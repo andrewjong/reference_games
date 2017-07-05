@@ -3,6 +3,9 @@
   "description": "Unofficial fork of MWERT, adapted to replicate sensing experiment",
   "version": "0.0.0",
   "private": true,
+  "scripts":{
+    "colorRef" : "node app.js --expname colors/colorReference"
+  },
   "dependencies": {
     "body-parser": "^1.17.2",
     "color-convert": "~1.0.0",
