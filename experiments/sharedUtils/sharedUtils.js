@@ -68,7 +68,11 @@ var getLongFormTime = function() {
 };
 
 var establishStream = function(game, streamName, outputFileName, header) {
-  var streamLoc = "../data/" + game.expName + "/" + streamName + "/" + outputFileName;
+  var dir = "../data/" + game.expName + "/" + streamName + "/" 
+  if (!fs.existsSync(dir)){
+    fs.mkdirSync(dir);
+  }
+  var streamLoc = dir + outputFileName;
   fs.writeFile(streamLoc, header, function (err) {if(err) throw err;});
   var stream = fs.createWriteStream(streamLoc, {'flags' : 'a'});
   game.streams[streamName] = stream;
