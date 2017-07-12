@@ -26,10 +26,11 @@ playGame.prototype = {
         game.load.spritesheet('cards', 'images/cards.png', options.cardSheetWidth, options.cardSheetHeight);
         game.load.image('cardback', 'images/cardback.png', options.cardSheetWidth, options.cardSheetHeight);
         game.load.spritesheet('end-turn', 'images/end-turn-button.png', 188, 46);
+        game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
     },
     create: function () {
         // game.stage.backgroundColor = '#076324';
-        let table = game.add.sprite(0,0,'table');
+        let table = game.add.sprite(0, 0, 'table');
         table.width = options.gameWidth;
         table.height = options.gameHeight;
         game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -47,7 +48,7 @@ playGame.prototype = {
             y_offset: 0, // the total current y offset
             dx: 0.1, // how much to offset x per card
             dy: 0.15, // how much to offset y per card
-            cards : [] // contain card sprites
+            cards: [] // contain card sprites
         }
 
         // make hands for this player and that player
@@ -63,8 +64,8 @@ playGame.prototype = {
         this.cardsAddedText = game.add.text(140, game.world.centerY - 100, getCounterText(this.cardsAdded, 'added'), counterStyle);
         const counterTexts = [this.cardsLeftText, this.cardsAddedText];
         counterTexts.forEach(function (text) {
-          text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
-          text.anchor = new Phaser.Point(0.5, 0.5);
+            text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+            text.anchor = new Phaser.Point(0.5, 0.5);
         });
 
         // text stating whose turn it is
@@ -84,14 +85,14 @@ playGame.prototype = {
         const centerInBar = (barHeight - options.turnButtonHeight) / 2;
         const horizontalPad = centerInBar;
         this.button = game.add.button(game.world.width - options.turnButtonWidth - horizontalPad,
-                                        game.world.height - options.turnButtonHeight - centerInBar,
-                                        'end-turn', this.nextTurn, this, 0, 1, 2);
+            game.world.height - options.turnButtonHeight - centerInBar,
+            'end-turn', this.nextTurn, this, 0, 1, 2);
         this.updateEachTurn();
     },
-    update: function(){
-        if (!isMyTurn){
+    update: function () {
+        if (!isMyTurn) {
             // set the button to disabled
-            this.button.setFrames(3,3,3);
+            this.button.setFrames(3, 3, 3);
             this.button.inputEnabled = false;
             this.table.forEach(card => card.inputEnabled = false);
             addTint(this.table);
@@ -101,7 +102,7 @@ playGame.prototype = {
             this.table.forEach(card => card.inputEnabled = true);
         }
     },
-    updateEachTurn: function() {
+    updateEachTurn: function () {
         // update card counters
         this.cardsLeft = 52 - this.nextCardIndex + this.cardsAdded;
         this.cardsLeftText.setText(getCounterText(this.cardsLeft, 'left'));
@@ -112,7 +113,7 @@ playGame.prototype = {
         let dy = this.deckSprites.dy;
         if (this.deckSprites.cards.length > this.cardsLeft) {
             // destroy extra card sprites if present
-            for(let i = this.deckSprites.cards.length; i > this.cardsLeft; i--){
+            for (let i = this.deckSprites.cards.length; i > this.cardsLeft; i--) {
                 this.deckSprites.cards.pop().destroy();
                 this.deckSprites.x_offset -= dx;
                 this.deckSprites.y_offset -= dy;
@@ -120,7 +121,7 @@ playGame.prototype = {
         }
         else if (this.deckSprites.cards.length < this.cardsLeft) {
             // add extra card sprites if needed
-            for(let i = this.deckSprites.cards.length; i < this.cardsLeft; i++){
+            for (let i = this.deckSprites.cards.length; i < this.cardsLeft; i++) {
                 const cardSprite = game.add.sprite(140 - this.deckSprites.x_offset, game.world.centerY - this.deckSprites.y_offset, 'cardback');
                 cardSprite.anchor.set(0.5);
                 cardSprite.scale.set(options.cardScale);
@@ -133,30 +134,30 @@ playGame.prototype = {
         // toggle turn settings
         this.turnText.setText(getTurnText());
     },
-    startDrag: function(card, pointer){
-      game.world.bringToTop(card);
-      card.scale.set(options.cardScale*1.1);
-      // for debugging
-      loc = this.myHand.indexOf(card) != -1 ? 'hand' : 'table';
-      console.log(loc);
+    startDrag: function (card, pointer) {
+        game.world.bringToTop(card);
+        card.scale.set(options.cardScale * 1.1);
+        // for debugging
+        loc = this.myHand.indexOf(card) != -1 ? 'hand' : 'table';
+        console.log(loc);
     },
-    stopDrag: function(card, pointer) {
-      card.scale.set(options.cardScale);
-      let shouldSwap = false;
-      if (isMyTurn) {
-        shouldSwap = cardGroupOverlap(card, this.myHand, this.table, game) ||
-                     cardGroupOverlap(card, this.table, this.myHand, game);
-      }
-      else {
-        for (let i = 0; i < this.myHand.length; i++) {
-          shouldSwap = shouldSwap || game.physics.arcade.overlap(this.myHand[i], card, swapPos);
+    stopDrag: function (card, pointer) {
+        card.scale.set(options.cardScale);
+        let shouldSwap = false;
+        if (isMyTurn) {
+            shouldSwap = cardGroupOverlap(card, this.myHand, this.table, game) ||
+                cardGroupOverlap(card, this.table, this.myHand, game);
         }
-      }
-      if (!shouldSwap) {
-        easeIn(card, card.origPos);
-      }
+        else {
+            for (let i = 0; i < this.myHand.length; i++) {
+                shouldSwap = shouldSwap || game.physics.arcade.overlap(this.myHand[i], card, swapPos);
+            }
+        }
+        if (!shouldSwap) {
+            easeIn(card, card.origPos);
+        }
     },
-    nextTurn: function(){
+    nextTurn: function () {
         isMyTurn = !isMyTurn;
         // reshuffle cards
         [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.table, this.deck.slice(this.nextCardIndex, 52));
@@ -164,19 +165,19 @@ playGame.prototype = {
         reshuffleAnimation(this.table, this.cardsAdded, game, this);
         obj = this;
         setTimeout(function () {
-          obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
-        }, 5000/2);
+            obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
+        }, 5000 / 2);
         this.updateEachTurn();
     }
 }
 
-function getTurnText(){
+function getTurnText() {
     let isPartner = isMyTurn ? '' : 'partner\'s '
     return 'It\'s your ' + isPartner + 'turn.'
 }
 
 function getCounterText(num, counterType) {
-  let plural = (num == 1) ? '' : 's';
-  let descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
-  return `${num} card${plural} ${descrip}`;
+    let plural = (num == 1) ? '' : 's';
+    let descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
+    return `${num} card${plural} ${descrip}`;
 }
