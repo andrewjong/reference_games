@@ -1,18 +1,22 @@
-// reshuffles each element of cards into deck with probability p
-// returns (#cards left in dec, #cards added back to the deck)
-function reshuffle(p, cards, deck) {
+/**
+ * Reshuffles an array of card sprits into the deck with probability p for each card
+ * Returns [# cards left in deck, # cards added back to deck]
+ *
+ * @param {Number} p the probability of adding a single card back to the deck
+ * @param {Array.<sprite>} cards array of cards to potentially reshuffle
+ * @param {Array.<Number>} deck deck of card indices
+ */
+function reshuffle(p, cards, deck, game) {
   let n = 0;
   cards.forEach(function(c) {
     if (Math.random() <= p) {
       n++;
-      deck.push(c); // MIGHT HAVE TO PUSH FRAME OR INDEX INSTEAD
+      deck.push(deck.indexOf(c.frame));
     }
-    c.kill();
   });
   Phaser.ArrayUtils.shuffle(deck);
   return [deck.length, n];
 }
-
 
 const cardsInSuit = 12;
 /**

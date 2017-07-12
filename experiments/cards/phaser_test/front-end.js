@@ -124,9 +124,13 @@ playGame.prototype = {
     nextTurn: function(){
         isMyTurn = !isMyTurn;
         // reshuffle cards
-        [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.table, this.deck.slice(this.nextCardIndex, 52));
-        this.table = drawCards(this.nextCardIndex, 4, game, this);
-        this.nextCardIndex += 4;
+        [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.table, this.deck.slice(this.nextCardIndex, 52), game);
+        reshuffleAnimation(this.table, this.cardsAdded, game, this);
+        obj = this;
+        setTimeout(function () {
+          this.table = drawCards(obj.nextCardIndex, 4, game, obj);
+          this.nextCardIndex += 4;
+        }, 5000);
     }
 }
 

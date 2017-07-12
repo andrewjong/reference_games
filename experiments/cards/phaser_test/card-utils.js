@@ -9,6 +9,7 @@ function makeCard(cardIndex, x, y, game, obj) {
   let card = game.add.sprite(x, y, 'cards', obj.deck[cardIndex]);
   card.scale.set(options.cardScale);
   card.anchor = new Phaser.Point(0.5,0.5);
+  fadeIn(card, 800);
 
   // enable drag and drop
   game.physics.arcade.enable(card);
@@ -34,10 +35,11 @@ function makeHand(startIndex, thisPlayer, game, obj) {
       return hand;
     }
     else {
-      let hand = [0, 1, 2].forEach(function(i) {
+      let hand = [0, 1, 2].map(function(i) {
           let c = game.add.sprite(game.world.centerX + (i - 1) * cardGap, game.world.centerY - 200, 'cardback');
           c.scale.set(options.cardScale);
-          c.anchor = new Phaser.Point(0.5,0.5)
+          c.anchor = new Phaser.Point(0.5,0.5);
+          return c;
       });
       return hand;
     }
@@ -50,9 +52,35 @@ function makeHand(startIndex, thisPlayer, game, obj) {
  * @param {Number} numCards number of cards to draw (should be 4)
  */
 function drawCards(startIndex, numCards, game, obj) {
-    let drawn = [0, 1, 2, 3].map(i =>
-        makeCard(startIndex + i, game.world.centerX + (i - 1.5) * cardGap, game.world.centerY, game, obj));
-    return drawn;
+  console.log(`startIndex = ${startIndex}`);
+  let table = [];
+  [0, 1, 2, 3].forEach(function (i) {
+    let x = game.world.centerX + (i - 1.5) * cardGap;
+    let y = game.world.centerY;
+
+    let b = game.add.sprite(140, game.world.centerY, 'cardback');
+    b.scale.set(options.cardScale);
+    b.anchor = new Phaser.Point(0.5,0.5);
+
+    moveTo(b, x, y, 1000, 1100, game, true);
+    setTimeout(function () {
+      table.push(makeCard(startIndex + i, x, y, game, obj));
+      b.kill();
+    }, 1800);
+  });
+  return table;
+}
+
+function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool) {
+  game.physics.arcade.enable(sprite);
+  game.physics.arcade.moveToXY(sprite, x, y, 0, moveTime);
+  game.time.events.add(waitTime, function () {
+    sprite.position.setTo(x,y);
+    sprite.body.reset();
+    if (fadeBool) {
+      fadeOut(sprite, 800);
+    }
+  });
 }
 
 /**
@@ -72,6 +100,29 @@ function cardGroupOverlap(card, newGroup, oldGroup, game) {
       return true;
     }
   }
+}
+
+function reshuffleAnimation(cards, numToAdd, game, obj) {
+  let backs = [];
+  cards.forEach(function (c) {
+    fadeOut(c, 500);
+    let back = game.add.sprite(c.x, c.y, 'cardback');
+    back.scale.set(options.cardScale);
+    back.anchor = new Phaser.Point(0.5,0.5);
+    fadeIn(back, 500);
+    backs.push(back);
+  });
+  setTimeout(function () {
+    backs.forEach(function (b) {
+      moveTo(b, game.world.centerX, game.world.centerY, 600, 600, game, false);
+    })
+  }, 1000);
+  setTimeout(function () {
+    for (let i = 0; i < backs.length; i++) {
+      let x = (i < numToAdd) ? 140 : 1500;
+      moveTo(backs[i], x, game.world.centerY, 600*(1+i), 600*(1+i), game, false);
+    }
+  }, 3000);
 }
 
 /**
@@ -108,4 +159,20 @@ function removeTint(cards) {
  */
 function easeIn(card, pos) {
   game.add.tween(card).to(pos, 400, Phaser.Easing.Back.Out, true);
+}
+
+/**
+ * Fades in card sprite
+ */
+function fadeIn(card, time) {
+  card.alpha = 0;
+  game.add.tween(card).to( { alpha: 1 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
+}
+
+/**
+ * Fades out card sprite
+ */
+function fadeOut(card, time) {
+  card.alpha = 1;
+  game.add.tween(card).to( { alpha: 0 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
 }
