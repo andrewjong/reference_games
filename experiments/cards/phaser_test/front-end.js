@@ -38,9 +38,13 @@ playGame.prototype = {
         console.log(this.deck);
 
         // deck sprite
-        const deckSprite = game.add.sprite(140, game.world.centerY, 'cardback');
-        deckSprite.anchor.set(0.5);
-        deckSprite.scale.set(options.cardScale);
+        this.deckSprites = {
+            x_offset: 0, // the total current x offset
+            y_offset: 0, // the total current y offset
+            dx: 0.1, // how much to offset x per card
+            dy: 0.15, // how much to offset y per card
+            cards : [] // contain card sprites
+        }
 
         // make hands for this player and that player
         this.myHand = makeHand(0, true, game, this);
@@ -78,15 +82,39 @@ playGame.prototype = {
         this.button = game.add.button(game.world.width - options.turnButtonWidth - horizontalPad,
                                         game.world.height - options.turnButtonHeight - centerInBar,
                                         'end-turn', this.nextTurn, this, 0, 1, 2);
+        this.updateEachTurn();
     },
-    update : function() {
+    updateEachTurn: function() {
         // update card counters
         this.cardsLeft = 52 - this.nextCardIndex + this.cardsAdded;
         this.cardsLeftText.setText(getCounterText(this.cardsLeft, 'left'));
         this.cardsAddedText.setText(getCounterText(this.cardsAdded, 'added'));
 
-        this.turnText.setText(getTurnText());
+        // update deck to show correct number of cards
+        let dx = this.deckSprites.dx;
+        let dy = this.deckSprites.dy;
+        if (this.deckSprites.cards.length > this.cardsLeft) {
+            // destroy extra card sprites if present
+            for(let i = this.deckSprites.cards.length; i > this.cardsLeft; i--){
+                this.deckSprites.cards.pop().destroy();
+                this.deckSprites.x_offset -= dx;
+                this.deckSprites.y_offset -= dy;
+            }
+        }
+        else if (this.deckSprites.cards.length < this.cardsLeft) {
+            // add extra card sprites if needed
+            for(let i = this.deckSprites.cards.length; i < this.cardsLeft; i++){
+                const cardSprite = game.add.sprite(140 - this.deckSprites.x_offset, game.world.centerY - this.deckSprites.y_offset, 'cardback');
+                cardSprite.anchor.set(0.5);
+                cardSprite.scale.set(options.cardScale);
+                this.deckSprites.cards.push(cardSprite);
+                this.deckSprites.x_offset += dx;
+                this.deckSprites.y_offset += dy;
+            }
+
+        }
         // toggle turn settings
+        this.turnText.setText(getTurnText());
         if (!isMyTurn){
             // set the button to disabled
             this.button.setFrames(3,3,3);
@@ -128,9 +156,10 @@ playGame.prototype = {
         reshuffleAnimation(this.table, this.cardsAdded, game, this);
         obj = this;
         setTimeout(function () {
-          this.table = drawCards(obj.nextCardIndex, 4, game, obj);
-          this.nextCardIndex += 4;
+          obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
+          obj.nextCardIndex += 4;
         }, 5000);
+        this.updateEachTurn();
     }
 }
 

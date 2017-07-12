@@ -176,3 +176,21 @@ function fadeOut(card, time) {
   card.alpha = 1;
   game.add.tween(card).to( { alpha: 0 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
 }
+
+/**
+ * Random number between min and max
+ * @param {*Number} min
+ * @param {*Number} max
+ */
+function randBetween(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+module.exports = {
+  makeCard: makeCard,
+  makeHand: makeHand,
+  drawCards: drawCards,
+  cardGroupOverlap: cardGroupOverlap,
+  swapPos: swapPos,
+  randBetween: randBetween
+}

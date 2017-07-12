@@ -56,3 +56,9 @@ function hasWrappedStraight(hand1, hand2){
 function getSuit(cardValue){
     return Math.trunc(cardValue / cardsInSuit);
 }
+
+module.exports = {
+    reshuffle: reshuffle,
+    hasWrappedStraight: hasWrappedStraight,
+    getSuit: getSuit
+}
