@@ -22,12 +22,16 @@ const cardGap = 120;
 
 playGame.prototype = {
     preload: function () {
+        game.load.image('table', 'images/felt-background.png');
         game.load.spritesheet('cards', 'images/cards.png', options.cardSheetWidth, options.cardSheetHeight);
         game.load.image('cardback', 'images/cardback.png', options.cardSheetWidth, options.cardSheetHeight);
         game.load.spritesheet('end-turn', 'images/end-turn-button.png', 188, 46);
     },
     create: function () {
-        game.stage.backgroundColor = '#076324';
+        // game.stage.backgroundColor = '#076324';
+        let table = game.add.sprite(0,0,'table');
+        table.width = options.gameWidth;
+        table.height = options.gameHeight;
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
         // initialize deck of cards as number array
