@@ -84,6 +84,18 @@ playGame.prototype = {
                                         'end-turn', this.nextTurn, this, 0, 1, 2);
         this.updateEachTurn();
     },
+    update: function(){
+        if (!isMyTurn){
+            // set the button to disabled
+            this.button.setFrames(3,3,3);
+            this.button.inputEnabled = false;
+            this.table.forEach(card => card.inputEnabled = false);
+        } else {
+            this.button.setFrames(0, 1, 2);
+            this.button.inputEnabled = true;
+            this.table.forEach(card => card.inputEnabled = true);
+        }
+    },
     updateEachTurn: function() {
         // update card counters
         this.cardsLeft = 52 - this.nextCardIndex + this.cardsAdded;
@@ -115,16 +127,6 @@ playGame.prototype = {
         }
         // toggle turn settings
         this.turnText.setText(getTurnText());
-        if (!isMyTurn){
-            // set the button to disabled
-            this.button.setFrames(3,3,3);
-            this.button.inputEnabled = false;
-            this.table.forEach(card => card.inputEnabled = false);
-        } else {
-            this.button.setFrames(0, 1, 2);
-            this.button.inputEnabled = true;
-            this.table.forEach(card => card.inputEnabled = true);
-        }
     },
     startDrag: function(card, pointer){
       game.world.bringToTop(card);
@@ -158,7 +160,7 @@ playGame.prototype = {
         setTimeout(function () {
           obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
           obj.nextCardIndex += 4;
-        }, 5000);
+        }, 5000/2);
         this.updateEachTurn();
     }
 }
