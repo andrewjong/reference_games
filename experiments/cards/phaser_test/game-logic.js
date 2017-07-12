@@ -5,7 +5,7 @@ function reshuffle(p, cards, deck) {
   cards.forEach(function(c) {
     if (Math.random() <= p) {
       n++;
-      deck.push(c); // MIGHT HAVE TO PUSH FRAME OR INDEX INSTEAD
+      deck.push(deck.indexOf(c.frame)); // MIGHT HAVE TO PUSH FRAME OR INDEX INSTEAD
     }
     c.kill();
   });
@@ -51,4 +51,10 @@ function hasWrappedStraight(hand1, hand2){
  */
 function getSuit(cardValue){
     return Math.trunc(cardValue / cardsInSuit);
+}
+
+module.exports = {
+    reshuffle: reshuffle,
+    hasWrappedStraight: hasWrappedStraight,
+    getSuit: getSuit
 }

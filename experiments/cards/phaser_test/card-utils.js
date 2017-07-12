@@ -109,3 +109,11 @@ function removeTint(cards) {
 function easeIn(card, pos) {
   game.add.tween(card).to(pos, 400, Phaser.Easing.Back.Out, true);
 }
+
+module.exports = {
+  makeCard: makeCard,
+  makeHand: makeHand,
+  drawCards: drawCards,
+  cardGroupOverlap: cardGroupOverlap,
+  swapPos: swapPos
+}
