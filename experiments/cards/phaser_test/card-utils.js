@@ -34,10 +34,11 @@ function makeHand(startIndex, thisPlayer, game, obj) {
       return hand;
     }
     else {
-      let hand = [0, 1, 2].forEach(function(i) {
+      let hand = [0, 1, 2].map(function(i) {
           let c = game.add.sprite(game.world.centerX + (i - 1) * cardGap, game.world.centerY - 200, 'cardback');
           c.scale.set(options.cardScale);
           c.anchor = new Phaser.Point(0.5,0.5)
+          return c;
       });
       return hand;
     }
@@ -110,10 +111,20 @@ function easeIn(card, pos) {
   game.add.tween(card).to(pos, 400, Phaser.Easing.Back.Out, true);
 }
 
+/**
+ * Random number between min and max
+ * @param {*Number} min 
+ * @param {*Number} max 
+ */
+function randBetween(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 module.exports = {
   makeCard: makeCard,
   makeHand: makeHand,
   drawCards: drawCards,
   cardGroupOverlap: cardGroupOverlap,
-  swapPos: swapPos
+  swapPos: swapPos,
+  randBetween: randBetween
 }
