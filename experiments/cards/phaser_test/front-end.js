@@ -90,6 +90,7 @@ playGame.prototype = {
             this.button.setFrames(3,3,3);
             this.button.inputEnabled = false;
             this.table.forEach(card => card.inputEnabled = false);
+            addTint(this.table);
         } else {
             this.button.setFrames(0, 1, 2);
             this.button.inputEnabled = true;
