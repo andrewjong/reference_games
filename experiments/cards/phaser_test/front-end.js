@@ -154,12 +154,12 @@ playGame.prototype = {
     nextTurn: function(){
         isMyTurn = !isMyTurn;
         // reshuffle cards
-        [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.table, this.deck.slice(this.nextCardIndex, 52), game);
+        [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.table, this.deck.slice(this.nextCardIndex, 52));
+        this.nextCardIndex += 4;
         reshuffleAnimation(this.table, this.cardsAdded, game, this);
         obj = this;
         setTimeout(function () {
           obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
-          obj.nextCardIndex += 4;
         }, 5000/2);
         this.updateEachTurn();
     }
