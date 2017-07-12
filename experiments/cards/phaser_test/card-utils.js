@@ -147,7 +147,7 @@ function swapPos(card1, card2) {
  * Adds tint to a list of card sprites
  */
 function addTint(cards) {
-  cards.forEach(c => c.tint = 0xD3D3D3);
+  cards.forEach(c => c.tint = 0xBEBEBE);
 }
 
 /**

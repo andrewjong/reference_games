@@ -6,12 +6,12 @@
  * @param {Array.<sprite>} cards array of cards to potentially reshuffle
  * @param {Array.<Number>} deck deck of card indices
  */
-function reshuffle(p, cards, deck, game) {
+function reshuffle(p, cards, deck) {
   let n = 0;
   cards.forEach(function(c) {
     if (Math.random() <= p) {
       n++;
-      deck.push(deck.indexOf(c.frame));
+      deck.push(c.frame);
     }
   });
   Phaser.ArrayUtils.shuffle(deck);
