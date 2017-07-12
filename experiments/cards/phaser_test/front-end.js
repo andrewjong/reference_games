@@ -130,11 +130,17 @@ playGame.prototype = {
     }
 }
 
+/**
+ * Generates the String that displays which players turn
+ */
 function getTurnText(){
     let isPartner = isMyTurn ? '' : 'partner\'s '
     return 'It\'s your ' + isPartner + 'turn.'
 }
 
+/**
+ * Generates the String for the number of cards in the deck
+ */
 function getCounterText(num, counterType) {
   let plural = (num == 1) ? '' : 's';
   let descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
