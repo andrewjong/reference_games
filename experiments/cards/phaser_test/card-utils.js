@@ -62,16 +62,15 @@ function drawCards(startIndex, numCards, game, obj) {
     b.scale.set(options.cardScale);
     b.anchor = new Phaser.Point(0.5,0.5);
 
-    moveTo(b, x, y, 1000, 1100, game, true);
+    moveTo(b, x, y, 1000, 1100, game, true, false);
     setTimeout(function () {
       table.push(makeCard(startIndex + i, x, y, game, obj));
-      b.kill();
     }, 1800);
   });
   return table;
 }
 
-function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool) {
+function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool, destroyBool) {
   game.physics.arcade.enable(sprite);
   game.physics.arcade.moveToXY(sprite, x, y, 0, moveTime);
   game.time.events.add(waitTime, function () {
@@ -79,6 +78,9 @@ function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool) {
     sprite.body.reset();
     if (fadeBool) {
       fadeOut(sprite, 800);
+    }
+    if (destroyBool) {
+      sprite.destroy();
     }
   });
 }
@@ -114,13 +116,14 @@ function reshuffleAnimation(cards, numToAdd, game, obj) {
   });
   setTimeout(function () {
     backs.forEach(function (b) {
-      moveTo(b, game.world.centerX, game.world.centerY, 600, 600, game, false);
+      moveTo(b, game.world.centerX, game.world.centerY, 600, 600, game, false, false);
     })
   }, 1000);
   setTimeout(function () {
     for (let i = 0; i < backs.length; i++) {
+      let b = backs[i];
       let x = (i < numToAdd) ? 140 : 1500;
-      moveTo(backs[i], x, game.world.centerY, 600*(1+i), 600*(1+i), game, false);
+      moveTo(b, x, game.world.centerY, 600*(1+i), 600*(1+i), game, false, true);
     }
   }, 3000);
 }
