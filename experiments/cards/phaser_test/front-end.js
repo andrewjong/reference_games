@@ -27,6 +27,8 @@ playGame.prototype = {
         game.load.image('cardback', 'images/cardback.png', options.cardSheetWidth, options.cardSheetHeight);
         game.load.spritesheet('end-turn', 'images/end-turn-button.png', 188, 46);
         game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+        game.scale.pageAlignHorizontally = true;
+        game.scale.pageAlignVertically = true;
     },
     create: function () {
         // game.stage.backgroundColor = '#076324';
