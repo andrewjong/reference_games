@@ -23,7 +23,7 @@ var ondisconnect = function(data) {
   }
   else {
       $('#instructs').html('哎呀！另一个玩家失去了连接。' +
-      '填写这个调查会提交你的HIT，并且你还会受到全赔偿金。若有任何困难，请联系我们：[EMAIL]'); 
+      '填写这个调查会提交你的HIT，并且你还会受到全赔偿金。若有任何困难，请联系我们在stanfordchinesecolors@gmail.com'); 
   }
   $('#message_panel').hide();
   $('#submitbutton').hide();
@@ -97,8 +97,8 @@ var sharedSetup = function(game) {
     globalGame.messageSent = true;
     var otherRole = (globalGame.my_role === game.playerRoleNames.role1 ?
 		     game.playerRoleNames.role2 : game.playerRoleNames.role1);
-    var source = data.user === globalGame.my_id ? "You" : otherRole;
-    var col = source === "You" ? "#363636" : "#707070";
+    var source = data.user === globalGame.my_id ? "我" : otherRole;
+    var col = source === "我" ? "#363636" : "#707070";
     $('.typing-msg').remove();
     $('#messages')
       .append($('<li style="padding: 5px 10px; background: ' + col + '">')

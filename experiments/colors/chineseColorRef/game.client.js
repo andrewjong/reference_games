@@ -181,7 +181,7 @@ var client_onjoingame = function (num_players, role) {
   // Update w/ role (can only move stuff if agent)
   $('#roleLabel').append(role + '.');
   if (role === globalGame.playerRoleNames.role1) {
-    $('#instructs').append("送讯息让倾听者发掘目标颜色。");
+    $('#instructs').append("送讯息让倾听者确定目标颜色。");
   } else if (role === globalGame.playerRoleNames.role2) {
     $('#instructs').append("选出演说者在描述的颜色。");
   }
