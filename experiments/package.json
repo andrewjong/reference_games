@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "colorRef" : "node app.js --expname colors/colorReference"
   },
   "dependencies": {
     "body-parser": "^1.17.2",

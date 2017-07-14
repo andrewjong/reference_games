@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>实验</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="../../lib/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap theme -->
+  <link href="../../lib/css/bootstrap-theme.min.css" rel="stylesheet">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js">
+
+  </script>
+</head>
+
+<body role="document">
+
+  <div class="container theme-showcase" role="main">
+
+    </br>
+
+    <div id="show">
+
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100" style="width: 1%;"><span class="sr-only">进度1%</span></div>
+      </div>
+
+      <div style="text-align: center; margin-left: auto; margin-right: auto">
+        <img src="images/cocologo.png" width="200px" length="200px" alt="Stanford CoCoLab" id="cocologo"></img>
+      </div>
+
+      <div class="page-header" style="text-align: center">
+        <h3>Stanford CoCoLab</h3>
+      </div>
+
+      <div class="well" style="width: 500px; margin: 0 auto">
+
+        <p align="left" id="instruct-text">在这个HIT里，你会和另一个人玩一个有趣的沟通游戏。开始游戏前，我们会给你更多的指示，并且你必须通过一个测试你对指示的理解的测验。</p>
+
+        <p>每一个游戏的平均时间是15分钟，包括阅读指示和等待另一玩家的时间。我们发现有些游戏的配对时间有时会快有时会慢。如果你发现你等待时间过长，没有必要着急或者退出--你可以在结尾时留下一个评论，然后我会用钱补偿你等待的时间。在回答问题之前，请集中注意力并且仔细思考。谢谢！</p>
+
+        <p>我们推荐Firefox, Chrome, 或者Safari的浏览器。我们没有检验别的浏览器。 </p>
+      </div>
+
+      <p>
+        <center><button id="agree" type="button" style="display: none" class="btn btn-sm btn-primary">CONTINUE</button></center>
+        <noscript><strong>你要先启用 JavaScript才能开始。 </strong></noscript>
+      </p>
+      <hr>
+
+      <u>
+        <p id="legal">法律相关信息：</p>
+      </u>
+
+      <p id="legal">通过回答这些问题，你正在参与斯坦福大学认知科学系的任认知科学家们的一个研究。如果你有任何关于本次研究的问题，请你联系我们在stanfordchinesecolors@gmail.com。你必须年满18岁才可以参加本次研究。你的参与是自愿的。你可以拒绝回答某些甚至所有下面的问题。你可以在实验中任何时间中断并且退出实验；若如此做，你不会受到任何不好的结果。你在本次实验种是完全匿名的；研究人员不会收到任何关于你的个人信息。
+        </p>
+    </div>
+    <!-- show -->
+
+  </div>
+  <!-- /container -->
+
+  <script type="text/javascript">
+    $(document).ready(function () {
+      var urlParams;
+      var match,
+        pl = /\+/g,  // Regex for replacing addition symbol with a space
+        search = /([^&=]+)=?([^&]*)/g,
+        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+        query = location.search.substring(1);
+
+      urlParams = {};
+      while (match = search.exec(query))
+        urlParams[decode(match[1])] = decode(match[2]);
+
+      console.log(urlParams)
+      if (urlParams.assignmentId != "ASSIGNMENT_ID_NOT_AVAILABLE") {
+        $("#agree").show()
+      }
+
+      document.getElementById("agree").onclick = function () {
+        var workerId = urlParams.workerId;
+        var assignmentId = urlParams.assignmentId;
+        var hitId = urlParams.hitId;
+        var turkSubmitTo = urlParams.turkSubmitTo;
+        location.replace("./instructions.html?workerId=" + workerId
+          + "&assignmentId=" + assignmentId
+          + "&hitId=" + hitId + "&turkSubmitTo=" + turkSubmitTo);
+      };
+    });
+  </script>
+  <script src="../../lib/js/bootstrap.min.js"></script>
+</body>
+
+</html>
