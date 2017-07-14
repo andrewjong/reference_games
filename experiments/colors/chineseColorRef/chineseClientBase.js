@@ -97,8 +97,8 @@ var sharedSetup = function(game) {
     globalGame.messageSent = true;
     var otherRole = (globalGame.my_role === game.playerRoleNames.role1 ?
 		     game.playerRoleNames.role2 : game.playerRoleNames.role1);
-    var source = data.user === globalGame.my_id ? "我" : otherRole;
-    var col = source === "我" ? "#363636" : "#707070";
+    var source = data.user === globalGame.my_id ? "你" : otherRole;
+    var col = source === "你" ? "#363636" : "#707070";
     $('.typing-msg').remove();
     $('#messages')
       .append($('<li style="padding: 5px 10px; background: ' + col + '">')
