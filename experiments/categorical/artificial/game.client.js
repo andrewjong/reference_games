@@ -39,22 +39,28 @@ var client_onserverupdate_received = function(data){
   
   if (globalGame.roundNum != data.roundNum) {
     globalGame.objects = _.map(data.trialInfo.currStim, function(obj) {
-      // Extract the coordinates matching your role
-      var customCoords = globalGame.my_role == "speaker" ? obj.speakerCoords : obj.listenerCoords;
+      // Extract the coordinates matching your role &
       // remove the speakerCoords and listenerCoords properties
+      var customCoords = (globalGame.my_role == "speaker" ?
+			  obj.speakerCoords : obj.listenerCoords);
       var customObj = _.chain(obj)
 	  .omit('speakerCoords', 'listenerCoords')
-	  .extend(obj, {trueX : customCoords.trueX, trueY : customCoords.trueY,
-			gridX : customCoords.gridX, gridY : customCoords.gridY,
-			box : customCoords.box})
+	  .extend(obj, {
+	    trueX : customCoords.trueX, trueY : customCoords.trueY,
+	    gridX : customCoords.gridX, gridY : customCoords.gridY,
+	    box : customCoords.box
+	  })
 	  .value();
       
       var imgObj = new Image(); //initialize object as an image (from HTML5)
       imgObj.onload = function(){ // Draw image as soon as it loads (this is a callback)
-        globalGame.ctx.drawImage(imgObj, parseInt(customObj.trueX), parseInt(customObj.trueY),
+        globalGame.ctx.drawImage(imgObj, parseInt(customObj.trueX),
+				 parseInt(customObj.trueY),
 				 customObj.width, customObj.height);
         if (globalGame.my_role === globalGame.playerRoleNames.role1) {
-          highlightCell(globalGame, '#d15619', function(x) {return x.targetStatus == 'target';});
+          highlightCell(globalGame, '#d15619', function(x) {
+	    return x.targetStatus == 'target';
+	  });
         }
       };
       imgObj.src = customObj.url; // tell client where to find it
@@ -62,27 +68,35 @@ var client_onserverupdate_received = function(data){
     });
   };
 
+  globalGame.game_started = data.gs;
+  globalGame.players_threshold = data.pt;
+  globalGame.player_count = data.pc;
+  globalGame.roundNum = data.roundNum;
+  globalGame.labels = data.trialInfo.labels;
+  if(!_.has(globalGame, 'data')) {
+    globalGame.data = data.dataObj;
+  }
+
   // Get rid of "waiting" screen if there are multiple players
   if(data.players.length > 1) {
     $('#messages').empty();
     $("#chatbox").removeAttr("disabled");
     $('#chatbox').focus();
     globalGame.get_player(globalGame.my_id).message = "";
-  }
 
-  globalGame.game_started = data.gs;
-  globalGame.players_threshold = data.pt;
-  globalGame.player_count = data.pc;
-  globalGame.roundNum = data.roundNum;
-  if(!_.has(globalGame, 'data')) {
-    globalGame.data = data.dataObj;
-  }
+    // Insert labels & show dropzone
+    var labels = $('#labels').empty().append(
+      _.map(globalGame.labels, (word) => {
+	return '<p class="cell draggable drag-drop">' + word + '</p>';
+      }))
+	.append('<div id="chatarea" class="dropzone"></div>');
 
-  if ((globalGame.roundNum > 2) && (globalGame.my_role === globalGame.playerRoleNames.role1)) { //TRIAL OVER
-    $('#instructs').empty()
-      .append("Send messages to tell the listener where the lily is. To get points, you only need to make them click near the lily. There is no bonus for increased accuracy.");
+    // reset labels
+    if(globalGame.my_role === globalGame.playerRoleNames.role1) {
+      setupLabels(globalGame);
+    }
   }
-
+    
   // Draw all this new stuff
   drawScreen(globalGame, globalGame.get_player(globalGame.my_id));
 };
@@ -102,7 +116,7 @@ var client_onMessage = function(data) {
       ondisconnect();
       console.log("received end message...");
       break;
-
+      
     case 'feedback' :
       $("#chatbox").attr("disabled", "disabled");
       // update local score
@@ -123,7 +137,7 @@ var client_onMessage = function(data) {
       }
 
       break;
-
+      
     case 'alert' : // Not in database, so you can't play...
       alert('You did not enter an ID');
       window.location.replace('http://nodejs.org'); break;
@@ -163,13 +177,21 @@ var customSetup = function(game) {
         .append("Round\n" + (game.roundNum + 2) + "/" + game.numRounds);
     }
   });
+
+  game.socket.on('dragging', function(event) {
+    dragMoveListener(event);
+  });
+
+  game.socket.on('drop', function(event) {
+    $('#chatarea').css('background-color', '#29e');
+    globalGame.messageSent = true;
+  });
 };
 
 var client_onjoingame = function(num_players, role) {
   // set role locally
   globalGame.my_role = role;
   globalGame.get_player(globalGame.my_id).role = globalGame.my_role;
-
   _.map(_.range(num_players - 1), function(i){
     globalGame.players.unshift({id: null, player: new game_player(globalGame)});
   });
@@ -177,9 +199,9 @@ var client_onjoingame = function(num_players, role) {
   // Update w/ role (can only move stuff if agent)
   $('#roleLabel').append(role + '.');
   if(role === globalGame.playerRoleNames.role1) {
-    $('#instructs').append("Send messages to tell the listener where the lily is. To get points, you only need to make them click within the circle around the lily. There is no bonus for increased accuracy. The circle will not appear after the first 3 trials.");
+    $('#instructs').append("Send messages to tell the listener stuff.");
   } else if(role === globalGame.playerRoleNames.role2) {
-    $('#instructs').append("Click as closely as possible to the location of the lily on the map.");
+    $('#instructs').append("Click on object");
   }
 
   if(num_players == 1) {
@@ -198,7 +220,6 @@ var client_onjoingame = function(num_players, role) {
               + 'Please do not refresh the page!');
   }
 
-  // set mouse-tracking event handler
   if(role === globalGame.playerRoleNames.role2) {
     globalGame.viewport.addEventListener("click", mouseClickListener, false);
   }
@@ -208,27 +229,39 @@ var client_onjoingame = function(num_players, role) {
  MOUSE EVENT LISTENERS
  */
 
+function dragMoveListener (event) {
+  console.log(event);
+  // Tell the server if this is a real drag event (as opposed to an update from partner)
+  if(_.has(event, 'name')) {
+    event.target = $(`p:contains("${event.name}")`)[0];
+    console.log(event.target);
+  } else {
+    globalGame.socket.send(['dragging', event.target.innerHTML,
+			    event.dx, event.dy].join('.'));
+  }
+  var target = event.target,
+      // keep the dragged position in the data-x/data-y attributes
+      x = (parseFloat(target.getAttribute('data-x')) || 0) + parseFloat(event.dx),
+      y = (parseFloat(target.getAttribute('data-y')) || 0) + parseFloat(event.dy);
+  
+  // translate the element
+  target.style.webkitTransform =
+    target.style.transform =
+    'translate(' + x + 'px, ' + y + 'px)';
+
+  // update the posiion attributes
+  target.setAttribute('data-x', x);
+  target.setAttribute('data-y', y);
+}
+
 function mouseClickListener(evt) {
   var bRect = globalGame.viewport.getBoundingClientRect();
   var mouseX = Math.floor((evt.clientX - bRect.left)*(globalGame.viewport.width/bRect.width));
   var mouseY = Math.floor((evt.clientY - bRect.top)*(globalGame.viewport.height/bRect.height));
   if (globalGame.messageSent) { // if message was not sent, don't do anything
-    console.log('click');
     _.forEach(globalGame.objects, function(obj) {
-      console.log(obj);
       if (hitTest(obj, mouseX, mouseY)) {
-	console.log('hit!');
 	globalGame.messageSent = false;
-        //highlight the object that was clicked:
-        // var upperLeftXListener = obj.listenerCoords.gridPixelX;
-        // var upperLeftYListener = obj.listenerCoords.gridPixelY;
-        // if (upperLeftXListener != null && upperLeftYListener != null) {
-        //   globalGame.ctx.beginPath();
-        //   globalGame.ctx.lineWidth="10";
-        //   globalGame.ctx.strokeStyle="black";
-        //   globalGame.ctx.rect(upperLeftXListener+5, upperLeftYListener+5,290,290); 
-        //   globalGame.ctx.stroke();
-        // }
 	// Tell the server about it
         globalGame.socket.send(["clickedObj", obj.subID].join('.'));
       }
@@ -237,8 +270,6 @@ function mouseClickListener(evt) {
 };
 
 function hitTest(shape,mx,my) {
-  console.log(shape)
-  console.log(mx + ',' + my);
   var dx = mx - shape.trueX;
   var dy = my - shape.trueY;
   return (0 < dx) && (dx < shape.width) && (0 < dy) && (dy < shape.height);

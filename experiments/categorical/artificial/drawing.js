@@ -53,13 +53,13 @@ var drawScreen = function(game, player) {
 
   // Draw message in center (for countdown, e.g.)
   if (player.message) {
-    game.ctx.font = "bold 23pt Helvetica";
+    game.ctx.font = "bold 40pt Helvetica";
     game.ctx.fillStyle = 'blue';
     game.ctx.textAlign = 'center';
     wrapText(game, player.message,
              game.world.width/2, game.world.height/4,
              game.world.width*4/5,
-             25);
+             50);
   }
   else {
 //    drawGrid(globalGame);
@@ -113,12 +113,35 @@ var highlightCell = function(game, color, condition) {
     game.ctx.globalCompositeOperation='source-over';
     if (upperLeftX != null && upperLeftY != null) {
       game.ctx.beginPath();
-      game.ctx.lineWidth="10";
+      game.ctx.lineWidth="20";
       game.ctx.strokeStyle=color;
-      game.ctx.rect(upperLeftX +5 , upperLeftY +5 ,game.cellDimensions.width-10,game.cellDimensions.height-10);
+      game.ctx.rect(upperLeftX +10 , upperLeftY +10 ,game.cellDimensions.width-20,game.cellDimensions.height-20);
       game.ctx.stroke();
     }
   }
+};
+
+function setupLabels(game) {
+  var labels = document.querySelector('#message_panel');
+  interact('p', {context: labels})
+    .draggable({
+      restrict: {
+      	restriction: "parent",
+      	endOnly: true,
+      	elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
+      },
+      onmove: dragMoveListener
+    });
+  interact('#chatarea')
+    .dropzone({
+      accept: '.draggable',
+      ondrop: function (event) {
+	$('#chatarea').css('background-color', '#29e');
+	game.socket.send('drop.' + event.relatedTarget);
+	interact('p', {context: labels}).draggable(false);
+      }
+    });
+
 };
 
 // This is a helper function to write a text string onto the HTML5 canvas.
