@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title> Collective Behavior</title>
+    <title>选出颜色游戏</title>
     <!-- Load style sheet -->
     <link href="index.css" media="screen" rel="stylesheet" type="text/css">
 
@@ -33,17 +33,14 @@
 
   <body>
     <div id='header'>
-      <button id='submitbutton' style="display: none;">Submit board</button>
+      <button id='submitbutton' style="display: none;">提交</button>
       <div id='textInfo'>
-	<h1 id='roleLabel'> You are the </h1> 
+	<h1 id='roleLabel'>你是</h1> 
 	<p id='instructs'> </p>
       </div>
-      <p style="color:red" id='roundnumber'>Round 1/50</p>
+      <p style="color:red" id='roundnumber'>第 1/50 轮</p>
       <p style="color:green" id='score'> </p>
     </div>
-
-
-        
         <div id='main'>
             <span>
             <div id='message_panel'>
@@ -52,60 +49,60 @@
                 <div id="chatarea">
                     <form action="">
                         <input id="chatbox" autocomplete="off" />
-                        <button id="chatbutton">Send</button>
+                        <button id="chatbutton">送</button>
                     </form>
                 </div>
             </div>
             <canvas id="viewport"> </canvas>
 	    	    <div id="exit_survey" style="display:none">
 	      <br><br><br><br><br>
-	      <h3> Thanks for participating in our experiment! </h3>
-	      <h3> Before you submit your HIT, we'd like to ask you a few questions. </h3>
+	      <h3>谢谢你参与我们的实验！</h3>
+	      <h3> 提交前，我们想问你一些问题。</h3>
 	      <br><br><br>
-	      <p> Did you believe you were playing against another human player? </p>
+	      <p>你觉得你的伙伴是人类吗？</p>
 	      <select onChange="dropdownTip('human::' + this.value)">
 		<option value=""></option>
-		<option value="yes">Yes, I thought they were a human</option>
-		<option value="no">No, I thought it was a computer program</option>
+		<option value="yes">是，我觉得他是人类</option>
+		<option value="no">否，我觉得它是电脑程序</option>
 	      </select>
-	      <p id='humanResult' style="display:none;color:red"> Thank you for your response -- in fact, all players were paired with other human turkers! <p>
+	      <p id='humanResult' style="display:none;color:red">谢谢你的回答 - 其实全部的玩家配对了人类玩家<p>
 
 		<br> <br>
-	      <p> Are you a native English speaker? </p>
-	      <select onChange="dropdownTip('language::' + this.value)">
-		<option value = ""></option>
-		<option value="yes">Yes</option>
-		<option value="no">No</option>
+	      <p>你是怎么学中文的？按“控制（Ctrl）选择多个选项。</p>
+	      <select multiple>
+		<option value="native">母语</option>
+		<option value="heritage">第二语言，在家里学</option>
+		<option value="school">第二语言，在学校学</option>
+		<option value="self-taught">第二语言，自学</option>
 	      </select>
 	      <br><br>
-	      <p> Did you read the instructions and do you think you did the 
-		HIT correctly? </p>
+	      <p>你有没有仔细看规定，有没有认为你可以正确完成这个HIT？</p>
 	      <select onChange="dropdownTip('confused::' + this.value)">
 		<option value = ""></option>
-		<option value="yes">Yes</option>
-		<option value="no">No</option>
-		<option value="confused">I was confused</option>
+		<option value="yes">是</option>
+		<option value="no">否</option>
+		<option value="confused">我有困惑</option>
 	      </select>
 
 	   <br><br>
-          <p> How much did you like working with your partner? </p>
+          <p>你喜欢和别人合作吗？</p>
             <select onChange="dropdownTip('partner::' + this.value)">
         <option value = ""></option>
-        <option value="not much">Not that much</option>
-        <option value="okay">My partner was fine</option>
-        <option value="liked">I liked working with my partner</option>
-        <option value="loved">I really enjoyed working with my partner</option>
+        <option value="not much">一般</option>
+        <option value="okay">还好/不错</option>
+        <option value="liked">喜欢合作</option>
+        <option value="loved">很喜欢合作</option>
           </select>
         <br><br>
 
-	      <p> Do you have any comments on the experiment? </p>
+	      <p>你对这个实验有什么宝贵意见可以提？</p>
 	      <textarea id='comments' rows="4" cols="50"></textarea>
 	      <br>
 
-	      <p> Note: Clicking this button should automatically submit the HIT and close this tab. There is no need to input a code.<p>
-	      <p> If you experience a problem submitting, please contact rxdh@stanford.edu for compensation. </p>
+	      <p>注意：点击这个按键会自动提交HIT并且关闭网页。没有必要输入代码。<p>
+	      <p>若有提交有困难，请联系我们关于赔偿金。邮箱地址 stanfordchinesecolors@gmail.com</p>
 	      
-	      <div><button id="surveySubmit" onclick="dropdownTip('submit')" type="button">Submit HIT</button></div>
+	      <div><button id="surveySubmit" onclick="dropdownTip('submit')" type="button">提交HIT</button></div>
 	    </div>
             </span>
         </div>
