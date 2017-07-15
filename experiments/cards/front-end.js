@@ -9,7 +9,7 @@ const options = {
 }
 
 window.onload = function () {
-    game = new Phaser.Game(options.gameWidth, options.gameHeight, Phaser.WEBGL);
+    game = new Phaser.Game(options.gameWidth, options.gameHeight, Phaser.WEBGL, 'viewport');
     game.state.add("PlayGame", playGame)
     game.state.start("PlayGame");
 }
@@ -22,10 +22,10 @@ const cardGap = 120;
 
 playGame.prototype = {
     preload: function () {
-        game.load.image('table', 'images/felt-background.png');
-        game.load.spritesheet('cards', 'images/cards.png', options.cardSheetWidth, options.cardSheetHeight);
-        game.load.image('cardback', 'images/cardback.png', options.cardSheetWidth, options.cardSheetHeight);
-        game.load.spritesheet('end-turn', 'images/end-turn-button.png', 188, 46);
+        game.load.image('table', 'sprites/felt-background.png');
+        game.load.spritesheet('cards', 'sprites/cards.png', options.cardSheetWidth, options.cardSheetHeight);
+        game.load.image('cardback', 'sprites/cardback.png', options.cardSheetWidth, options.cardSheetHeight);
+        game.load.spritesheet('end-turn', 'sprites/end-turn-button.png', 188, 46);
         game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         game.scale.pageAlignHorizontally = true;
         game.scale.pageAlignVertically = true;
@@ -131,7 +131,6 @@ playGame.prototype = {
                 this.deckSprites.x_offset += dx;
                 this.deckSprites.y_offset += dy;
             }
-
         }
         // toggle turn settings
         this.turnText.setText(getTurnText());
