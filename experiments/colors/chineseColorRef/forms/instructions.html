@@ -12,7 +12,7 @@
   <title>实验</title>
 
   <!-- Bootstrap core CSS -->
-  <link href="../../lib/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../../../lib/css/bootstrap.min.css" rel="stylesheet">
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 
@@ -196,11 +196,11 @@
         var assignmentId = urlParams.assignmentId;
         var hitId = urlParams.hitId;
         var turkSubmitTo = urlParams.turkSubmitTo;
-        location.replace("https://csli-games.herokuapp.com/colors/chineseColorRef/forms/pass.html?workerId=" + workerId
+        location.replace("/colors/chineseColorRef/forms/pass.html?workerId=" + workerId
           + "&assignmentId=" + assignmentId
           + "&hitId=" + hitId + "&turkSubmitTo=" + turkSubmitTo);
       } else if (counter == 3) {
-        location.replace("https://csli-games.herokuapp.com/colors/chineseColorRef/forms/fail.html");
+        location.replace("/colors/chineseColorRef/forms/fail.html");
       } else {
         $('.error').show()
         counter += 1;
@@ -214,7 +214,7 @@
     ================================================== -->
   <!-- Placed at the end of the document so the pages load faster -->
 
-  <script src="../../lib/js/bootstrap.min.js"></script>
+  <script src="../../../lib/js/bootstrap.min.js"></script>
 </body>
 
 </html>

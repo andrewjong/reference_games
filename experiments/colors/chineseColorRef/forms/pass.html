@@ -11,15 +11,15 @@
   <title>实验</title>
 
   <!-- Bootstrap core CSS -->
-  <link href="../../lib/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../../../lib/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap theme -->
-  <link href="../../lib/css/bootstrap-theme.min.css" rel="stylesheet">
+  <link href="../../../lib/css/bootstrap-theme.min.css" rel="stylesheet">
 
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-  <script src="../../lib/js/bootstrap.min.js"></script>
+  <script src="../../../lib/js/bootstrap.min.js"></script>
 
-  <script type="text/javascript" src="../../lib/js/mmturkey.js"></script>
+  <script type="text/javascript" src="../../../lib/js/mmturkey.js"></script>
 
   <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
   <!--[if lt IE 9]>
@@ -41,7 +41,7 @@
       <h1>祝贺！你通过了理解相关的考核。</h1>
     </div>
 
-    <div class="well" style="width:800px; margin 0 auto">
+    <div class="well" style="width:800px; margin: 0 auto">
       <p align="left">
         点击下面来开始游戏！
       </p>
@@ -79,7 +79,7 @@
       var assignmentId = urlParams.assignmentId;
       var hitId = urlParams.hitId;
       var turkSubmitTo = urlParams.turkSubmitTo;
-      window.open("https://csli-games.herokuapp.com/colors/chineseColorRef/index.html?workerId=" + workerId
+      window.open("/colors/chineseColorRef/index.html?workerId=" + workerId
         + "&assignmentId=" + assignmentId
         + "&hitId=" + hitId + "&turkSubmitTo=" + turkSubmitTo,
         '_blank');

@@ -24,7 +24,7 @@ if(argv.gameport) {
   console.log('using port ' + gameport);
 } else {
   gameport = process.env.PORT || 8888;
-  console.log('no gameport specified: using ${gameport}\nUse the --gameport flag to change');
+  console.log('no gameport specified: using ' + gameport + '\nUse the --gameport flag to change');
 }
 
 if(argv.expname) {
@@ -57,6 +57,7 @@ console.log('\t :: Express :: Listening on port ' + gameport );
 
 app.get( '/*' , function( req, res ) {
   var id = req.query.workerId;  
+  console.log("ID=" + id);
   if(!id) {
     // If no worker id supplied (e.g. for demo), allow to continue
     return utils.serveFile(req, res);

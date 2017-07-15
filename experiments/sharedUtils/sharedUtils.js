@@ -15,12 +15,12 @@ var serveFile = function(req, res) {
 
 var handleDuplicate = function(req, res) {
   console.log("duplicate id: blocking request");
-  return res.redirect('https://rxdhawkins.me:8888/sharedUtils/duplicate.html');
+  return res.redirect('sharedUtils/duplicate.html');
 };
 
 var handleInvalidID = function(req, res) {
   console.log("invalid id: blocking request");
-  return res.redirect('https://rxdhawkins.me:8888/sharedUtils/invalid.html');
+  return res.redirect('/colors/chineseColorRef/forms/invalid.html');
 };
 
 var checkPreviousParticipant = function(workerId, callback) {
