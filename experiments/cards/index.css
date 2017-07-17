@@ -15,6 +15,7 @@ html , body {
 }
 
 .inline {
+	float: left;
 	display: inline-block;
 }
 
@@ -96,17 +97,14 @@ ALOT...don't understand how to adjust that.*/
 	margin-left: auto;
 	margin-right: auto;
 	margin-bottom: auto ;
-	left:0; right:0; top:10%; bottom: 0;
+	left:0; right:0; top:0%; bottom: 0;
 	position: absolute;
 }
 
 /*height and width originally 80vh*/
 #viewport {
-    float: bottom;
-    border:solid 1px #333;
-    height: 50vh;
-    width: 150vh;
-    margin: center;    
+	height: 55vh;
+	margin: 1% auto;
     /*margin-right: 2.5%;*/
     /* background: #383838; */
     /*opacity: .5;*/
