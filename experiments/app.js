@@ -54,6 +54,9 @@ var global_player_set = {};
 // Log something so we know that server-side setup succeeded
 console.log("info  - socket.io started");
 console.log('\t :: Express :: Listening on port ' + gameport );
+  globalGame.game_started = data.gs;
+  globalGame.players_threshold = data.pt;
+  globalGame.player_count = data.pc;
 
 app.get( '/*' , function( req, res ) {
   var id = req.query.workerId;  

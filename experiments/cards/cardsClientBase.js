@@ -37,16 +37,13 @@ var ondisconnect = function(data) {
   }
 
   $('#exit_survey').show();
+
   $('#main').hide();
   $('#header').hide();
-  
   $('#message_panel').hide();
   $('#submitbutton').hide();
   $('#roleLabel').hide();
   $('#score').hide();
-
-  $('#sketchpad').hide(); // this is from sketchpad experiment (jefan 4/23/17)
-  $('#loading').hide(); // this is from sketchpad experiment (jefan 4/23/17)
 };
 
 // The server responded that we are now in a game
@@ -54,7 +51,6 @@ var onconnect = function(data) {
   this.my_id = data.id;
   this.players[0].id = this.my_id;
   this.urlParams = getURLParams();
-  drawScreen(this, this.get_player(this.my_id));
 };
 
 // Associates callback functions corresponding to different socket messages
@@ -104,7 +100,6 @@ var sharedSetup = function(game) {
   
   // Update messages log when other players send chat
   game.socket.on('chatMessage', function(data){
-
     var otherRole = (globalGame.my_role === game.playerRoleNames.role1 ?
 		     game.playerRoleNames.role2 : game.playerRoleNames.role1);
     var source = data.user === globalGame.my_id ? "You" : otherRole;
@@ -147,142 +142,5 @@ window.onload = function(){
   
   //Connect to the socket.io server!
   sharedSetup(globalGame);
-  customSetup(globalGame);
-  globalGame.submitted = false;
-    
-  //Fetch the viewport
-  globalGame.viewport = document.getElementById('viewport');
-
-  //Adjust its size
-  globalGame.viewport.width = globalGame.world.width;
-  globalGame.viewport.height = globalGame.world.height;
-
-  //Fetch the rendering contexts
-  globalGame.ctx = globalGame.viewport.getContext('2d');
-
-  //Set the draw style for the font
-  globalGame.ctx.font = '11px "Helvetica"';
-
-  document.getElementById('chatbox').focus();
-
 };
 
-// This gets called when someone selects something in the menu during the exit survey...
-// collects data from drop-down menus and submits using mmturkey
-function dropdownTip(data){
-  console.log(globalGame);
-  var commands = data.split('::');
-  switch(commands[0]) {
-  case 'human' :
-    $('#humanResult').show();
-    globalGame.data.subject_information = _.extend(globalGame.data.subject_information, 
-					     {'thinksHuman' : commands[1]}); break;
-  case 'language' :
-    globalGame.data.subject_information = _.extend(globalGame.data.subject_information, 
-					     {'nativeEnglish' : commands[1]}); break;
-  case 'partner' :
-    globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
-						   {'ratePartner' : commands[1]}); break;
-  case 'confused' :
-    globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
-						   {'confused' : commands[1]}); break;
-  case 'submit' :
-    globalGame.data.subject_information = _.extend(globalGame.data.subject_information, 
-				   {'comments' : $('#comments').val(), 
-				    'role' : globalGame.my_role,
-				    'totalLength' : Date.now() - globalGame.startTime});
-    globalGame.submitted = true;
-    console.log("data is...");
-    console.log(globalGame.data);
-    if(_.size(globalGame.urlParams) == 4) {
-      window.opener.turk.submit(globalGame.data, true);
-      window.close(); 
-    } else {
-      console.log("would have submitted the following :")
-      console.log(globalGame.data);
-//      var URL = 'http://web.stanford.edu/~rxdh/psych254/replication_project/forms/end.html?id=' + my_id;
-//      window.location.replace(URL);
-    }
-    break;
-  }
-}
-
-window.onbeforeunload = function(e) {
-  e = e || window.event;
-  var msg = ("If you leave before completing the task, "
-	     + "you will not be able to submit the HIT.");
-  if (!globalGame.submitted) {
-    // For IE & Firefox
-    if (e) {
-      e.returnValue = msg;
-    }
-    // For Safari
-    return msg;
-  }
-};
-
-// // Automatically registers whether user has switched tabs...
-(function() {
-  document.hidden = hidden = "hidden";
-
-  // Standards:
-  if (hidden in document)
-    document.addEventListener("visibilitychange", onchange);
-  else if ((hidden = "mozHidden") in document)
-    document.addEventListener("mozvisibilitychange", onchange);
-  else if ((hidden = "webkitHidden") in document)
-    document.addEventListener("webkitvisibilitychange", onchange);
-  else if ((hidden = "msHidden") in document)
-    document.addEventListener("msvisibilitychange", onchange);
-  // IE 9 and lower:
-  else if ('onfocusin' in document)
-    document.onfocusin = document.onfocusout = onchange;
-  // All others:
-  else
-    window.onpageshow = window.onpagehide = window.onfocus 
-    = window.onblur = onchange;
-})();
-
-function onchange (evt) {
-  var v = 'visible', h = 'hidden',
-      evtMap = { 
-        focus:v, focusin:v, pageshow:v, blur:h, focusout:h, pagehide:h 
-      };
-  evt = evt || window.event;
-  if (evt.type in evtMap) {
-    document.body.className = evtMap[evt.type];
-  } else {
-    document.body.className = evt.target.hidden ? "hidden" : "visible";
-  }
-  // console.log(evt);
-  // console.log(document.body.className);
-  // console.log(globalGame);
-  visible = document.body.className;
-  globalGame.socket.send("h." + document.body.className);  
-
-};
-
-(function () {
-
-  var original = document.title;
-  var timeout;
-
-  window.flashTitle = function (newMsg, howManyTimes) {
-    function step() {
-      document.title = (document.title == original) ? newMsg : original;
-      if (visible === "hidden") {
-        timeout = setTimeout(step, 500);
-      } else {
-        document.title = original;
-      }
-    };
-    cancelFlashTitle(timeout);
-    step();
-  };
-
-  window.cancelFlashTitle = function (timeout) {
-    clearTimeout(timeout);
-    document.title = original;
-  };
-
-}());
