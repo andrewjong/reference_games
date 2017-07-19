@@ -6,6 +6,8 @@ var client_onserverupdate_received = function (data) {
   // Update client versions of variables with data received from
   // server_send_update function in game.core.js
   // data refers to server information
+
+  // offset each index of the player ids by 1
   if (data.players) {
     _.map(_.zip(data.players, globalGame.players), function (z) {
       z[1].id = z[0].id;
