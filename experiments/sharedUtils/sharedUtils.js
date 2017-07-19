@@ -4,79 +4,79 @@ var converter = require("color-convert");
 var DeltaE = require('../node_modules/delta-e');
 var sendPostRequest = require('request').post;
 
-var serveFile = function(req, res) {
+var serveFile = function (req, res) {
   var fileName = req.params[0];
   console.log('\t :: Express :: file requested: ' + fileName);
-  if(req.query.workerId) {
+  if (req.query.workerId) {
     console.log(" by workerID " + req.query.workerId);
   }
-  return res.sendFile(fileName, {root: __base}); 
+  return res.sendFile(fileName, { root: __base });
 };
 
-var handleDuplicate = function(req, res) {
+var handleDuplicate = function (req, res) {
   console.log("duplicate id: blocking request");
   return res.redirect('sharedUtils/duplicate.html');
 };
 
-var handleInvalidID = function(req, res) {
+var handleInvalidID = function (req, res) {
   console.log("invalid id: blocking request");
   return res.redirect('/colors/chineseColorRef/forms/invalid.html');
 };
 
-var checkPreviousParticipant = function(workerId, callback) {
+var checkPreviousParticipant = function (workerId, callback) {
 
-  var p = {'workerId': workerId};
+  var p = { 'workerId': workerId };
   var postData = {
     dbname: '3dObjects',
     colname: 'sketchpad_repeated',
     query: p,
-    projection: {'_id': 1}
+    projection: { '_id': 1 }
   };
   sendPostRequest(
     'http://localhost:4000/db/exists',
-    {json: postData},
+    { json: postData },
     (error, res, body) => {
       if (!error && res.statusCode === 200) {
-	console.log("success! Received data " + JSON.stringify(body));
-	callback(body);
+        console.log("success! Received data " + JSON.stringify(body));
+        callback(body);
       } else {
-	console.log(`error checking participant in store: ${error} ${body}`);
+        console.log(`error checking participant in store: ${error} ${body}`);
       }
     }
   );
 };
 
-var UUID = function() {
+var UUID = function () {
   var baseName = (Math.floor(Math.random() * 10) + '' +
-        Math.floor(Math.random() * 10) + '' +
-        Math.floor(Math.random() * 10) + '' +
-        Math.floor(Math.random() * 10));
+    Math.floor(Math.random() * 10) + '' +
+    Math.floor(Math.random() * 10) + '' +
+    Math.floor(Math.random() * 10));
   var template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
-  var id = baseName + '-' + template.replace(/[xy]/g, function(c) {
-    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+  var id = baseName + '-' + template.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
   return id;
 };
 
-var getLongFormTime = function() {
+var getLongFormTime = function () {
   var d = new Date();
   var fullTime = (d.getFullYear() + '-' + d.getMonth() + 1 + '-' +
-        d.getDate() + '-' + d.getHours() + '-' + d.getMinutes() + '-' +
-        d.getSeconds() + '-' + d.getMilliseconds());
+    d.getDate() + '-' + d.getHours() + '-' + d.getMinutes() + '-' +
+    d.getSeconds() + '-' + d.getMilliseconds());
   return fullTime;
 };
 
-var establishStream = function(game, streamName, outputFileName, header) {
+var establishStream = function (game, streamName, outputFileName, header) {
   var streamLoc = "../data/" + game.expName + "/" + streamName + "/" + outputFileName;
-  fs.writeFile(streamLoc, header, function (err) {if(err) throw err;});
-  var stream = fs.createWriteStream(streamLoc, {'flags' : 'a'});
+  fs.writeFile(streamLoc, header, function (err) { if (err) throw err; });
+  var stream = fs.createWriteStream(streamLoc, { 'flags': 'a' });
   game.streams[streamName] = stream;
 };
 
-var getObjectLocHeader = function() {
-  return _.map(_.range(1,5), function(i) {
-    return _.map(['Name', 'SenderLoc', 'ReceiverLoc'], function(v) {
+var getObjectLocHeader = function () {
+  return _.map(_.range(1, 5), function (i) {
+    return _.map(['Name', 'SenderLoc', 'ReceiverLoc'], function (v) {
       return 'object' + i + v;
     }).join('\t');
   }).join('\t');
@@ -89,16 +89,16 @@ const flatten = arr => arr.reduce(
   []
 );
 
-var getObjectLocHeaderArray = function() {
-  arr =  _.map(_.range(1,5), function(i) {
-    return _.map(['Name', 'SenderLoc', 'ReceiverLoc'], function(v) {
+var getObjectLocHeaderArray = function () {
+  arr = _.map(_.range(1, 5), function (i) {
+    return _.map(['Name', 'SenderLoc', 'ReceiverLoc'], function (v) {
       return 'object' + i + v;
     });
   });
   return flatten(arr);
 };
 
-var hsl2lab = function(hsl) {
+var hsl2lab = function (hsl) {
   return converter.hsl.lab(hsl);
 };
 
@@ -110,15 +110,15 @@ function fillArray(value, len) {
   return arr;
 }
 
-var checkInBounds = function(object, options) {
+var checkInBounds = function (object, options) {
   return (object.x + (object.w || object.d) < options.width) &&
-         (object.y + (object.h || object.d) < options.height);
+    (object.y + (object.h || object.d) < options.height);
 };
 
 var randomColor = function (options) {
   var h = ~~(Math.random() * 360);
   var s = ~~(Math.random() * 100);
-  var l = _.has(options, 'fixedL') ? 50 : ~~(Math.random() * 100) ;
+  var l = _.has(options, 'fixedL') ? 50 : ~~(Math.random() * 100);
   return [h, s, l];
 };
 
@@ -128,7 +128,7 @@ var randomSpline = function () {
 };
 
 // returns an object with x, y, w, h fields
-var randomRect = function(options) {
+var randomRect = function (options) {
   if (_.isEmpty(options)) {
     throw "Error, must provide options to randomRect!";
   }
@@ -138,7 +138,7 @@ var randomRect = function(options) {
 
   var rect = randomPoint(options);
   rect.h = _.sample(wRange),
-  rect.w = _.sample(hRange)
+    rect.w = _.sample(hRange)
 
   if (!checkInBounds(rect, options)) {
     return this.randomRect(options);
@@ -147,7 +147,7 @@ var randomRect = function(options) {
   return rect;
 }
 
-var randomCircle = function(options) {
+var randomCircle = function (options) {
   if (_.isEmpty(options)) {
     throw "Error, must provide options to randomCircle!";
   }
@@ -166,7 +166,7 @@ var randomCircle = function(options) {
   return circle;
 }
 
-var randomPoint = function(options) {
+var randomPoint = function (options) {
 
   var xRange = _.range(options.xMin, options.xMax);
   var yRange = _.range(options.yMin, options.yMax);
@@ -177,7 +177,7 @@ var randomPoint = function(options) {
   }
 }
 
-var colorDiff = function(color1, color2) {
+var colorDiff = function (color1, color2) {
   var subLAB = _.object(['L', 'A', 'B'], hsl2lab(color1));
   var tarLAB = _.object(['L', 'A', 'B'], hsl2lab(color2));
   var diff = Math.round(DeltaE.getDeltaE00(subLAB, tarLAB));
@@ -187,43 +187,43 @@ var colorDiff = function(color1, color2) {
 
 // --- below added by jefan March 2017
 // extracts all the values of the javascript dictionary by key
-var vec = function extractEntries(dict,key) {
-    vec = []
-    for (i=0; i<dict.length; i++) {
-        vec.push(dict[i][key]);    
-    } 
-    return vec;
+var vec = function extractEntries(dict, key) {
+  vec = []
+  for (i = 0; i < dict.length; i++) {
+    vec.push(dict[i][key]);
+  }
+  return vec;
 }
 
 // finds matches to specific value given key
-var vec = function matchingValue(dict,key,value) {
+var vec = function matchingValue(dict, key, value) {
   vec = []
-  for (i=0; i<dict.length; i++) {
-    if (dict[i][key]==value) {      
-        vec.push(dict[i]);    
+  for (i = 0; i < dict.length; i++) {
+    if (dict[i][key] == value) {
+      vec.push(dict[i]);
     }
-  } 
+  }
   return vec;
 }
 
 // add entry to dictionary object
-var dict = function addEntry(dict,key,value) {
-  for (i=0; i<dict.length; i++) {
-      dict[i][key] = value;   
-  } 
-  return dict;  
+var dict = function addEntry(dict, key, value) {
+  for (i = 0; i < dict.length; i++) {
+    dict[i][key] = value;
+  }
+  return dict;
 }
 
 // make integer series from lb (lower) to ub (upper)
-var series = function makeSeries(lb,ub) {
-    series = new Array();
-    if (ub<=lb) {
-      throw new Error("Upper bound should be greater than lower bound!");
-    }
-   for (var i = lb; i<(ub+1); i++) {
-      series = series.concat(i);
-   }
-   return series;
+var series = function makeSeries(lb, ub) {
+  series = new Array();
+  if (ub <= lb) {
+    throw new Error("Upper bound should be greater than lower bound!");
+  }
+  for (var i = lb; i < (ub + 1); i++) {
+    series = series.concat(i);
+  }
+  return series;
 }
 
 // --- above added by jefan March 2017
