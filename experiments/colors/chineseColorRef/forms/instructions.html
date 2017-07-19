@@ -121,9 +121,9 @@
       </br>
       玩家可以用中文以外的语言进行沟通。
       </br>
-      <input type="radio" name="mgoal" value="no"> 对
+      <input type="radio" name="other-lang" value="no"> 对
       </br>
-      <input type="radio" name="mgoal" value="yes"> 错
+      <input type="radio" name="other-lang" value="yes"> 错
       </br>
 
       </br>
@@ -185,13 +185,14 @@
     document.getElementById("quiz_submit").onclick = function () {
       var ans1 = $('input[name="dgoal"]:checked').val();
       var ans2 = $('input[name="mgoal"]:checked').val();
-      var ans3 = $('input[name="round"]:checked').val();
-      var ans4 = $('input[name="message"]:checked').val();
-      var ans5 = $('input[name="comp"]:checked').val();
-      var ans6 = $('input[name="location"]:checked').val();
+      var ans3 = $('input[name="other-lang"]:checked').val();
+      var ans4 = $('input[name="round"]:checked').val();
+      var ans5 = $('input[name="message"]:checked').val();
+      var ans6 = $('input[name="comp"]:checked').val();
+      var ans7 = $('input[name="location"]:checked').val();
 
       if (ans1 == "yes" && ans2 == "yes" && ans3 == "yes" &&
-        ans4 == "yes" && ans5 == "yes" && ans6 == "yes") {
+        ans4 == "yes" && ans5 == "yes" && ans6 == "yes" && ans7 == "yes") {
         var workerId = urlParams.workerId;
         var assignmentId = urlParams.assignmentId;
         var hitId = urlParams.hitId;
