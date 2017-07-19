@@ -57,16 +57,20 @@ console.log('\t :: Express :: Listening on port ' + gameport );
 
 app.get( '/*' , function( req, res ) {
   var id = req.query.workerId;  
-  console.log("ID=" + id);
+  console.log("workerId=" + id);
   if(!id) {
     // If no worker id supplied (e.g. for demo), allow to continue
+    console.log("No workerId supplied, allowing continue for demo")
     return utils.serveFile(req, res);
   } else if(!valid_id(id)) {
     // If invalid id, block them    
+    console.log("ID marked as invalid");
     return utils.handleInvalidID(req, res);
   } else {
     // If the database shows they've already participated, block them
+    console.log("Checking previous participant...")
     utils.checkPreviousParticipant(id, (exists) => {
+      console.log("Blocking previous participant");
       return exists ? utils.handleDuplicate(req, res) : utils.serveFile(req, res);
     });
   }
@@ -76,25 +80,33 @@ app.get( '/*' , function( req, res ) {
 // to see if the client supplied a id. If so, we distinguish them by
 // that, otherwise we assign them one at random
 io.on('connection', function (client) {
+  console.log("In io.on('connection')")
   // Recover query string information and set condition
   var hs = client.request;
   var query = require('url').parse(hs.headers.referer, true).query;
   var id;
+  // Check that connection isn't from existing player
   if( !(query.workerId && query.workerId in global_player_set) ) {
     if(query.workerId) {
       // useid from query string if exists
       global_player_set[query.workerId] = true;
       id = query.workerId; 
+      console.log("workerId found, setting var id");
     } else {
       id = utils.UUID();
+      console.log("workerId not found, generating UUID");
     }
     if(valid_id(id)) {
       initialize(query, client, id);
+      console.log("valid_id(" + id + ") true, initializing")
+    } else {
+      console.log("valid_id(" + id + ") not true, not initializaing");
     }
   }
 });
 
 var valid_id = function(id) {
+  console.log("Checking valid_id(" + id + ")");
   return (id.length <= 15 && id.length >= 12) || id.length == 41;
 };
 
