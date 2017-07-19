@@ -34,7 +34,7 @@ var client_onMessage = function (data) {
   switch (command) {
     case 's': //server message
       switch (subcommand) {
-        case 'end':
+        case 'end_turn':
           // Redirect to exit survey
           ondisconnect();
           console.log("received end message...");
