@@ -68,37 +68,34 @@ var drawScreen = function(game, player) {
 };
 
 function drawSketcherFeedback(globalGame, scoreDiff, clickedObjName) {
-  // visual feedback
-  highlightCell(globalGame, 'black', function(x) {
-    return x.subID == clickedObjName;
-  });
   // textual feedback
-  if (scoreDiff==1) {
-    setTimeout(function(){
+  if (scoreDiff > 0) {
+    // visual feedback
+    highlightCell(globalGame, '#19A319', x => x.name == clickedObjName);
+    setTimeout(() => {
       $('#feedback').html('Great job! Your partner correctly identified the target.');
     }, globalGame.feedbackDelay);
   } else {
-    setTimeout(function(){
-      $('#feedback').html('Too bad... Your partner thought the target was the object outlined in ' + 'black'.bold() + '.');
+    highlightCell(globalGame, '#C83232', x => x.name == clickedObjName);
+    setTimeout(() => {
+      $('#feedback').html('Too bad... Your partner thought the target was the object outlined in ' + 'red'.fontcolor('#C83232').bold() + '.');
     }, globalGame.feedbackDelay);
   }
 };
 
 function drawViewerFeedback(globalGame, scoreDiff, clickedObjName) {
   // viewer feedback
-  highlightCell(globalGame, 'black', function(x) {
-    return x.subID == clickedObjName;
-  });
-  highlightCell(globalGame, 'green', function(x) {
-    return x.targetStatus == 'target';
-  });
-  if (scoreDiff==1) {
-    setTimeout(function(){
+  highlightCell(globalGame, '#000000', x => x.name == clickedObjName);
+  if (scoreDiff > 0) {
+    highlightCell(globalGame, '#19A319', x => x.targetStatus == 'target');
+    setTimeout(() => {
       $('#feedback').html('Great job! You correctly identified the target!');
     }, globalGame.feedbackDelay);
   } else {
-    setTimeout(function(){
-      $('#feedback').html('Sorry... The target was the object outlined in ' + 'green'.fontcolor("#1aff1a").bold() + '.');
+    highlightCell(globalGame, '#C83232', x => x.targetStatus == 'target');
+    setTimeout(() => {
+      $('#feedback').html('Sorry... The target was the object outlined in '
+			  + 'red'.fontcolor("#C83232").bold() + '.');
     }, globalGame.feedbackDelay);
   }
 };
@@ -121,8 +118,15 @@ var highlightCell = function(game, color, condition) {
   }
 };
 
-function setupLabels(game) {
+function disableLabels(game) {
+  interact('p').unset();
+  interact('#chatarea').unset();
+}
+
+function enableLabels(game) {
   var labels = document.querySelector('#message_panel');
+  var startPos = null;
+  var dropCenter = null;
   interact('p', {context: labels})
     .draggable({
       restrict: {
@@ -130,18 +134,59 @@ function setupLabels(game) {
       	endOnly: true,
       	elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
       },
+      onstart: function(event) {
+      	var rect = interact.getElementRect(event.target);
+
+      	// record center point when starting the very first a drag
+      	startPos = {
+          x: rect.left + rect.width  / 2,
+          y: rect.top  + rect.height / 2
+      	}
+
+      	event.interactable.draggable({
+          snap: {
+            targets: [startPos]
+          }
+      	});
+      },
+
+      snap: {
+        targets: [startPos],
+        range: Infinity,
+        relativePoints: [ { x: 0.5, y: 0.5 } ],
+        endOnly: true
+      },
       onmove: dragMoveListener
     });
+  
   interact('#chatarea')
     .dropzone({
       accept: '.draggable',
-      ondrop: function (event) {
-	$('#chatarea').css('background-color', '#29e');
-	game.socket.send('drop.' + event.relatedTarget);
+      overlap: .5,
+      ondragenter: function (event) {
+	var draggableElement = event.relatedTarget,
+            dropzoneElement  = event.target,
+            dropRect         = interact.getElementRect(dropzoneElement);
+	
+        dropCenter = {
+          x: dropRect.left + dropRect.width  / 2,
+          y: dropRect.top  + dropRect.height / 2
+        };
+	
+        event.draggable.draggable({
+          snap: {
+            targets: [dropCenter]
+          }
+        });
+      },
+      ondrop: function(event) {
+	$('#chatarea').css('background-color', '#32CD32');
+	var timeElapsed = new Date() - game.roundStartTime;
+	game.socket.send('drop.' + event.relatedTarget.innerHTML + '.' + timeElapsed);
 	interact('p', {context: labels}).draggable(false);
       }
     });
-
+  
 };
 
 // This is a helper function to write a text string onto the HTML5 canvas.

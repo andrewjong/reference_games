@@ -35,8 +35,6 @@ var onMessage = function(client,message) {
   switch(message_type) {
     
   case 'clickedObj' :
-    writeData(client, "clickedObj", message_parts);
-    console.log('wrote data' + message_parts)  
     others[0].player.instance.send("s.feedback." + message_parts[1]); 
     target.instance.send("s.feedback." + message_parts[1]);
     
@@ -57,90 +55,90 @@ var onMessage = function(client,message) {
   
   case 'chatMessage' :
     if(client.game.player_count == 2 && !gc.paused) {
-      writeData(client, "message", message_parts);
       // Update others
       var msg = message_parts[1].replace(/~~~/g,'.');
       _.map(all, function(p){
-  p.player.instance.emit( 'chatMessage', {user: client.userid, msg: msg});});
+	p.player.instance.emit( 'chatMessage', {user: client.userid, msg: msg});});
     }
     break;
 
   case 'h' : // Receive message when browser focus shifts
     target.visible = message_parts[1];
     break;
-  
   }
 };
 
-function getIntendedTargetName(objects) {
-  return _.filter(objects, function(x){
-    return x.target_status == 'target';
-  })[0]['subordinate']; 
-}
-
-function getObjectLocs(objects) {
-  return _.flatten(_.map(objects, function(object) {
-    return [object.subordinate,
-	    object.speakerCoords.gridX,
-	    object.listenerCoords.gridX];
-  }));
-}
-
-var writeData = function(client, type, message_parts) {
-  var gc = client.game;
-  var trialNum = gc.state.roundNum + 1; 
-  var roundNum = gc.state.roundNum + 1;
-  var intendedName = getIntendedTargetName(gc.trialInfo.currStim);
-  var line = [gc.id, Date.now(), trialNum];
-  var id = gc.id;
-
-
-  switch(type) {
-  case "clickedObj" :
-    // parse the message
-    var clickedName = message_parts[1];
-    var correct = intendedName === clickedName ? 1 : 0;
-    var pose = parseInt(message_parts[2]);
-    var condition = message_parts[3];
-    var objectLocs = getObjectLocs(gc.trialInfo.currStim);
-    line = (line.concat([intendedName, clickedName, correct, pose, condition])
-	    .concat(objectLocs)).join('\t') + '\n';
-     console.log(line)
-    break;
- 
-  case "message" :
-    var msg = message_parts[1].replace(/~~~/g,'.');
-    console.log(client.role);
-    var line = (id + '\t' + Date.now() + '\t' + roundNum + '\t' + client.role + '\t' + msg + '\n');
-    console.log("message:" + line);
-    break;
+/*
+  Associates events in onMessage with callback returning json to be saved
+  {
+    <eventName>: (client, message_parts) => {<datajson>}
   }
-  gc.streams[type].write(line, function (err) {if(err) throw err;});
+  Note: If no function provided for an event, no data will be written
+*/
+var dataOutput = function() {
+  function getIntendedTargetName(objects) {
+    return _.filter(objects, o => o.target_status === 'target')[0]['subordinate'];
+  }
 
-};
+  function getObjectLocs(objects) {
+    return _.flatten(_.map(objects, o => {
+      return [o.subordinate, o.speakerCoords.gridX, o.listenerCoords.gridX];
+    }));
+  }
 
-var startGame = function(game, player) {
-  // Establish write streams
-  var startTime = utils.getLongFormTime();
-  var dataFileName = startTime + "_" + game.id + ".csv";
-  var baseCols = ["gameid","time","trialNum"].join('\t');
-  var objectLocHeader = utils.getObjectLocHeader();
-  var clickedObjHeader = [baseCols, "intendedTarget","clickedObject", 
-			  "outcome", "pose", "condition", objectLocHeader, "\n"].join('\t');
-  var messageHeader = [baseCols, "sender","contents\n"].join('\t');
- utils.establishStream(game, "message", dataFileName, messageHeader);
-  utils.establishStream(game, "clickedObj", dataFileName, clickedObjHeader);
+  function getObjectLocHeaderArray() {
+    return _.flatten(_.map(_.range(1,5), i => {
+      return _.map(['Name', 'SketcherLoc', 'ViewerLoc'], v => 'object' + i + v);
+    }));
+  };
 
-  game.newRound();
-};
+  function commonOutput (client, message_data) {
+    return {
+      expid: client.game.expid,
+      gameid: client.game.id,
+      time: Date.now(),
+      trialNum : client.game.state.roundNum + 1,
+      workerId: client.workerid,
+      assignmentId: client.assignmentid
+    };
+  };
+
+  var clickedObjOutput = function(client, message_data) {
+    var objects = client.game.trialInfo.currStim;
+    var intendedName = getIntendedTargetName(objects);
+    var objLocations = _.zipObject(getObjectLocHeaderArray(), getObjectLocs(objects));
+    return _.extend(
+      commonOutput(client, message_data),
+      objLocations, {
+	intendedName,
+	clickedName: message_data[1],
+	correct: intendedName === message_data[1],
+	pose: parseInt(message_data[2]),
+	condition : message_data[3]
+      }
+    );
+  };
+
+  var chatMessageOutput = function(client, message_data) {
+    var intendedName = getIntendedTargetName(client.game.trialInfo.currStim);
+    return _.extend(
+      commonOutput(client, message_data), {
+	intendedName,
+	role: client.role,
+	text: message_data[1].replace(/~~~/g, '.'),
+	reactionTime: message_data[2]
+      }
+    );
+  };
+
+  return {
+    'chatMessage' : chatMessageOutput,
+    'clickedObj' : clickedObjOutput
+  };
+}();
 
 var setCustomEvents = function(socket) {
   //empty
 };
 
-module.exports = {
-  setCustomEvents : setCustomEvents,
-  writeData : writeData,
-  startGame : startGame,
-  onMessage : onMessage
-};
+module.exports = {dataOutput, setCustomEvents, onMessage};

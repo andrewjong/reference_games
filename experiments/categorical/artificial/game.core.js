@@ -30,6 +30,17 @@ var game_core = function(options){
   // Store a flag if we are the server instance
   this.server = options.server ;
 
+  // Some config settings
+  this.email = 'rxdh@stanford.edu';
+  this.projectName = 'basicLevel';
+  this.experimentName = 'artificialLanguage';
+  this.iterationName = 'pilot0';
+  this.anonymizeCSV = true;
+  this.bonusAmt = 3; // in cents
+  
+  // save data to the following locations (allowed: 'csv', 'mongo')
+  this.dataStore = ['csv', 'mongo'];
+
   // How many players in the game?
   this.players_threshold = 2;
   this.playerRoleNames = {
@@ -46,24 +57,24 @@ var game_core = function(options){
     height: 600 * 2,
     width: 600 * 2
   };
+  
   // Which round are we on (initialize at -1 so that first round is 0-indexed)
   this.roundNum = -1;
 
   // How many rounds do we want people to complete?
-  this.numRounds = 60;
+  this.numRounds = 1;
   this.feedbackDelay = 300;
+
   // This will be populated with the tangram set
-  this.trialInfo = {};
+  this.trialInfo = {roles: _.values(this.playerRoleNames)};
 
   if(this.server) {
-    // If we're initializing the server game copy, pre-create the list of trials
-    // we'll use, make a player object, and tell the player who they are
     this.id = options.id;
     this.expName = options.expName;
     this.player_count = options.player_count;
     this.objects = require('./objects.json');
     this.condition = _.sample(['over', 'under', 'basic', 'uniform']);
-    this.trialList = this.makeTrialList(this.condition);
+    this.trialList = this.makeTrialList();
     this.language = new ArtificialLanguage();
     this.data = {
       id : this.id,
@@ -103,8 +114,7 @@ var game_player = function( game_instance, player_instance) {
 // server side we set some classes to global types, so that
 // we can use them in other files (specifically, game.server.js)
 if('undefined' != typeof global) {
-  module.exports = global.game_core = game_core;
-  module.exports = global.game_player = game_player;
+  module.exports = {game_core, game_player};
 }
 
 // HELPER FUNCTIONS
@@ -128,24 +138,27 @@ game_core.prototype.get_active_players = function() {
   return _.without(noEmptiesList, null);
 };
 
-game_core.prototype.advanceRound = function(delay) {
+game_core.prototype.newRound = function(delay) {
   var players = this.get_active_players();
   var localThis = this;
   setTimeout(function() {
     // If you've reached the planned number of rounds, end the game
     if(localThis.roundNum == localThis.numRounds - 1) {
-      _.forEach(players, function(p){
-        p.player.instance.disconnect();
-      });
+      _.forEach(players, p => p.player.instance.emit( 'finishedGame' ));
     } else {
       // Tell players
-      _.forEach(players, function(p){
-        p.player.instance.emit( 'newRoundUpdate' );
-      });
+      _.forEach(players, p => p.player.instance.emit( 'newRoundUpdate'));
+
       // Otherwise, get the preset list of tangrams for the new round
       localThis.roundNum += 1;
-      localThis.trialInfo = {currStim: localThis.trialList[localThis.roundNum],
-			     labels: _.shuffle(localThis.language.vocab)};
+
+      localThis.trialInfo = {
+	currStim: localThis.trialList[localThis.roundNum],
+	currContextType: localThis.contextTypeList[localThis.roundNum],
+	labels: localThis.language.vocab,
+	roles: _.zipObject(_.map(localThis.players, p =>p.id),
+			   _.reverse(_.values(localThis.trialInfo.roles)))
+      };
       localThis.server_send_update();
     }
   }, delay);
@@ -162,12 +175,12 @@ game_core.prototype.coordExtension = function(obj, gridCell) {
 
 // Take condition as argument
 // construct context list w/ statistics of condition
-game_core.prototype.makeTrialList = function (condition) {
+game_core.prototype.makeTrialList = function () {
   var that = this;
   var trialList = [];
-  var contexts = this.sampleContextSequence(condition);
+  this.contextTypeList = this.sampleContextSequence();
   for (var i = 0; i < this.numRounds; i++) {
-    var world = this.sampleTrial(contexts[i]); // Sample a world state
+    var world = this.sampleTrial(this.contextTypeList[i]); // Sample a world state
     // construct trial list (in sets of complete rounds)
     trialList.push(_.map(world, function(obj) {
       var newObj = _.clone(obj);
@@ -183,18 +196,18 @@ game_core.prototype.makeTrialList = function (condition) {
   return(trialList);
 };
 
-game_core.prototype.sampleContextSequence = function(condition) {
+game_core.prototype.sampleContextSequence = function() {
   var designMatrix = _.mapValues({
     'uniform' : {'sub' : 1/3, 'super' : 1/3, 'basic' : 1/3},
     'over'    : {'sub' : 2/3, 'super' : 1/6, 'basic' : 1/6},
     'under'   : {'sub' : 1/6, 'super' : 2/3, 'basic' : 1/6},
     'basic'   : {'sub' : 1/6, 'super' : 1/6, 'basic' : 2/3}
   }, (obj, key) => {
-    return _.mapValues(obj, (innerVal, key) => {return innerVal * this.numRounds;});
+    return _.mapValues(obj, (innerVal, key) => parseInt(innerVal * this.numRounds));
   });
-  var seq = (Array(designMatrix[condition]['sub']).fill('sub')
-	     .concat(Array(designMatrix[condition]['basic']).fill('basic'))
-	     .concat(Array(designMatrix[condition]['super']).fill('super')));
+  var seq = (Array(designMatrix[this.condition]['sub']).fill('sub')
+	     .concat(Array(designMatrix[this.condition]['basic']).fill('basic'))
+	     .concat(Array(designMatrix[this.condition]['super']).fill('super')));
   return _.shuffle(seq);
 };
 
@@ -280,7 +293,8 @@ game_core.prototype.server_send_update = function(){
     dataObj  : this.data,
     roundNum : this.roundNum,
     trialInfo: this.trialInfo,
-    language: this.language
+    language: this.language,
+    allObjects: this.objects
   };
   _.extend(state, {players: player_packet});
   _.extend(state, {instructions: this.instructions});
@@ -292,8 +306,8 @@ game_core.prototype.server_send_update = function(){
 };
 
 var ArtificialLanguage = function() {
-  this.vocabSize = 9;
-  this.wordLength = 6;
+  this.vocabSize = 16;
+  this.wordLength = 4;
   this.possibleVowels = ['a','e','i','o','u'];
   this.possibleConsonants = ['g','h','k','l','m','n','p','w'];
   this.vocab = this.sampleVocab();
