@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "test": "jest",
-    "start" : "node app.js --expname colors/colorReference"
+    "start" : "node app.js --expname colors/chineseColorRef"
   },
   "dependencies": {
     "body-parser": "^1.17.2",
