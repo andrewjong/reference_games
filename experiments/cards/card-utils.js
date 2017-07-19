@@ -7,7 +7,7 @@
  */
 function makeCard(cardIndex, x, y, game, obj) {
   let card = game.add.sprite(x, y, 'cards', obj.deck[cardIndex]);
-  card.scale.set(options.cardScale);
+  card.scale.set(gOptions.cardScale);
   card.anchor = new Phaser.Point(0.5,0.5);
   fadeIn(card, 800);
 
@@ -29,20 +29,16 @@ function makeCard(cardIndex, x, y, game, obj) {
  * @param {boolean} thisPlayer whether or not the hand is meant for this player
  */
 function makeHand(startIndex, thisPlayer, game, obj) {
-    if (thisPlayer) {
-      let hand = [0, 1, 2].map(i =>
-          makeCard(startIndex + i, game.world.centerX + (i - 1) * cardGap, game.world.centerY + 200, game, obj));
-      return hand;
-    }
-    else {
-      let hand = [0, 1, 2].map(function(i) {
-          let c = game.add.sprite(game.world.centerX + (i - 1) * cardGap, game.world.centerY - 200, 'cardback');
-          c.scale.set(options.cardScale);
-          c.anchor = new Phaser.Point(0.5,0.5);
-          return c;
-      });
-      return hand;
-    }
+let hand;
+if (thisPlayer) {
+    hand = [0, 1, 2].map(i =>
+        makeCard(startIndex + i, game.world.centerX + (i - 1) * gOptions.cardGap, game.world.centerY + 200, game, obj));
+  }
+  else {
+    hand = [0, 1, 2].map(i =>
+        makeCard(startIndex + i, game.world.centerX + (i - 1) * gOptions.cardGap, game.world.centerY - 200, game, obj));
+  }
+  return hand;
 }
 
 /**
@@ -55,11 +51,11 @@ function drawCards(startIndex, numCards, game, obj) {
   console.log(`startIndex = ${startIndex}`);
   let table = [];
   [0, 1, 2, 3].forEach(function (i) {
-    let x = game.world.centerX + (i - 1.5) * cardGap;
+    let x = game.world.centerX + (i - 1.5) * gOptions.cardGap;
     let y = game.world.centerY;
 
     let b = game.add.sprite(140, game.world.centerY, 'cardback');
-    b.scale.set(options.cardScale);
+    b.scale.set(gOptions.cardScale);
     b.anchor = new Phaser.Point(0.5,0.5);
 
     moveTo(b, x, y, 1000/2, 1100/2, game, true, false);
@@ -109,7 +105,7 @@ function reshuffleAnimation(cards, numToAdd, game, obj) {
   cards.forEach(function (c) {
     fadeOut(c, 500);
     let back = game.add.sprite(c.x, c.y, 'cardback');
-    back.scale.set(options.cardScale);
+    back.scale.set(gOptions.cardScale);
     back.anchor = new Phaser.Point(0.5,0.5);
     fadeIn(back, 500);
     backs.push(back);
