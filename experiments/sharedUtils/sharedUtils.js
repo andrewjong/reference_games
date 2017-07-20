@@ -108,7 +108,7 @@ var getLongFormTime = function () {
 
 var establishStream = function(game, dataPoint) {
   var startTime = getLongFormTime();
-  var dirPath = ['..', 'data', game.expName, dataPoint.eventType].join('/');
+  var dirPath = ['data', game.expName, dataPoint.eventType].join('/');
   var fileName = startTime + "-" + game.id + ".csv";
   var filePath = [dirPath, fileName].join('/');
 
