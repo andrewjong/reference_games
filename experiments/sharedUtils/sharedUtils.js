@@ -6,6 +6,8 @@ var DeltaE = require('../node_modules/delta-e');
 var mkdirp = require('mkdirp');
 var sendPostRequest = require('request').post;
 
+const port = process.env.PORT;
+
 var serveFile = function (req, res) {
   var fileName = req.params[0];
   console.log('\t :: Express :: file requested: ' + fileName);
@@ -33,7 +35,7 @@ var checkPreviousParticipant = function(workerId, callback) {
     projection: { '_id': 1 }
   };
   sendPostRequest(
-    'http://localhost:4000/db/exists',
+    'http://localhost:' + port + '/db/exists',
     { json: postData },
     (error, res, body) => {
       try {
@@ -74,7 +76,7 @@ var writeDataToMongo = function(game, line) {
     colname: game.experimentName
   }, line);
   sendPostRequest(
-    'http://localhost:4000/db/insert',
+    'http://localhost:' + port + '/db/insert',
     { json: postData },
     (error, res, body) => {
       if (!error && res.statusCode === 200) {

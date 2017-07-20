@@ -30,7 +30,7 @@ var game_core = function(options){
   this.email = 'stanford.csli.games@gmail.com';
 
   // save data to the following locations (allowed: 'csv', 'mongo')
-  this.dataStore = ['csv'];
+  this.dataStore = ['mongo'];
   
   // How many players in the game?
   this.players_threshold = 2;

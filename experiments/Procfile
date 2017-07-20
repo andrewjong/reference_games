@@ -1,0 +1,2 @@
+store: node store.js
+web: npm start
