@@ -7,8 +7,10 @@ const graphics = {
     CARD_SCALE: 0.3,
     CARD_CELL_WIDTH: 120, // size of a card cell
     FADE_IN_TIME: 800,
+    DECK_X: 140,
     DECK_PADDING: 100, // vertical padding between deck and description text
     HAND_OFFSET_FROM_CENTER: 200,
+    TURN_BAR_HEIGHT: 75,
     TURN_BUTTON_WIDTH: 188,
     TURN_BUTTON_HEIGHT: 46
 }
@@ -22,6 +24,7 @@ let game; // the phaser game instance
 let isMyTurn = true; // turn boolean
 let deck, myHand, theirHand, onTable; // numerical arrays to represent each hand
 let deckSprites = {
+    x: 140,
     x_offset: 0, // the total current x offset of the top card
     y_offset: 0, // the total current y offset of the top card
     dx: 0.1, // how much to offset x per card
@@ -72,121 +75,75 @@ playGame.prototype = {
         tableBackground.width = graphics.GAME_WIDTH;
         tableBackground.height = graphics.GAME_HEIGHT;
 
-        // Group of sprites that will represent the deck of cards
-        deckSprites = {
-            x_offset: 0, // the total current x offset of the top card
-            y_offset: 0, // the total current y offset of the top card
-            dx: 0.1, // how much to offset x per card
-            dy: 0.15, // how much to offset y per card
-            cards: [] // contain card sprites
-        }
-
         // Draw hands for this player and that player
         myHandGroup = makeHandGroup(myHand, true);
         console.log("My hand: " + myHandGroup.children);
         theirHandGroup = makeHandGroup(theirHand, false);
         console.log("Their hand: " + theirHandGroup.children);
-        // this.onTableSprites = dealCards(onTable);
-        // console.log("On table: " + this.onTableSprites);
+        onTableGroup = makeOnTableGroup(onTable);
+        console.log("On table: " + onTableGroup);
 
-        // // text stating how many cards are left in the deck and how many were reshuffled in the previous round
-        // const counterStyle = { font: '20px Arial', fill: '#FFF', align: 'center' };
-        // this.cardsLeftText = game.add.text(140, game.world.centerY + graphics.DECK_PADDING, getCounterText(this.cardsLeft, 'left'), counterStyle);
-        // this.cardsAddedText = game.add.text(140, game.world.centerY - graphics.DECK_PADDING, getCounterText(this.cardsAdded, 'added'), counterStyle);
-        // const counterTexts = [this.cardsLeftText, this.cardsAddedText];
-        // counterTexts.forEach(function (text) {
-        //     text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
-        //     text.anchor = new Phaser.Point(0.5, 0.5);
-        // });
+        // text stating how many cards are left in the deck and how many were reshuffled in the previous round
+        const counterStyle = { font: '20px Arial', fill: '#FFF', align: 'center' };
+        this.cardsLeftText = game.add.text(140, game.world.centerY + graphics.DECK_PADDING, getCounterText(deck.length, 'left'), counterStyle);
+        this.cardsAddedText = game.add.text(140, game.world.centerY - graphics.DECK_PADDING, getCounterText(0, 'reshuffled'), counterStyle);
+        const counterTexts = [this.cardsLeftText, this.cardsAddedText];
+        counterTexts.forEach(function (text) {
+            text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+            text.anchor = new Phaser.Point(0.5, 0.5);
+        });
 
-        // // text stating whose turn it is
-        // const bar = game.add.graphics();
-        // const barWidth = game.world.width;
-        // const barHeight = 75;
-        // const barYOffset = game.world.height - barHeight;
-        // bar.beginFill('#000', 0.2);
-        // bar.drawRect(0, barYOffset, barWidth, barHeight);
+        // Text stating whose turn it is
+        const bar = game.add.graphics();
+        const barWidth = game.world.width;
+        const barHeight = graphics.TURN_BAR_HEIGHT;
+        const barYOffset = game.world.height - barHeight;
+        bar.beginFill('#000', 0.2);
+        bar.drawRect(0, barYOffset, barWidth, barHeight);
 
-        // const turnTextStyle = { font: 'bold 32px Arial', fill: '#FFF', boundsAlignH: 'center', boundsAlignV: 'middle' };
-        // this.turnText = game.add.text(0, 0, getTurnText(), turnTextStyle);
-        // this.turnText.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
-        // this.turnText.setTextBounds(0, barYOffset, barWidth, barHeight);
+        const turnTextStyle = { font: 'bold 32px Arial', fill: '#FFF', boundsAlignH: 'center', boundsAlignV: 'middle' };
+        this.turnText = game.add.text(0, 0, getTurnText(), turnTextStyle);
+        this.turnText.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+        this.turnText.setTextBounds(0, barYOffset, barWidth, barHeight);
 
-        // // end turn button
-        // const centerInBar = (barHeight - graphics.TURN_BUTTON_HEIGHT) / 2;
-        // const horizontalPad = centerInBar;
-        // this.button = game.add.button(game.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad,
-        //     game.world.height - graphics.TURN_BUTTON_HEIGHT - centerInBar,
-        //     'end-turn', this.nextTurn, this, 0, 1, 2);
-        // this.updateEachTurn();
+        // End turn button
+        const centerInBar = (barHeight - graphics.TURN_BUTTON_HEIGHT) / 2;
+        const horizontalPad = centerInBar;
+        this.button = game.add.button(game.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad,
+            game.world.height - graphics.TURN_BUTTON_HEIGHT - centerInBar,
+            'end-turn', this.nextTurn, this, 0, 1, 2);
+
+        this.updateEachTurn();
     },
-    // update: function () {
-    //     if (!isMyTurn) {
-    //         // set the button to disabled
-    //         this.button.setFrames(3, 3, 3);
-    //         this.button.inputEnabled = false;
-    //         this.onTableSprites.forEach(card => card.inputEnabled = false);
-    //         addTint(this.onTableSprites);
-    //     } else {
-    //         this.button.setFrames(0, 1, 2);
-    //         this.button.inputEnabled = true;
-    //         this.onTableSprites.forEach(card => card.inputEnabled = true);
-    //     }
-    // },
-    // updateEachTurn: function () {
-    //     // update card counters
-    //     this.cardsLeft = 52 - this.nextCardIndex + this.cardsAdded;
-    //     this.cardsLeftText.setText(getCounterText(this.cardsLeft, 'left'));
-    //     this.cardsAddedText.setText(getCounterText(this.cardsAdded, 'added'));
+    update: function () {
+        /* Stuff in here about sending server information */
 
-    //     // update deck to show correct number of cards
-    //     let dx = this.deckSprites.dx;
-    //     let dy = this.deckSprites.dy;
-    //     if (this.deckSprites.cards.length > this.cardsLeft) {
-    //         // destroy extra card sprites if present
-    //         for (let i = this.deckSprites.cards.length; i > this.cardsLeft; i--) {
-    //             this.deckSprites.cards.pop().destroy();
-    //             this.deckSprites.x_offset -= dx;
-    //             this.deckSprites.y_offset -= dy;
-    //         }
-    //     }
-    //     else if (this.deckSprites.cards.length < this.cardsLeft) {
-    //         // add extra card sprites if needed
-    //         for (let i = this.deckSprites.cards.length; i < this.cardsLeft; i++) {
-    //             const cardSprite = game.add.sprite(140 - this.deckSprites.x_offset, game.world.centerY - this.deckSprites.y_offset, 'cardback');
-    //             cardSprite.anchor.set(0.5);
-    //             cardSprite.scale.set(graphics.CARD_SCALE);
-    //             this.deckSprites.cards.push(cardSprite);
-    //             this.deckSprites.x_offset += dx;
-    //             this.deckSprites.y_offset += dy;
-    //         }
-    //     }
-    //     // toggle turn settings
-    //     this.turnText.setText(getTurnText());
-    // },
-    // startDrag: function (card, pointer) {
-    //     game.world.bringToTop(card);
-    //     card.scale.set(graphics.CARD_SCALE * 1.1);
-    //     // for debugging
-    //     loc = this.myHandSprites.indexOf(card) != -1 ? 'hand' : 'table';
-    //     console.log(loc);
-    // },
-    // stopDrag: function (card, pointer) {
-    //     card.scale.set(graphics.CARD_SCALE);
-    //     let shouldSwap = false;
-    //     if (isMyTurn) {
-    //         shouldSwap = cardGroupOverlap(card, this.myHandSprites, this.onTableSprites, game) ||
-    //             cardGroupOverlap(card, this.onTableSprites, this.myHandSprites, game);
-    //     }
-    //     else {
-    //         for (let i = 0; i < this.myHandSprites.length; i++) {
-    //             shouldSwap = shouldSwap || game.physics.arcade.overlap(this.myHandSprites[i], card, swapPos);
-    //         }
-    //     }
-    //     if (!shouldSwap) {
-    //         easeIn(card, card.origPos);
-    //     }
-    // },
+    },
+    updateEachTurn: function () {
+        if (isMyTurn) {
+            // Enable the end-turn button
+            this.button.setFrames(0, 1, 2);
+            this.button.inputEnabled = true;
+            // Enable input on the table group
+            onTableGroup.children.forEach(enableCard);
+            // onTableGroup.children.forEach(c => c.inputEnabled = false);
+        } else {
+            // Disable the end-turn button
+            this.button.setFrames(3, 3, 3);
+            this.button.inputEnabled = false;
+            // Disable input on the table group
+            onTableGroup.children.forEach(disableCard);
+        }
+        // // update card counters
+        // this.cardsLeft = 52 - this.nextCardIndex + this.cardsAdded;
+        // this.cardsLeftText.setText(getCounterText(this.cardsLeft, 'left'));
+        // this.cardsAddedText.setText(getCounterText(this.cardsAdded, 'added'));
+
+        // update deck to show correct number of cards
+        makeDeckSprites();
+        // toggle turn settings
+        this.turnText.setText(getTurnText());
+    },
     // nextTurn: function () {
     //     isMyTurn = !isMyTurn;
     //     // reshuffle cards

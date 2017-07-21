@@ -1,45 +1,67 @@
 /**
- * Returns a 3-card array and adds it to the game
- *
- * @param {Array} cards the hand to create sprites from
+ * Takes in an array of numbers (that represent cards) and returns a Phaser group 
+ * with the sprites for each card, placed at the correct location for each player
+ * 
+ * @param {Array<Number>} cards the hand to create sprites from
  * @param {boolean} forMe true if cards are for me, false if for other player
  */
 function makeHandGroup(cards, forMe) {
+  let handGroup = makeCardGroup(cards);
+  // put the group in the right place
   let yOffset = graphics.HAND_OFFSET_FROM_CENTER; // the offset to place the cards
   if (!forMe) yOffset *= -1; // place on the opposite side if other player
-
-  let handGroup = game.add.group();
-
-  /* Placement */
-  // create 1 of each frame in array cards
-  handGroup.createMultiple(1, 'cards', cards, true);
-  handGroup.children.forEach(card => {
-    card.anchor.set(0.5);
-    card.scale.set(graphics.CARD_SCALE);
-  }); 
-  // align this many cards, along 1 row, of width of the card and the card gap
-  handGroup.align(cards.length, 1, graphics.CARD_CELL_WIDTH, graphics.CARD_HEIGHT);
-
-  // put the group in the right place
   handGroup.centerX = game.world.centerX;
   handGroup.centerY = game.world.centerY + yOffset;
 
-  /* Effects */
-  handGroup.children.forEach(card => {
-    // Fade in when created
-    fadeIn(card, graphics.FADE_IN_TIME); 
-    // Enable dragging
-    game.physics.enable(card);
-    card.inputEnabled = true;
-    card.input.enableDrag();
-    card.snapPosition = card.position.clone();
-    // card.events.onDragStart.add(/* DRAG FUNCTION */);
-    // card.events.onDragStop.add(/* DRAG FUNCTION */);
-  });
-
+  if (!forMe) handGroup.children.forEach(disableCard);
   return handGroup;
 }
 
+/**
+ * Creates the Phaser group of sprites to be dealt on the table
+ * @param {Array<Number>} cards the array to create sprites from
+ */
+function makeOnTableGroup(cards) {
+  let onTableGroup = makeCardGroup(cards);
+  // put the group in the right place
+  onTableGroup.centerX = game.world.centerX;
+  onTableGroup.centerY = game.world.centerY;
+
+  return onTableGroup
+}
+
+/**
+ * Helper function that creates a Phaser group of card Sprites. The group is placed 
+ * at the default location.
+ * @param {Array<Number>} cards the array to create sprites from
+ */
+let makeCardGroup = function (cards) {
+  /* Note: This function is defined as a variable as it's not meant to be hoisted */
+  let cardGroup = game.add.group();
+
+  /* Placement */
+  // create 1 each, from spritesheet 'cards', for each frame in array cards, and set visible to physics
+  cardGroup.createMultiple(1, 'cards', cards, true);
+  cardGroup.children.forEach(card => {
+    card.anchor.set(0.5);
+    card.scale.set(graphics.CARD_SCALE);
+  });
+  // align this many cards, along 1 row, of width of the card and the card gap
+  cardGroup.align(cards.length, 1, graphics.CARD_CELL_WIDTH, graphics.CARD_HEIGHT);
+
+  /* Effects */
+  cardGroup.children.forEach(card => {
+    // Fade in when created
+    fadeIn(card, graphics.FADE_IN_TIME);
+    // Enable dragging
+    card.inputEnabled = true;
+    card.input.enableDrag(true, true); // center on mouse = true, bring to top = true 
+    card.snapPosition = card.position.clone();
+    card.events.onDragStart.add(startDrag);
+    card.events.onDragStop.add(stopDrag);
+  });
+  return cardGroup;
+}
 /**
  * Returns a 4-card array and adds it to the game in the table position
  *
@@ -65,6 +87,142 @@ function drawCards(startIndex, numCards, game, obj) {
   return table;
 }
 
+/**
+ * Set input enable on card and set no tint
+ * @param {Sprite} card 
+ */
+function enableCard(card) {
+  card.inputEnabled = true;
+  card.tint = 0xFFFFFF;
+}
+
+/**
+ * Set input disabled on card and set a gray tint
+ * @param {Sprite} card 
+ */
+function disableCard(card) {
+  card.inputEnabled = false;
+  card.tint = 0xBEBEBE;
+}
+
+/**
+ * Helper function for cards on the start of their drag
+ * @param {Sprite} card 
+ * @param {Mouse?} pointer 
+ */
+let startDrag = function(card, pointer){
+  // make the card bigger for the illusion of picking it up
+  card.scale.set(graphics.CARD_SCALE * 1.1);
+  // for debugging
+  loc = myHandGroup.children.indexOf(card) != -1 ? 'hand' : 'table';
+  console.log(loc);
+}
+
+let stopDrag = function(card, pointer) {
+  // Reset the card's scale for the illusion of putting it back down
+  card.scale.set(graphics.CARD_SCALE);
+
+  // See if an overlap event and its resulting action occurred
+  swappableCards = myHandGroup.children.concat(onTableGroup.children);
+  let didOverlap = swappableCards.some(otherCard => {
+    return game.physics.arcade.overlap(otherCard, card, swapPosition, shouldSwap);
+  });
+
+  // Snap the card back if there was no overlap
+  if(!didOverlap) {
+    snapTo(card, card.snapPosition);
+  }
+}
+
+/**
+ * Swaps the positions of two card sprites
+ */
+function swapPosition(card1, card2) {
+  // Animations
+  [card1,card2].forEach(disableCard);
+  snapTo(card1, card2.snapPosition);
+  snapTo(card2, card1.snapPosition);
+  setTimeout(function () { 
+    [card1,card2].forEach(enableCard);
+  }, 700);
+
+  let temp = card1.snapPosition;
+  card1.snapPosition = card2.snapPosition;
+  card2.snapPosition = temp;
+
+  // Change the indicies in the array representations
+
+}
+
+/**
+ * Callback to determine if two cards should swap
+ * @param {Sprite} card1 
+ * @param {Sprite} card2 
+ */
+function shouldSwap(card1, card2) {
+  if (!card1.inputEnabled || !card2.inputEnabled) return false // one of the cards is disabled
+
+  if (myHandGroup.children.includes(card1) && myHand.children.includes(card2)) // case both in my hand
+    return true;
+  else if (onTableGroup.children.includes(card1) && onTableGroup.children.includes(card2)) // case both on table
+    return true;
+  else if ( // case one in hand one on table and my turn
+    isMyTurn &&
+    (myHandGroup.children.includes(card1) && onTableGroup.children.includes(card2)
+    || myHandGroup.children.includes(card2) && onTableGroup.children.includes(card1)) 
+  ){
+      return true;
+  } 
+  // return false otherwise
+  return false;
+}
+
+/**
+ * Returns true if a card belonging to some group overlaps with a card from another group
+ *
+ * @param {sprite} card the card sprite
+ * @param {Array<sprite>} newGroup group to check overlap
+ * @param {Array<sprite>} oldGroup group currently containing card
+ */
+function cardGroupOverlap(card, newGroup, oldGroup) {
+  let oldIndex = oldGroup.indexOf(card);
+  for (let i = 0; i < newGroup.length; i++) {
+    if (game.physics.arcade.overlap(newGroup[i], card, swapPosition) && oldIndex != -1) {
+      let temp = newGroup[i];
+      oldGroup[oldIndex] = temp;
+      newGroup[i] = card;
+      return true;
+    }
+  }
+}
+/**
+ * Creates/destroys the sprites that represent the deck based on the current value of deck.length
+ */
+function makeDeckSprites() {
+  let dx = deckSprites.dx;
+  let dy = deckSprites.dy;
+  if (deckSprites.cards.length > deck.length) {
+    // destroy extra card sprites if present
+    for (let i = deckSprites.cards.length; i > deck.length; i--) {
+      deckSprites.cards.pop().destroy();
+      deckSprites.x_offset -= dx;
+      deckSprites.y_offset -= dy;
+    }
+  }
+  else if (deckSprites.cards.length < deck.length) {
+    // add extra card sprites if needed
+    for (let i = deckSprites.cards.length; i < deck.length; i++) {
+      const cardSprite = game.add.sprite(deckSprites.x - deckSprites.x_offset, game.world.centerY - deckSprites.y_offset, 'cardback');
+      cardSprite.anchor.set(0.5);
+      cardSprite.scale.set(graphics.CARD_SCALE);
+      deckSprites.cards.push(cardSprite);
+      deckSprites.x_offset += dx;
+      deckSprites.y_offset += dy;
+    }
+  }
+}
+
+
 function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool, destroyBool) {
   game.physics.arcade.enable(sprite);
   game.physics.arcade.moveToXY(sprite, x, y, 0, moveTime);
@@ -80,24 +238,6 @@ function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool, destroyBool) {
   });
 }
 
-/**
- * Returns true if a card belonging to some group overlaps with a card from another group
- *
- * @param {sprite} card the card sprite
- * @param {Array<sprite>} newGroup group to check overlap
- * @param {Array<sprite>} oldGroup group currently containing card
- */
-function cardGroupOverlap(card, newGroup, oldGroup, game) {
-  let oldIndex = oldGroup.indexOf(card);
-  for (let i = 0; i < newGroup.length; i++) {
-    if (game.physics.arcade.overlap(newGroup[i], card, swapPos) && oldIndex != -1) {
-      let temp = newGroup[i];
-      oldGroup[oldIndex] = temp;
-      newGroup[i] = card;
-      return true;
-    }
-  }
-}
 
 function reshuffleAnimation(cards, numToAdd, game, obj) {
   let backs = [];
@@ -123,41 +263,15 @@ function reshuffleAnimation(cards, numToAdd, game, obj) {
   }, 3000 / 2);
 }
 
-/**
- * Swaps the positions of two card sprites
- */
-function swapPos(card1, card2) {
-  // animations
-  addTint([card1, card2]);
-  easeIn(card1, card2.origPos);
-  easeIn(card2, card1.origPos);
-  setTimeout(function () { removeTint([card1, card2]) }, 700);
-
-  let temp = card1.origPos;
-  card1.origPos = card2.origPos;
-  card2.origPos = temp;
-}
-
-/**
- * Adds tint to a list of card sprites
- */
-function addTint(cards) {
-  cards.forEach(c => c.tint = 0xBEBEBE);
-}
-
-/**
- * Removes tint from a list of card sprites
- */
-function removeTint(cards) {
-  cards.forEach(c => c.tint = 0xFFFFFF);
-}
 
 /**
  * Gives easing to movement of card sprite
  */
-function easeIn(card, pos) {
+function snapTo(card, pos) {
   game.add.tween(card).to(pos, 400, Phaser.Easing.Back.Out, true);
 }
+
+
 
 /**
  * Fades in card sprite
@@ -189,6 +303,6 @@ module.exports = {
   makeHand: makeHand,
   drawCards: drawCards,
   cardGroupOverlap: cardGroupOverlap,
-  swapPos: swapPos,
+  swapPos: swapPosition,
   randBetween: randBetween
 }
