@@ -63,8 +63,9 @@ var checkPreviousParticipant = function(workerId, callback) {
   );
 };
 
+/*
+REMOVE BECAUSE HEROKU DOESN'T ALLOW MKDIR (ESTABLISHSTREAM FUNCTION) AND WE DON'T NEED THIS ANYWAY (chineseColorRef game)
 var writeDataToCSV = function(game, _dataPoint) {
-  console.log("Writing data to csv");
   var dataPoint = _.clone(_dataPoint);  
   var eventType = dataPoint.eventType;
 
@@ -79,9 +80,9 @@ var writeDataToCSV = function(game, _dataPoint) {
   var line = _.values(dataPoint).join('\t') + "\n";
   game.streams[eventType].write(line, err => {if(err) throw err;});
 };
+*/
 
 var writeDataToMongo = function(game, line) {
-  console.log("Writing data to mongo");
   let postData = _.extend({
     dbname: game.projectName,
     colname: game.experimentName
