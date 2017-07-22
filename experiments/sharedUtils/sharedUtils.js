@@ -8,13 +8,13 @@ var sendPostRequest = require('request').post;
 
 // Mongoose stuff
 const mongoose = require('mongoose');
-mongoose.connect(process.env.MONGODB_URI)
-const GameSchema = mongoose.Schema({
+mongoose.connect(process.env.MONGODB_URI, err => console.log('Could not connect to mongo database via mongoose! Data is not being collected!\n' + err));
+const gameSchema = new mongoose.Schema({
   dbname: String,
   colname: String,
   line: String
 })
-const Model = mongoose.model('data-model', GameSchema)
+const DataModel = mongoose.model('data-model', gameSchema)
 const port = process.env.PORT;
 
 var serveFile = function (req, res) {
@@ -87,7 +87,7 @@ var writeDataToMongo = function(game, line) {
     dbname: game.projectName,
     colname: game.experimentName
   }, line);
-  const mongoData = new GameSchema(postData);
+  const mongoData = new DataModel(postData);
   mongoData.save(err => console.log('Error writing to mongo! ' + err));
 
   // sendPostRequest(
