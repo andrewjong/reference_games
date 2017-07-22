@@ -6,6 +6,15 @@ var DeltaE = require('../node_modules/delta-e');
 var mkdirp = require('mkdirp');
 var sendPostRequest = require('request').post;
 
+// Mongoose stuff
+const mongoose = require('mongoose');
+mongoose.connect(process.env.MONGODB_URI)
+const GameSchema = mongoose.Schema({
+  dbname: String,
+  colname: String,
+  line: String
+})
+const Model = mongoose.model('data-model', GameSchema)
 const port = process.env.PORT;
 
 var serveFile = function (req, res) {
@@ -55,6 +64,7 @@ var checkPreviousParticipant = function(workerId, callback) {
 };
 
 var writeDataToCSV = function(game, _dataPoint) {
+  console.log("Writing data to csv");
   var dataPoint = _.clone(_dataPoint);  
   var eventType = dataPoint.eventType;
 
@@ -71,21 +81,25 @@ var writeDataToCSV = function(game, _dataPoint) {
 };
 
 var writeDataToMongo = function(game, line) {
-  var postData = _.extend({
+  console.log("Writing data to mongo");
+  let postData = _.extend({
     dbname: game.projectName,
     colname: game.experimentName
   }, line);
-  sendPostRequest(
-    'http://localhost:' + port + '/db/insert',
-    { json: postData },
-    (error, res, body) => {
-      if (!error && res.statusCode === 200) {
-        console.log(`sent data to store`);
-      } else {
-	console.log(`error sending data to store: ${error} ${body}`);
-      }
-    }
-  );
+  const mongoData = new GameSchema(postData);
+  mongoData.save(err => console.log('Error writing to mongo! ' + err));
+
+  // sendPostRequest(
+  //   'http://localhost:' + port + '/db/insert',
+  //   { json: postData },
+  //   (error, res, body) => {
+  //     if (!error && res.statusCode === 200) {
+  //       console.log(`sent data to store`);
+  //     } else {
+	// console.log(`error sending data to store: ${error} ${body}`);
+  //     }
+  //   }
+  // );
 };
 
 var UUID = function () {
