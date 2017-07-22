@@ -123,23 +123,23 @@ var getLongFormTime = function () {
   return day + '-' + time;
 };
 
-var establishStream = function(game, dataPoint) {
-  var startTime = getLongFormTime();
-  var dirPath = ['data', game.expName, dataPoint.eventType].join('/');
-  var fileName = startTime + "-" + game.id + ".csv";
-  var filePath = [dirPath, fileName].join('/');
+// var establishStream = function(game, dataPoint) {
+//   var startTime = getLongFormTime();
+//   var dirPath = ['data', game.expName, dataPoint.eventType].join('/');
+//   var fileName = startTime + "-" + game.id + ".csv";
+//   var filePath = [dirPath, fileName].join('/');
 
-  // Create path if it doesn't already exist
-  mkdirp.sync(dirPath, err => {if (err) console.error(err);});
+//   // Create path if it doesn't already exist
+//   mkdirp.sync(dirPath, err => {if (err) console.error(err);});
 
-  // Write header
-  var header = _.keys(dataPoint).join('\t') + '\n';
-  fs.writeFile(filePath, header, err => {if(err) console.error(err);});
+//   // Write header
+//   var header = _.keys(dataPoint).join('\t') + '\n';
+//   fs.writeFile(filePath, header, err => {if(err) console.error(err);});
 
-  // Create stream
-  var stream = fs.createWriteStream(filePath, {'flags' : 'a'});
-  game.streams[dataPoint.eventType] = stream;
-};
+//   // Create stream
+//   var stream = fs.createWriteStream(filePath, {'flags' : 'a'});
+//   game.streams[dataPoint.eventType] = stream;
+// };
 
 var getObjectLocHeaderArray = function() {
   var arr =  _.map(_.range(1,5), function(i) {
@@ -287,8 +287,8 @@ module.exports = {
   handleDuplicate,
   handleInvalidID,
   getLongFormTime,
-  establishStream,
-  writeDataToCSV,
+  // establishStream,
+  // writeDataToCSV,
   writeDataToMongo,
   hsl2lab,
   fillArray,
