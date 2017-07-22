@@ -63,8 +63,6 @@ var checkPreviousParticipant = function(workerId, callback) {
   );
 };
 
-/*
-REMOVE BECAUSE HEROKU DOESN'T ALLOW MKDIR (ESTABLISHSTREAM FUNCTION) AND WE DON'T NEED THIS ANYWAY (chineseColorRef game)
 var writeDataToCSV = function(game, _dataPoint) {
   var dataPoint = _.clone(_dataPoint);  
   var eventType = dataPoint.eventType;
@@ -80,27 +78,27 @@ var writeDataToCSV = function(game, _dataPoint) {
   var line = _.values(dataPoint).join('\t') + "\n";
   game.streams[eventType].write(line, err => {if(err) throw err;});
 };
-*/
 
 var writeDataToMongo = function(game, line) {
   let postData = _.extend({
     dbname: game.projectName,
     colname: game.experimentName
   }, line);
+  console.log("postData: " + JSON.stringify(postData));
   const mongoData = new DataModel(postData);
   mongoData.save(err => console.log('Error writing to mongo! ' + err));
 
-  // sendPostRequest(
-  //   'http://localhost:' + port + '/db/insert',
-  //   { json: postData },
-  //   (error, res, body) => {
-  //     if (!error && res.statusCode === 200) {
-  //       console.log(`sent data to store`);
-  //     } else {
-	// console.log(`error sending data to store: ${error} ${body}`);
-  //     }
-  //   }
-  // );
+  sendPostRequest(
+    'http://localhost:' + port + '/db/insert',
+    { json: postData },
+    (error, res, body) => {
+      if (!error && res.statusCode === 200) {
+        console.log(`sent data to store`);
+      } else {
+	console.log(`error sending data to store: ${error} ${body}`);
+      }
+    }
+  );
 };
 
 var UUID = function () {
@@ -123,23 +121,23 @@ var getLongFormTime = function () {
   return day + '-' + time;
 };
 
-// var establishStream = function(game, dataPoint) {
-//   var startTime = getLongFormTime();
-//   var dirPath = ['data', game.expName, dataPoint.eventType].join('/');
-//   var fileName = startTime + "-" + game.id + ".csv";
-//   var filePath = [dirPath, fileName].join('/');
+var establishStream = function(game, dataPoint) {
+  var startTime = getLongFormTime();
+  var dirPath = ['..' , 'data', game.expName, dataPoint.eventType].join('/');
+  var fileName = startTime + "-" + game.id + ".csv";
+  var filePath = [dirPath, fileName].join('/');
 
-//   // Create path if it doesn't already exist
-//   mkdirp.sync(dirPath, err => {if (err) console.error(err);});
+  // Create path if it doesn't already exist
+  mkdirp.sync(dirPath, err => {if (err) console.error(err);});
 
-//   // Write header
-//   var header = _.keys(dataPoint).join('\t') + '\n';
-//   fs.writeFile(filePath, header, err => {if(err) console.error(err);});
+  // Write header
+  var header = _.keys(dataPoint).join('\t') + '\n';
+  fs.writeFile(filePath, header, err => {if(err) console.error(err);});
 
-//   // Create stream
-//   var stream = fs.createWriteStream(filePath, {'flags' : 'a'});
-//   game.streams[dataPoint.eventType] = stream;
-// };
+  // Create stream
+  var stream = fs.createWriteStream(filePath, {'flags' : 'a'});
+  game.streams[dataPoint.eventType] = stream;
+};
 
 var getObjectLocHeaderArray = function() {
   var arr =  _.map(_.range(1,5), function(i) {
