@@ -95,7 +95,8 @@ var writeDataToMongo = function(game, line) {
   console.log("postData: " + JSON.stringify(postData));
   const mongoData = new DataModel(postData);
   mongoData.save(err => {
-    if (err) console.log('Error writing to mongo! ' + err)
+    if (err) console.log('Error writing to mongo! ' + err);
+    else console.log('Data saved successfully to mongo');
   });
 
   // sendPostRequest(
