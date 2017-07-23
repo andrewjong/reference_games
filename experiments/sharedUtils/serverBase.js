@@ -31,10 +31,10 @@ class ReferenceGameServer {
         console.log('Writing to mongo');
         utils.writeDataToMongo(game, dataPoint);
       }
-      if (_.includes(game.dataStore, 'csv')) {
-        console.log('Writing to csv');
-        utils.writeDataToCSV(game, dataPoint);
-      }
+      // if (_.includes(game.dataStore, 'csv')) {
+      //   console.log('Writing to csv');
+      //   utils.writeDataToCSV(game, dataPoint);
+      // }
     }
   }
 

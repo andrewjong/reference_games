@@ -5,17 +5,21 @@ var converter = require("color-convert");
 var DeltaE = require('../node_modules/delta-e');
 var mkdirp = require('mkdirp');
 var sendPostRequest = require('request').post;
+const port = process.env.PORT || 4000;
 
 // Mongoose stuff
 const mongoose = require('mongoose');
-mongoose.connect(process.env.MONGODB_URI, err => console.log('Could not connect to mongo database via mongoose! Data is not being collected!\n' + err));
+const mongoDB = mongoose.connect(process.env.MONGODB_URI, {useMongoClient:true});
+mongoDB
+  .then(db => console.log("MongoDB connected :)"))
+  .catch(err => console.log(`Couldn't connect to MongoDB! Data is not being saved\n${err}`));
+
 const gameSchema = new mongoose.Schema({
   dbname: String,
   colname: String,
   line: String
 })
 const DataModel = mongoose.model('data-model', gameSchema)
-const port = process.env.PORT;
 
 var serveFile = function (req, res) {
   var fileName = req.params[0];
@@ -63,42 +67,48 @@ var checkPreviousParticipant = function(workerId, callback) {
   );
 };
 
-var writeDataToCSV = function(game, _dataPoint) {
-  var dataPoint = _.clone(_dataPoint);  
-  var eventType = dataPoint.eventType;
+// var writeDataToCSV = function(game, _dataPoint) {
+//   var dataPoint = _.clone(_dataPoint);  
+//   var eventType = dataPoint.eventType;
 
-  // Omit sensitive data
-  if(game.anonymizeCSV) 
-    dataPoint = _.omit(dataPoint, ['workerId', 'assignmentId']);
+//   // Omit sensitive data
+//   if(game.anonymizeCSV) 
+//     dataPoint = _.omit(dataPoint, ['workerId', 'assignmentId']);
   
-  // Establish stream to file if it doesn't already exist
-  if(!_.has(game.streams, eventType))
-    establishStream(game, dataPoint);    
+//   // Establish stream to file if it doesn't already exist
+//   if(!_.has(game.streams, eventType))
+//     establishStream(game, dataPoint);    
 
-  var line = _.values(dataPoint).join('\t') + "\n";
-  game.streams[eventType].write(line, err => {if(err) throw err;});
-};
+//   var line = _.values(dataPoint).join('\t') + "\n";
+//   game.streams[eventType].write(line, err => {if(err) throw err;});
+// };
 
 var writeDataToMongo = function(game, line) {
+  console.log(`dbname: ${game.projectName}`);
+  console.log(`colname: ${game.experimentName}`);
+  console.log(`line: ${line}`);
+
   let postData = _.extend({
     dbname: game.projectName,
     colname: game.experimentName
   }, line);
   console.log("postData: " + JSON.stringify(postData));
   const mongoData = new DataModel(postData);
-  mongoData.save(err => console.log('Error writing to mongo! ' + err));
+  mongoData.save(err => {
+    if (err) console.log('Error writing to mongo! ' + err)
+  });
 
-  sendPostRequest(
-    'http://localhost:' + port + '/db/insert',
-    { json: postData },
-    (error, res, body) => {
-      if (!error && res.statusCode === 200) {
-        console.log(`sent data to store`);
-      } else {
-	console.log(`error sending data to store: ${error} ${body}`);
-      }
-    }
-  );
+  // sendPostRequest(
+  //   'http://localhost:' + port + '/db/insert',
+  //   { json: postData },
+  //   (error, res, body) => {
+  //     if (!error && res.statusCode === 200) {
+  //       console.log(`sent data to store`);
+  //     } else {
+	// console.log(`error sending data to store: ${error} ${body}`);
+  //     }
+  //   }
+  // );
 };
 
 var UUID = function () {
@@ -121,23 +131,23 @@ var getLongFormTime = function () {
   return day + '-' + time;
 };
 
-var establishStream = function(game, dataPoint) {
-  var startTime = getLongFormTime();
-  var dirPath = ['..' , 'data', game.expName, dataPoint.eventType].join('/');
-  var fileName = startTime + "-" + game.id + ".csv";
-  var filePath = [dirPath, fileName].join('/');
+// var establishStream = function(game, dataPoint) {
+//   var startTime = getLongFormTime();
+//   var dirPath = ['..' , 'data', game.expName, dataPoint.eventType].join('/');
+//   var fileName = startTime + "-" + game.id + ".csv";
+//   var filePath = [dirPath, fileName].join('/');
 
-  // Create path if it doesn't already exist
-  mkdirp.sync(dirPath, err => {if (err) console.error(err);});
+//   // Create path if it doesn't already exist
+//   mkdirp.sync(dirPath, err => {if (err) console.error(err);});
 
-  // Write header
-  var header = _.keys(dataPoint).join('\t') + '\n';
-  fs.writeFile(filePath, header, err => {if(err) console.error(err);});
+//   // Write header
+//   var header = _.keys(dataPoint).join('\t') + '\n';
+//   fs.writeFile(filePath, header, err => {if(err) console.error(err);});
 
-  // Create stream
-  var stream = fs.createWriteStream(filePath, {'flags' : 'a'});
-  game.streams[dataPoint.eventType] = stream;
-};
+//   // Create stream
+//   var stream = fs.createWriteStream(filePath, {'flags' : 'a'});
+//   game.streams[dataPoint.eventType] = stream;
+// };
 
 var getObjectLocHeaderArray = function() {
   var arr =  _.map(_.range(1,5), function(i) {
