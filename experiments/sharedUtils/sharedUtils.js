@@ -9,7 +9,7 @@ const port = process.env.PORT || 4000;
 
 // Mongoose stuff
 const mongoose = require('mongoose');
-const mongoDB = mongoose.connect(process.env.MONGODB_URI, {useMongoClient:true});
+const mongoDB = mongoose.connect(process.env.MONGODB_URI, { useMongoClient: true });
 mongoDB
   .then(db => console.log("MongoDB connected :)"))
   .catch(err => console.log(`Couldn't connect to MongoDB! Data is not being saved\n${err}`));
@@ -17,7 +17,9 @@ mongoDB
 const gameSchema = new mongoose.Schema({
   line: String
 })
-const DataModel = mongoose.model('data-model', gameSchema)
+// Use different models if chatMessage or clickedObj because they have different number of fields
+const ChatMessage = mongoose.model('chatMessage', gameSchema);
+const ClickedObj = mongoose.model('clickedObj', gameSchema);
 
 var serveFile = function (req, res) {
   var fileName = req.params[0];
@@ -38,8 +40,8 @@ var handleInvalidID = function (req, res) {
   return res.redirect('/colors/chineseColorRef/forms/invalid.html');
 };
 
-var checkPreviousParticipant = function(workerId, callback) {
-  var p = {'workerId': workerId};
+var checkPreviousParticipant = function (workerId, callback) {
+  var p = { 'workerId': workerId };
   var postData = {
     dbname: '3dObjects',
     query: p,
@@ -50,16 +52,16 @@ var checkPreviousParticipant = function(workerId, callback) {
     { json: postData },
     (error, res, body) => {
       try {
-	if (!error && res.statusCode === 200) {
-	  console.log("success! Received data " + JSON.stringify(body));
-	  callback(body);
-	} else {
-	  throw `${error}`;
-	}
+        if (!error && res.statusCode === 200) {
+          console.log("success! Received data " + JSON.stringify(body));
+          callback(body);
+        } else {
+          throw `${error}`;
+        }
       } catch (err) {
-	console.log(err);
-	console.log('no database; allowing participant to continue');
-	return callback(false);
+        console.log(err);
+        console.log('no database; allowing participant to continue');
+        return callback(false);
       }
     }
   );
@@ -72,21 +74,32 @@ var checkPreviousParticipant = function(workerId, callback) {
 //   // Omit sensitive data
 //   if(game.anonymizeCSV) 
 //     dataPoint = _.omit(dataPoint, ['workerId', 'assignmentId']);
-  
+
 //   // Establish stream to file if it doesn't already exist
 //   if(!_.has(game.streams, eventType))
 //     establishStream(game, dataPoint);    
 
-//   var line = _.values(dataPoint).join('\t') + "\n";
+//   var lin'e = _.values(dataPoint).join('\t') + "\n";
 //   game.streams[eventType].write(line, err => {if(err) throw err;});
 // };
 
-var writeDataToMongo = function(game, line) {
-  let postData = {
+var writeDataToMongo = function (game, line) {
+  const postData = {
     line: line
   };
   console.log("postData: " + JSON.stringify(postData));
-  const mongoData = new DataModel(postData);
+
+  console.log(`eventType: ${line.eventType}`);
+  let mongoData;
+  if (line.eventType == 'chatMessage') {
+    console.log('Using model chatMessage');
+    mongoData = new ChatMessage(postData);
+  }
+  else if (line.eventType == 'clickedObj'){
+    console.log('Using model clickedObj');
+    mongoData = new ClickedObj(postData);
+  }
+
   mongoData.save(err => {
     if (err) console.log('Error writing to mongo! ' + err);
     else console.log('Data saved successfully to mongo');
@@ -99,7 +112,7 @@ var writeDataToMongo = function(game, line) {
   //     if (!error && res.statusCode === 200) {
   //       console.log(`sent data to store`);
   //     } else {
-	// console.log(`error sending data to store: ${error} ${body}`);
+  // console.log(`error sending data to store: ${error} ${body}`);
   //     }
   //   }
   // );
@@ -143,9 +156,9 @@ var getLongFormTime = function () {
 //   game.streams[dataPoint.eventType] = stream;
 // };
 
-var getObjectLocHeaderArray = function() {
-  var arr =  _.map(_.range(1,5), function(i) {
-    return _.map(['Name', 'SenderLoc', 'ReceiverLoc'], function(v) {
+var getObjectLocHeaderArray = function () {
+  var arr = _.map(_.range(1, 5), function (i) {
+    return _.map(['Name', 'SenderLoc', 'ReceiverLoc'], function (v) {
       return 'object' + i + v;
     });
   });
