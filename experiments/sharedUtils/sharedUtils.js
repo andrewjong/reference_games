@@ -15,8 +15,6 @@ mongoDB
   .catch(err => console.log(`Couldn't connect to MongoDB! Data is not being saved\n${err}`));
 
 const gameSchema = new mongoose.Schema({
-  dbname: String,
-  colname: String,
   line: String
 })
 const DataModel = mongoose.model('data-model', gameSchema)
@@ -84,14 +82,9 @@ var checkPreviousParticipant = function(workerId, callback) {
 // };
 
 var writeDataToMongo = function(game, line) {
-  console.log(`dbname: ${game.projectName}`);
-  console.log(`colname: ${game.experimentName}`);
-  console.log(`line: ${line}`);
-
-  let postData = _.extend({
-    dbname: game.projectName,
-    colname: game.experimentName
-  }, line);
+  let postData = {
+    line: line
+  };
   console.log("postData: " + JSON.stringify(postData));
   const mongoData = new DataModel(postData);
   mongoData.save(err => {
