@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <title>选出颜色游戏</title>
     <!-- Load style sheet -->
     <link href="index.css" media="screen" rel="stylesheet" type="text/css">
@@ -9,40 +10,52 @@
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
 
     <!-- Include some extra functional programming tools -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min.js"> </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min.js">
+
+    </script>
 
     <!-- Load jQuery, which lets us handle mouse events -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    
+
     <!-- Load the common game code. -->
     <script type="text/javascript" src="game.core.js"></script>
 
     <!-- Finally, Load the game client code. -->
-    <script type="text/javascript" src="chineseClientBase.js"></script>    
+    <script type="text/javascript" src="chineseClientBase.js"></script>
     <script type="text/javascript" src="game.client.js"></script>
     <script type="text/javascript" src="drawing.js"></script>
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font: 13px Helvetica, Arial; }
-        #messages li { padding: 5px 10px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font: 13px Helvetica, Arial;
+        }
+
+        #messages li {
+            padding: 5px 10px;
+        }
         /*#messages li:nth-child(odd) { background: #eee; }*/
     </style>
 
-    </head>
+</head>
 
-  <body>
+<body>
     <div id='header'>
-      <button id='submitbutton' style="display: none;">提交</button>
-      <div id='textInfo'>
-	<h1 id='roleLabel'>你是</h1> 
-	<p id='instructs'> </p>
-      </div>
-      <p style="color:red" id='roundnumber'>第1/50轮</p>
-      <p style="color:green" id='score'> </p>
+        <button id='submitbutton' style="display: none;">提交</button>
+        <div id='textInfo'>
+            <h1 id='roleLabel'>你是</h1>
+            <p id='instructs'> </p>
+        </div>
+        <p style="color:red" id='roundnumber'>第1/50轮</p>
+        <p style="color:green" id='score'> </p>
     </div>
-        <div id='main'>
-            <span>
+    <div id='main'>
+        <span>
             <div id='message_panel'>
                 <ul id="messages"></ul>
                 <hr>
@@ -69,7 +82,7 @@
 
 		<br> <br>
 	      <p>你是怎么学中文的？按【控制（Ctrl）】选择多个选项。</p>
-	      <select multiple>
+	      <select id="languageAcquisition" multiple="true" onchange="dropdownTip('languageAcquisition::' + this.value)">
 		<option value="native">母语</option>
 		<option value="heritage">第二语言，在家里学</option>
 		<option value="school">第二语言，在学校学</option>
@@ -77,7 +90,7 @@
 	      </select>
 	      <br><br>
 	      <p>你有没有仔细看规定，有没有认为你可以正确完成这个HIT？</p>
-	      <select onChange="dropdownTip('confused::' + this.value)">
+	      <select onChange="dropdownTip('understood::' + this.value)">
 		<option value = ""></option>
 		<option value="yes">是</option>
 		<option value="no">否</option>
@@ -105,6 +118,7 @@
 	      <div><button id="surveySubmit" onclick="dropdownTip('submit')" type="button">提交HIT</button></div>
 	    </div>
             </span>
-        </div>
-    </body>
+    </div>
+</body>
+
 </html>
