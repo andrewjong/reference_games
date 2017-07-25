@@ -110,7 +110,7 @@ function disableCard(card) {
  * @param {Sprite} card 
  * @param {Mouse?} pointer 
  */
-let startDrag = function(card, pointer){
+let startDrag = function (card, pointer) {
   // make the card bigger for the illusion of picking it up
   card.scale.set(graphics.CARD_SCALE * 1.1);
   // for debugging
@@ -118,19 +118,21 @@ let startDrag = function(card, pointer){
   console.log(loc);
 }
 
-let stopDrag = function(card, pointer) {
-  // Reset the card's scale for the illusion of putting it back down
-  card.scale.set(graphics.CARD_SCALE);
-
-  // See if an overlap event and its resulting action occurred
-  swappableCards = myHandGroup.children.concat(onTableGroup.children);
-  let didOverlap = swappableCards.some(otherCard => {
-    return game.physics.arcade.overlap(otherCard, card, swapPosition, shouldSwap);
-  });
-
-  // Snap the card back if there was no overlap
-  if(!didOverlap) {
-    snapTo(card, card.snapPosition);
+let stopDrag = function (card, pointer) {
+  card.scale.set(graphics.CARD_SCALE); 
+  let shouldSwap = false;
+  if (isMyTurn) {
+    shouldSwap = cardGroupOverlap(card, myHandGroup.children, onTableGroup.children, game) ||
+      cardGroupOverlap(card, onTableGroup.children, myHandGroup.children, game);
+  }
+  else {
+    for (let i = 0; i < myHandGroup.children.length; i++) {
+      shouldSwap = shouldSwap || game.physics.arcade.overlap(myHandGroup.children[i], card, swapPosition);
+    }
+  }
+  console.log(`shouldSwap: ${shouldSwap}`);
+  if (!shouldSwap) {
+    snapTo(card, card.origPos);
   }
 }
 
@@ -139,11 +141,11 @@ let stopDrag = function(card, pointer) {
  */
 function swapPosition(card1, card2) {
   // Animations
-  [card1,card2].forEach(disableCard);
+  [card1, card2].forEach(disableCard);
   snapTo(card1, card2.snapPosition);
   snapTo(card2, card1.snapPosition);
-  setTimeout(function () { 
-    [card1,card2].forEach(enableCard);
+  setTimeout(function () {
+    [card1, card2].forEach(enableCard);
   }, 700);
 
   let temp = card1.snapPosition;
@@ -169,10 +171,10 @@ function shouldSwap(card1, card2) {
   else if ( // case one in hand one on table and my turn
     isMyTurn &&
     (myHandGroup.children.includes(card1) && onTableGroup.children.includes(card2)
-    || myHandGroup.children.includes(card2) && onTableGroup.children.includes(card1)) 
-  ){
-      return true;
-  } 
+      || myHandGroup.children.includes(card2) && onTableGroup.children.includes(card1))
+  ) {
+    return true;
+  }
   // return false otherwise
   return false;
 }
@@ -186,6 +188,7 @@ function shouldSwap(card1, card2) {
  */
 function cardGroupOverlap(card, newGroup, oldGroup) {
   let oldIndex = oldGroup.indexOf(card);
+  console.log(`oldIndex: ${oldIndex}`);
   for (let i = 0; i < newGroup.length; i++) {
     if (game.physics.arcade.overlap(newGroup[i], card, swapPosition) && oldIndex != -1) {
       let temp = newGroup[i];
@@ -193,7 +196,8 @@ function cardGroupOverlap(card, newGroup, oldGroup) {
       newGroup[i] = card;
       return true;
     }
-  }
+  } 
+  return false;
 }
 /**
  * Creates/destroys the sprites that represent the deck based on the current value of deck.length
