@@ -110,7 +110,7 @@ function disableCard(card) {
  * @param {Sprite} card 
  * @param {Mouse?} pointer 
  */
-let startDrag = function(card, pointer){
+let startDrag = function (card, pointer) {
   // make the card bigger for the illusion of picking it up
   card.scale.set(graphics.CARD_SCALE * 1.1);
   // for debugging
@@ -118,18 +118,30 @@ let startDrag = function(card, pointer){
   console.log(loc);
 }
 
-let stopDrag = function(card, pointer) {
+let stopDrag = function (card, pointer) {
   // Reset the card's scale for the illusion of putting it back down
   card.scale.set(graphics.CARD_SCALE);
 
   // See if an overlap event and its resulting action occurred
   swappableCards = myHandGroup.children.concat(onTableGroup.children);
-  let didOverlap = swappableCards.some(otherCard => {
-    return game.physics.arcade.overlap(otherCard, card, swapPosition, shouldSwap);
-  });
+  console.log("This card: " + card.frame);
+  console.log("Swappable cards: " + JSON.stringify(swappableCards.map(a => a.frame)));
+  let didOverlap = false;
+  for (let i = 0; i < swappableCards.length; ++i) {
+    console.log(`Checking card ${swappableCards[i].frame}`);
+    if (game.physics.arcade.overlap(card, swappableCards[i], swapPosition, shouldSwap, this)) {
+      console.log(`Found overlap for ${swappableCards[i].frame}`);
+      didOverlap = true;
+      break;
+    }
+  }
+  // let didOverlap = swappableCards.some(otherCard => {
+  //   return game.physics.arcade.overlap(otherCard, card, swapPosition, shouldSwap, this);
+  // });
+  console.log("didOverlap: " + didOverlap);
 
   // Snap the card back if there was no overlap
-  if(!didOverlap) {
+  if (!didOverlap) {
     snapTo(card, card.snapPosition);
   }
 }
@@ -138,20 +150,22 @@ let stopDrag = function(card, pointer) {
  * Swaps the positions of two card sprites
  */
 function swapPosition(card1, card2) {
+  console.log("Swapping cards...");
   // Animations
-  [card1,card2].forEach(disableCard);
+  [card1, card2].forEach(disableCard);
   snapTo(card1, card2.snapPosition);
   snapTo(card2, card1.snapPosition);
-  setTimeout(function () { 
-    [card1,card2].forEach(enableCard);
+  setTimeout(function () {
+    // reenable the cards
+    [card1, card2].forEach(enableCard);
   }, 700);
 
+  // switch the snap positions
   let temp = card1.snapPosition;
   card1.snapPosition = card2.snapPosition;
   card2.snapPosition = temp;
 
   // Change the indicies in the array representations
-
 }
 
 /**
@@ -160,21 +174,29 @@ function swapPosition(card1, card2) {
  * @param {Sprite} card2 
  */
 function shouldSwap(card1, card2) {
-  if (!card1.inputEnabled || !card2.inputEnabled) return false // one of the cards is disabled
-
-  if (myHandGroup.children.includes(card1) && myHand.children.includes(card2)) // case both in my hand
-    return true;
-  else if (onTableGroup.children.includes(card1) && onTableGroup.children.includes(card2)) // case both on table
-    return true;
-  else if ( // case one in hand one on table and my turn
+  let shouldSwap;
+  if (!card1.inputEnabled || !card2.inputEnabled){
+    console.log(`Inputs on ${card1} and ${card2} disabled`);
+    shouldSwap = false // one of the cards is disabled
+  }
+  else if (myHandGroup.children.includes(card1) && myHand.children.includes(card2)) {// case both in my hand
+    console.log(`${card1} and ${card2} both in hand`);
+    shouldSwap = true;
+  }
+  else if (onTableGroup.children.includes(card1) && onTableGroup.children.includes(card2)) {// case both on table
+    console.log(`${card1} and ${card2} both on table`);
+    shouldSwap = true;
+  } else if ( // case one in hand one on table and my turn
     isMyTurn &&
     (myHandGroup.children.includes(card1) && onTableGroup.children.includes(card2)
-    || myHandGroup.children.includes(card2) && onTableGroup.children.includes(card1)) 
-  ){
-      return true;
-  } 
-  // return false otherwise
-  return false;
+      || myHandGroup.children.includes(card2) && onTableGroup.children.includes(card1))
+  ) {
+    console.log(`One on hand, one on table`);
+    shouldSwap = true;
+  }
+  // there should be no other cases. if shouldSwap = undefined, check for logic error
+  console.log("shouldSwap: " + shouldSwap);
+  return shouldSwap;
 }
 
 /**
