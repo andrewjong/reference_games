@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "test": "jest",
-    "start" : "node app.js --expname colors/chineseColorRef"
+    "start" : "node app.js --expname colors/chineseColorRef",
+		"cards" : "node app.js --expname cards"
   },
   "dependencies": {
     "body-parser": "^1.17.2",
