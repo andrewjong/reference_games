@@ -7,6 +7,11 @@ data/
 data/colorReference/clickedObj/node_modules/
 data/sketchpad/message/*.csv
 experiments/node_modules/
+experiments/2dSplines/
+experiments/3dObjects/
+experiments/categorical/
+experiments/spatial/
+experiments/tangrams/
 models/node_modules/
 models/wppl-color/node_modules/
 models/.ipynb_checkpoints/
