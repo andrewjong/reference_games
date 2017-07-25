@@ -84,12 +84,12 @@ var checkPreviousParticipant = function (workerId, callback) {
 // };
 
 var writeDataToMongo = function (game, line) {
+  //The data
   const postData = {
     line: line
   };
   console.log("postData: " + JSON.stringify(postData));
-
-  console.log(`eventType: ${line.eventType}`);
+  // Use a different Model per message type
   let mongoData;
   if (line.eventType == 'chatMessage') {
     console.log('Using model chatMessage');
@@ -99,23 +99,11 @@ var writeDataToMongo = function (game, line) {
     console.log('Using model clickedObj');
     mongoData = new ClickedObj(postData);
   }
-
+  // Save to Mongo
   mongoData.save(err => {
     if (err) console.log('Error writing to mongo! ' + err);
     else console.log('Data saved successfully to mongo');
   });
-
-  // sendPostRequest(
-  //   'http://localhost:' + port + '/db/insert',
-  //   { json: postData },
-  //   (error, res, body) => {
-  //     if (!error && res.statusCode === 200) {
-  //       console.log(`sent data to store`);
-  //     } else {
-  // console.log(`error sending data to store: ${error} ${body}`);
-  //     }
-  //   }
-  // );
 };
 
 var UUID = function () {

@@ -23,12 +23,10 @@ class ReferenceGameServer {
     Writes data specified by experiment instance to csv and/or mongodb
   */
   writeData(client, eventType, message_parts) {
-    console.log(eventType);
     var output = this.customServer.dataOutput;
     var game = client.game;
     if (_.has(output, eventType)) {
       var dataPoint = _.extend(output[eventType](client, message_parts), { eventType });
-      console.log('dataPoint: ' + JSON.stringify(dataPoint));
       if (_.includes(game.dataStore, 'mongo')) {
         console.log('Writing to mongo');
         utils.writeDataToMongo(game, dataPoint);
