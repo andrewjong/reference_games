@@ -6,6 +6,8 @@ const graphics = {
     CARD_HEIGHT: 440,
     CARD_SCALE: 0.3,
     CARD_CELL_WIDTH: 120, // size of a card cell
+    ENABLED_TINT: 0xFFFFFF,
+    DISABLED_TINT: 0xBEBEBE,
     FADE_IN_TIME: 800,
     DECK_X: 140,
     DECK_PADDING: 100, // vertical padding between deck and description text

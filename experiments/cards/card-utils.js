@@ -102,7 +102,7 @@ function enableCard(card) {
  */
 function disableCard(card) {
   card.inputEnabled = false;
-  card.tint = 0xBEBEBE;
+  card.tint = graphics.DISABLED_TINT;
 }
 
 /**
@@ -127,19 +127,15 @@ let stopDrag = function (card, pointer) {
   console.log("This card: " + card.frame);
   console.log("Swappable cards: " + JSON.stringify(swappableCards.map(a => a.frame)));
   let didOverlap = false;
-  for (let i = 0; i < swappableCards.length; ++i) {
-    console.log(`Checking card ${swappableCards[i].frame}`);
-    if (game.physics.arcade.overlap(card, swappableCards[i], swapPosition, shouldSwap, this)) {
-      console.log(`Found overlap for ${swappableCards[i].frame}`);
+  swappableCards.some(o => {
+    if (!(card === o) && card.overlap(o) && shouldSwap(card, o)){
+      console.log(`Found overlap for ${o.frame}`);
+      swapPosition(card, o);
       didOverlap = true;
-      break;
     }
-  }
-  // let didOverlap = swappableCards.some(otherCard => {
-  //   return game.physics.arcade.overlap(otherCard, card, swapPosition, shouldSwap, this);
-  // });
-  console.log("didOverlap: " + didOverlap);
+  })
 
+  console.log("didOverlap: " + didOverlap);
   // Snap the card back if there was no overlap
   if (!didOverlap) {
     snapTo(card, card.snapPosition);
@@ -147,44 +143,22 @@ let stopDrag = function (card, pointer) {
 }
 
 /**
- * Swaps the positions of two card sprites
- */
-function swapPosition(card1, card2) {
-  console.log("Swapping cards...");
-  // Animations
-  [card1, card2].forEach(disableCard);
-  snapTo(card1, card2.snapPosition);
-  snapTo(card2, card1.snapPosition);
-  setTimeout(function () {
-    // reenable the cards
-    [card1, card2].forEach(enableCard);
-  }, 700);
-
-  // switch the snap positions
-  let temp = card1.snapPosition;
-  card1.snapPosition = card2.snapPosition;
-  card2.snapPosition = temp;
-
-  // Change the indicies in the array representations
-}
-
-/**
- * Callback to determine if two cards should swap
+ * Function to determine if two cards should swap
  * @param {Sprite} card1 
  * @param {Sprite} card2 
  */
 function shouldSwap(card1, card2) {
   let shouldSwap;
   if (!card1.inputEnabled || !card2.inputEnabled){
-    console.log(`Inputs on ${card1} and ${card2} disabled`);
+    console.log(`Inputs on ${card1.frame} and ${card2.frame} disabled`);
     shouldSwap = false // one of the cards is disabled
   }
-  else if (myHandGroup.children.includes(card1) && myHand.children.includes(card2)) {// case both in my hand
-    console.log(`${card1} and ${card2} both in hand`);
+  else if (myHandGroup.children.includes(card1) && myHandGroup.children.includes(card2)) {// case both in my hand
+    console.log(`${card1.frame} and ${card2.frame} both in hand`);
     shouldSwap = true;
   }
   else if (onTableGroup.children.includes(card1) && onTableGroup.children.includes(card2)) {// case both on table
-    console.log(`${card1} and ${card2} both on table`);
+    console.log(`${card1.frame} and ${card2.frame} both on table`);
     shouldSwap = true;
   } else if ( // case one in hand one on table and my turn
     isMyTurn &&
@@ -200,23 +174,47 @@ function shouldSwap(card1, card2) {
 }
 
 /**
- * Returns true if a card belonging to some group overlaps with a card from another group
- *
- * @param {sprite} card the card sprite
- * @param {Array<sprite>} newGroup group to check overlap
- * @param {Array<sprite>} oldGroup group currently containing card
+ * Swaps the positions of two card sprites
+ * @param {Sprite} card1
+ * @param {Sprite} card2
  */
-function cardGroupOverlap(card, newGroup, oldGroup) {
-  let oldIndex = oldGroup.indexOf(card);
-  for (let i = 0; i < newGroup.length; i++) {
-    if (game.physics.arcade.overlap(newGroup[i], card, swapPosition) && oldIndex != -1) {
-      let temp = newGroup[i];
-      oldGroup[oldIndex] = temp;
-      newGroup[i] = card;
-      return true;
-    }
+
+ function swapPosition(card1, card2) {
+  console.log("Swapping cards...");
+  // Animations
+  [card1, card2].forEach(c => c.tint = graphics.DISABLED_TINT);
+  // snapTo(card1, card2.snapPosition);
+  // snapTo(card2, card1.snapPosition);
+  if(card1.parent === card2.parent) {
+    const cardsArray = card1.parent.children;
+    const card1Index = cardsArray.indexOf(card1);
+    const card2Index = cardsArray.indexOf(card2);
+    cardsArray.swap(card1Index, card2Index);
+    card1.parent.align(cardsArray.length, 1, graphics.CARD_CELL_WIDTH, graphics.CARD_HEIGHT);
+  } else {
+
+    // let card1Group = card1.parent;
+    // let card2Group = card2.parent;
+    // let swappedOut = card1Group.replace(card1, card2);
+    // card2Group.replace(card2, swappedOut);
+
   }
+
+
+  setTimeout(function () {
+    // reenable the cards
+    [card1, card2].forEach(c => c.tint = graphics.ENABLED_TINT);
+  }, 700);
+
+  // switch the snap positions
+  let temp = card1.snapPosition;
+  card1.snapPosition = card2.snapPosition;
+  card2.snapPosition = temp;
+  // Update the cards in the array representations
+  myHand = myHandGroup.children.map(c => c.frame);
+  onTable = onTableGroup.children.map(c => c.frame);
 }
+
 /**
  * Creates/destroys the sprites that represent the deck based on the current value of deck.length
  */
@@ -318,6 +316,14 @@ function fadeOut(card, time) {
  */
 function randBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+
+Array.prototype.swap = function (x,y) {
+  var b = this[x];
+  this[x] = this[y];
+  this[y] = b;
+  return this;
 }
 
 module.exports = {
