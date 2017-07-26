@@ -170,7 +170,7 @@ function dropdownTip(data) {
     case 'partner':
       globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
         { 'ratePartner': commands[1] }); break;
-    case 'confused':
+    case 'understood':
       globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
         { 'understood': commands[1] }); break;
     case 'submit':
