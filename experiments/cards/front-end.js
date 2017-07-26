@@ -158,14 +158,3 @@ playGame.prototype = {
     //     this.updateEachTurn();
     // }
 }
-
-function getTurnText() {
-    let isPartner = isMyTurn ? '' : 'partner\'s '
-    return 'It\'s your ' + isPartner + 'turn.'
-}
-
-function getCounterText(num, counterType) {
-    let plural = (num == 1) ? '' : 's';
-    let descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
-    return `${num} card${plural} ${descrip}`;
-}

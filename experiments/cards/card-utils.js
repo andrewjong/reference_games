@@ -263,7 +263,6 @@ function makeDeckSprites() {
   }
 }
 
-
 function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool, destroyBool) {
   game.physics.arcade.enable(sprite);
   game.physics.arcade.moveToXY(sprite, x, y, 0, moveTime);
@@ -278,7 +277,6 @@ function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool, destroyBool) {
     }
   });
 }
-
 
 function reshuffleAnimation(cards, numToAdd, game, obj) {
   let backs = [];
@@ -312,8 +310,6 @@ function snapTo(card, pos) {
   game.add.tween(card).to(pos, 400, Phaser.Easing.Back.Out, true);
 }
 
-
-
 /**
  * Fades in card sprite
  */
@@ -339,6 +335,16 @@ function randBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function getTurnText() {
+    const isPartner = isMyTurn ? '' : 'partner\'s '
+    return 'It\'s your ' + isPartner + 'turn.'
+}
+
+function getCounterText(num, counterType) {
+    const plural = (num == 1) ? '' : 's';
+    const descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
+    return `${num} card${plural} ${descrip}`;
+}
 
 /**
  * Swaps the elements at two indices of an array
