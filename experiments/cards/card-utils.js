@@ -10,10 +10,13 @@ function makeHandGroup(cards, forMe) {
   // put the group in the right place
   let yOffset = graphics.HAND_OFFSET_FROM_CENTER; // the offset to place the cards
   if (!forMe) yOffset *= -1; // place on the opposite side if other player
-  handGroup.centerX = game.world.centerX;
-  handGroup.centerY = game.world.centerY + yOffset;
+  handGroup.forEach(c => {
+    c.y = game.world.centerY + yOffset
+    c.snapPosition = c.position.clone();
+    c.parentGroup = handGroup;
+  });
 
-  if (!forMe) handGroup.children.forEach(disableCard);
+  if (!forMe) handGroup.forEach(disableCard);
   return handGroup;
 }
 
@@ -25,8 +28,11 @@ function makeOnTableGroup(cards) {
   let onTableGroup = makeCardGroup(cards);
   // put the group in the right place
   onTableGroup.centerX = game.world.centerX;
-  onTableGroup.centerY = game.world.centerY;
-
+  onTableGroup.forEach(c => {
+    c.y = game.world.centerY
+    c.snapPosition = c.position.clone();
+    c.parentGroup = onTableGroup;
+  });
   return onTableGroup
 }
 
@@ -37,26 +43,29 @@ function makeOnTableGroup(cards) {
  */
 let makeCardGroup = function (cards) {
   /* Note: This function is defined as a variable as it's not meant to be hoisted */
-  let cardGroup = game.add.group();
-
   /* Placement */
-  // create 1 each, from spritesheet 'cards', for each frame in array cards, and set visible to physics
-  cardGroup.createMultiple(1, 'cards', cards, true);
-  cardGroup.children.forEach(card => {
-    card.anchor.set(0.5);
-    card.scale.set(graphics.CARD_SCALE);
-  });
-  // align this many cards, along 1 row, of width of the card and the card gap
-  cardGroup.align(cards.length, 1, graphics.CARD_CELL_WIDTH, graphics.CARD_HEIGHT);
+  let cardGroup = new Array(cards.length);
+  let groupWidth = cards.length * graphics.CARD_CELL_WIDTH;
+  let startX = game.world.centerX - groupWidth / 2;
+  for (let i = 0; i < cardGroup.length; ++i) {
+    // add a sprite off the game screen
+    let cardSprite = game.add.sprite(-10, -10, 'cards', cards[i]);
+    // set the anchor and scale
+    cardSprite.anchor.set(0.5);
+    cardSprite.scale.set(graphics.CARD_SCALE);
+    // put the card in the correct location
+    let cardX = startX + i * graphics.CARD_CELL_WIDTH;
+    cardSprite.x = cardX + graphics.CARD_CELL_WIDTH / 2;
+    cardGroup[i] = cardSprite;
+  }
 
   /* Effects */
-  cardGroup.children.forEach(card => {
+  cardGroup.forEach(card => {
     // Fade in when created
     fadeIn(card, graphics.FADE_IN_TIME);
     // Enable dragging
     card.inputEnabled = true;
     card.input.enableDrag(true, true); // center on mouse = true, bring to top = true 
-    card.snapPosition = card.position.clone();
     card.events.onDragStart.add(startDrag);
     card.events.onDragStop.add(stopDrag);
   });
@@ -114,7 +123,7 @@ let startDrag = function (card, pointer) {
   // make the card bigger for the illusion of picking it up
   card.scale.set(graphics.CARD_SCALE * 1.1);
   // for debugging
-  loc = myHandGroup.children.indexOf(card) != -1 ? 'hand' : 'table';
+  loc = myHandGroup.indexOf(card) != -1 ? 'hand' : 'table';
   console.log(loc);
 }
 
@@ -123,12 +132,12 @@ let stopDrag = function (card, pointer) {
   card.scale.set(graphics.CARD_SCALE);
 
   // See if an overlap event and its resulting action occurred
-  swappableCards = myHandGroup.children.concat(onTableGroup.children);
+  swappableCards = myHandGroup.concat(onTableGroup);
   console.log("This card: " + card.frame);
   console.log("Swappable cards: " + JSON.stringify(swappableCards.map(a => a.frame)));
   let didOverlap = false;
   swappableCards.some(o => {
-    if (!(card === o) && card.overlap(o) && shouldSwap(card, o)){
+    if (!(card === o) && card.overlap(o) && shouldSwap(card, o)) {
       console.log(`Found overlap for ${o.frame}`);
       swapPosition(card, o);
       didOverlap = true;
@@ -149,21 +158,21 @@ let stopDrag = function (card, pointer) {
  */
 function shouldSwap(card1, card2) {
   let shouldSwap;
-  if (!card1.inputEnabled || !card2.inputEnabled){
+  if (!card1.inputEnabled || !card2.inputEnabled) {
     console.log(`Inputs on ${card1.frame} and ${card2.frame} disabled`);
     shouldSwap = false // one of the cards is disabled
   }
-  else if (myHandGroup.children.includes(card1) && myHandGroup.children.includes(card2)) {// case both in my hand
+  else if (myHandGroup.includes(card1) && myHandGroup.includes(card2)) {// case both in my hand
     console.log(`${card1.frame} and ${card2.frame} both in hand`);
     shouldSwap = true;
   }
-  else if (onTableGroup.children.includes(card1) && onTableGroup.children.includes(card2)) {// case both on table
+  else if (onTableGroup.includes(card1) && onTableGroup.includes(card2)) {// case both on table
     console.log(`${card1.frame} and ${card2.frame} both on table`);
     shouldSwap = true;
   } else if ( // case one in hand one on table and my turn
     isMyTurn &&
-    (myHandGroup.children.includes(card1) && onTableGroup.children.includes(card2)
-      || myHandGroup.children.includes(card2) && onTableGroup.children.includes(card1))
+    (myHandGroup.includes(card1) && onTableGroup.includes(card2)
+      || myHandGroup.includes(card2) && onTableGroup.includes(card1))
   ) {
     console.log(`One on hand, one on table`);
     shouldSwap = true;
@@ -179,28 +188,12 @@ function shouldSwap(card1, card2) {
  * @param {Sprite} card2
  */
 
- function swapPosition(card1, card2) {
+function swapPosition(card1, card2) {
   console.log("Swapping cards...");
   // Animations
   [card1, card2].forEach(c => c.tint = graphics.DISABLED_TINT);
-  // snapTo(card1, card2.snapPosition);
-  // snapTo(card2, card1.snapPosition);
-  if(card1.parent === card2.parent) {
-    const cardsArray = card1.parent.children;
-    const card1Index = cardsArray.indexOf(card1);
-    const card2Index = cardsArray.indexOf(card2);
-    cardsArray.swap(card1Index, card2Index);
-    card1.parent.align(cardsArray.length, 1, graphics.CARD_CELL_WIDTH, graphics.CARD_HEIGHT);
-  } else {
-
-    // let card1Group = card1.parent;
-    // let card2Group = card2.parent;
-    // let swappedOut = card1Group.replace(card1, card2);
-    // card2Group.replace(card2, swappedOut);
-
-  }
-
-
+  snapTo(card1, card2.snapPosition);
+  snapTo(card2, card1.snapPosition);
   setTimeout(function () {
     // reenable the cards
     [card1, card2].forEach(c => c.tint = graphics.ENABLED_TINT);
@@ -210,9 +203,37 @@ function shouldSwap(card1, card2) {
   let temp = card1.snapPosition;
   card1.snapPosition = card2.snapPosition;
   card2.snapPosition = temp;
+
+  // Logistics
+  // switch which group the cards belong to
+  if (card1.parentGroup === card2.parentGroup){
+    const parentGroup = card1.parentGroup;
+    const index1 = parentGroup.indexOf(card1);
+    const index2 = parentGroup.indexOf(card2);
+    parentGroup.swap(index1, index2);
+  } else {
+    const c1Group = card1.parentGroup;
+    const c1Index = c1Group.indexOf(card1);
+
+    const c2Group = card2.parentGroup;
+    const c2Index = c2Group.indexOf(card2);
+
+    // put card2 where card1 was
+    c1Group.splice(c1Index, 1, card2); 
+    // put card1 where card2 was
+    c2Group.splice(c2Index, 1, card1); 
+
+    // update membership
+    card1.parentGroup = c2Group;
+    card2.parentGroup = c1Group;
+  }
+
   // Update the cards in the array representations
-  myHand = myHandGroup.children.map(c => c.frame);
-  onTable = onTableGroup.children.map(c => c.frame);
+  myHand = myHandGroup.map(c => c.frame);
+  onTable = onTableGroup.map(c => c.frame);
+  console.log('Their Hand: ' + theirHand);
+  console.log('On Table: ' + onTable);
+  console.log('My Hand: ' + myHand);
 }
 
 /**
@@ -319,7 +340,12 @@ function randBetween(min, max) {
 }
 
 
-Array.prototype.swap = function (x,y) {
+/**
+ * Swaps the elements at two indices of an array
+ * @param {Number} index1 
+ * @param {Number} index2
+ */
+Array.prototype.swap = function (x, y) {
   var b = this[x];
   this[x] = this[y];
   this[y] = b;

@@ -61,12 +61,13 @@ playGame.prototype = {
         Phaser.ArrayUtils.shuffle(deck); // shuffle the deck
         console.log(deck); // print to console for debugging
 
-        myHand = deck.splice(0, gameOptions.CARDS_PER_HAND); // take the top cards
-        console.log("My hand: " + myHand);
+        // Draw from the top cards of the deck
         theirHand = deck.splice(0, gameOptions.CARDS_PER_HAND);
         console.log("Their hand: " + theirHand);
         onTable = deck.splice(0, gameOptions.CARDS_ON_TABLE);
         console.log("On table: " + onTable);
+        myHand = deck.splice(0, gameOptions.CARDS_PER_HAND);
+        console.log("My hand: " + myHand);
 
         /* GRAPHICS */
         // Enable physics for overlap detection later
@@ -78,12 +79,10 @@ playGame.prototype = {
         tableBackground.height = graphics.GAME_HEIGHT;
 
         // Draw hands for this player and that player
-        myHandGroup = makeHandGroup(myHand, true);
-        console.log("My hand: " + myHandGroup.children);
+        // Note: these groups are NOT Phaser groups. They're js arrays with sprites
         theirHandGroup = makeHandGroup(theirHand, false);
-        console.log("Their hand: " + theirHandGroup.children);
         onTableGroup = makeOnTableGroup(onTable);
-        console.log("On table: " + onTableGroup);
+        myHandGroup = makeHandGroup(myHand, true);
 
         // text stating how many cards are left in the deck and how many were reshuffled in the previous round
         const counterStyle = { font: '20px Arial', fill: '#FFF', align: 'center' };
@@ -127,14 +126,14 @@ playGame.prototype = {
             this.button.setFrames(0, 1, 2);
             this.button.inputEnabled = true;
             // Enable input on the table group
-            onTableGroup.children.forEach(enableCard);
-            // onTableGroup.children.forEach(c => c.inputEnabled = false);
+            onTableGroup.forEach(enableCard);
+            // onTableGroup.forEach(c => c.inputEnabled = false);
         } else {
             // Disable the end-turn button
             this.button.setFrames(3, 3, 3);
             this.button.inputEnabled = false;
             // Disable input on the table group
-            onTableGroup.children.forEach(disableCard);
+            onTableGroup.forEach(disableCard);
         }
         // // update card counters
         // this.cardsLeft = 52 - this.nextCardIndex + this.cardsAdded;
