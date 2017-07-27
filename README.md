@@ -1,27 +1,26 @@
-Note: This is a substantially refactored fork of [MWERT](https://github.com/hawkrobe/MWERT). The overall framework is the same, but we extract a lot of shared code into the sharedUtils directory, which is imported as a base by all of the individual experiments.
+# Info
+This is a fork of https://github.com/hawkrobe/reference_games that adds two experiments: "chineseColorRef" and "cards."
 
-Local demo (from scratch)
-=========================
+- _chineseColorRef_, a Chinese version of the color reference game is located in ```experiments/colors/chineseColorRef```. Since the Chinese version has modified files in the ```sharedUtils/``` folder for Chinese strings, it lives on its own branch: chinese-master.
 
-1. Git is a popular version control and source code management system. If you're new to git, you'll need to install the latest version by following the link for [Mac](http://sourceforge.net/projects/git-osx-installer/) or [Windows](http://msysgit.github.io/) and downloading the first option in the list. On Mac, this will give you a set of command-line tools (restart the terminal if the git command is still not found after installation). On Windows it will give you a shell to type commands into. For Linux users, more information can be found [here](http://git-scm.com/book/en/Getting-Started-Installing-Git).
+- _cards_, a new game to collect corpora in a changing environment, is located in ```experiments/cards```. This branch lives on the default branch: cards-master.
 
-2. On Mac or Linux, use the Terminal to navigate to the location where you want to create your project, and enter 
-   ```
-   git clone https://github.com/hawkrobe/reference_games.git
-   ```
-   at the command line to create a local copy of this repository. On Windows, run this command in the shell you installed in the previous step.
+For background knowledge about these games, please consult [Andrew Jong](andrewjong@cs.stanford.edu "andrewjong@cs.stanford.edu"), [Jennifer Hu](jenniferhu@college.harvard.edu "jennhu@college.harvard.edu"), [Will Monroe](wmonroe4@stanford.edu "wmonroe4@stanford.edu"), or [Chris Potts](cgpotts@stanford.edu "cgpotts@stanford.edu").
 
-3. Install node and npm (the node package manager) on your machine. Node.js sponsors an [official download](https://nodejs.org/en/download/) for all systems.
 
-4. Navigate into the repository you created, then ```./experiments```. You should see a file called package.json, which contains the dependencies. To install these dependencies, enter ```npm install``` at the command line. This may take a few minutes.
+**To test locally, see https://github.com/hawkrobe/reference_games**
 
-5. Finally, to run the experiment of your choice, in the experiments directory type ```node app.js --expname <path/to/experiment> --gameport 8888``` at the command line. The experiment name argument is required; the game port number is optional. You should expect to see the following message:
-   ```
-   info  - socket.io started
-       :: Express :: Listening on port 8888
-   ```
-   This means that you've successfully created a 'server' that can be accessed by copying and pasting 
-   ```
-   http://localhost:8888/<path/to/experiment>/index.html
-   ```
-   in one tab of your browser. To connect the other player in another tab for test purposes, open a new tab and use the same URL. Repeat as many times as you'd like!
+## Deploying On Heroku
+(At the moment, this is mainly for _chineseColorRef_, but will expand to _cards_ once it is in a deployable state.)
+
+For NodeJS apps, Heroku requires the root directory to have a package.json file. As this project is structured with package.json in experiments/ and not in the root, an easy way to deploy on heroku is with git subtrees.
+
+After adding your heroku remote, use the command:
+
+```git push heroku `git subtree split --prefix experiments chinese-master`:master --force```
+
+to push the directory ```experiments``` from branch chinese-master to Heroku's master.
+
+This app also uses MongoDB for its database. Add the MLab add-on (or another MongoDB service) on Heroku. See [here](https://devcenter.heroku.com/articles/mongolab) for more detail. The code for writing to MongoDB is in ```sharedUtils/sharedUtils.js```.
+
+For assistance/questions, feel free to email [Andrew](andrewjong@cs.stanford.edu "andrewjong@cs.stanford.edu")!
