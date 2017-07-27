@@ -17,11 +17,6 @@ const graphics = {
     TURN_BUTTON_HEIGHT: 46
 }
 
-const gameOptions = {
-    CARDS_PER_HAND: 3,
-    CARDS_ON_TABLE: 4
-}
-
 let game; // the phaser game instance
 let isMyTurn = true; // turn boolean
 let deck, myHand, theirHand, onTable; // numerical arrays to represent each hand
@@ -55,19 +50,8 @@ playGame.prototype = {
     create: function () {
         /* LOGISTICS */
 
-        // TODO: move this initialization stuff to game.core.js
-        // Initialize deck of cards as number array
-        deck = Phaser.ArrayUtils.numberArray(0, 51);
-        Phaser.ArrayUtils.shuffle(deck); // shuffle the deck
-        console.log(deck); // print to console for debugging
+        // Logistics initialized in game.core.js! 
 
-        // Draw from the top cards of the deck
-        theirHand = deck.splice(0, gameOptions.CARDS_PER_HAND);
-        console.log("Their hand: " + theirHand);
-        onTable = deck.splice(0, gameOptions.CARDS_ON_TABLE);
-        console.log("On table: " + onTable);
-        myHand = deck.splice(0, gameOptions.CARDS_PER_HAND);
-        console.log("My hand: " + myHand);
 
         /* GRAPHICS */
         // Enable physics for overlap detection later

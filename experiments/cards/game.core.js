@@ -14,6 +14,11 @@ if (typeof _ === 'undefined') {
   else throw 'mymodule requires underscore, see http://underscorejs.org';
 }
 
+const gameOptions = {
+    CARDS_PER_HAND: 3,
+    CARDS_ON_TABLE: 4
+}
+
 var game_core = function (options) {
   // Store a flag if we are the server instance
   this.server = options.server;
@@ -33,6 +38,20 @@ var game_core = function (options) {
       instance: options.player_instances[0].player,
       player: new game_player(this, options.player_instances[0].player)
     }];
+
+    /* Game Start State */
+    
+    // Represent deck of cards as number array
+    this.deck = Array.from(Array(52).keys);
+    this.deck.sort(() => { return 0.5 - Math.random() }); // shuffle random order
+    console.log('Deck: ' + deck);
+
+    // Draw from the top cards of the deck
+    this.players[0].hand = deck.splice(0, gameOptions.CARDS_PER_HAND);
+    console.log("P1 hand: " + this.players[0].hand);
+    this.onTable = deck.splice(0, gameOptions.CARDS_ON_TABLE);
+    console.log("On table: " + this.onTable);
+    this.players[1].hand = deck.splice(0, gameOptions.CARDS_PER_HAND);
 
     this.server_send_update();
   } else {
@@ -79,12 +98,18 @@ game_core.prototype.get_active_players = function () {
   return _.without(noEmptiesList, null);
 };
 
-// send an update to the server
+// send an update from the server
 game_core.prototype.server_send_update = function () {
   //Make a snapshot of the current state, for updating the clients
   var local_game = this;
 
   // Add info about all players
+  let player_packet = local_game.players.map(p => {
+    return {
+      id: p.id,
+      player: null
+    }
+  })
   var player_packet = _.map(local_game.players, function (p) {
     return {
       id: p.id,
@@ -96,16 +121,13 @@ game_core.prototype.server_send_update = function () {
     gs: this.game_started,   // true when game's started
     pt: this.players_threshold,
     pc: this.player_count,
-    dataObj: this.data,
-    roundNum: this.roundNum,
-    trialInfo: this.trialInfo
   };
 
   _.extend(state, { players: player_packet });
 
   //Send the snapshot to the players
   this.state = state;
-  _.map(local_game.get_active_players(), function (p) {
+  this.get_active_players().forEach(p => {
     p.player.instance.emit('onserverupdate', state);
-  });
+  })
 };

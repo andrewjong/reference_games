@@ -32,13 +32,26 @@ var onMessage = function (client, message) {
   var others = gc.get_others(client.userid);
   switch (message_type) {
 
+    // the player ended their turn
     case 'endTurn':
       _.map(others, p => {
-        p.player.instance.emit('endTurn')
+        p.player.instance.emit('endTurn');
+      });
+
+      break;
+
+    // a change was made to the cards on the table / in the hands
+    case 'cardUpdate':
+      others.forEach(p => {
+        p.player.instance.emit('cardUpdate', {
+          // TODO: fill this with the updated cards. currently not sure how to represent to the other player
+
+        });
       })
 
       break;
 
+    // a player is typing
     case 'playerTyping':
       _.map(others, function (p) {
         p.player.instance.emit('playerTyping',
@@ -46,6 +59,7 @@ var onMessage = function (client, message) {
       });
       break;
 
+    // a message was sent
     case 'chatMessage':
       if (client.game.player_count == 2 && !gc.paused) {
         // Update others
