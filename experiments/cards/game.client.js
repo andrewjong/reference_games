@@ -36,7 +36,7 @@ var client_onMessage = function (data) {
   switch (command) {
     case 's': //server message
       switch (subcommand) {
-        case 'end_turn':
+        case 'end':
           // Redirect to exit survey
           ondisconnect();
           console.log("received end message...");
@@ -81,3 +81,22 @@ var client_onjoingame = function (num_players, role) {
       + 'Please do not refresh the page!');
   }
 };
+
+let customSetup = function(game){
+  // Update about the cards in both player's hands and on the table
+  game.socket.on('cardsUpdate', cardsPacket => {
+
+  });
+
+  // End turn contains data of how many cards were reshuffled/discarded at the end of the turn
+  game.socket.on('endTurn', numReshuffled => {
+
+  });
+
+  // New turn updates the new cards that are dealt on the table at the beginning of a turn
+  game.socket.on('newTurn', cardsDealt => {
+
+  });
+
+
+}

@@ -42,13 +42,13 @@ var selecting;
  that they can update their variables to reflect changes.
  */
 
-var client_onserverupdate_received = function(data){
+var client_onserverupdate_received = function (data) {
 
   // Update client versions of variables with data received from
   // server_send_update function in game.core.js
   //data refers to server information
-  if(data.players) {
-    _.map(_.zip(data.players, globalGame.players),function(z){
+  if (data.players) {
+    _.map(_.zip(data.players, globalGame.players), function (z) {
       z[1].id = z[0].id;
     });
   }
@@ -56,43 +56,45 @@ var client_onserverupdate_received = function(data){
   // If your objects are out-of-date (i.e. if there's a new round), set up
   // machinery to draw them
   if (globalGame.roundNum != data.roundNum) {
-    var alreadyLoaded = 0; 
+    var alreadyLoaded = 0;
     $('#occluder').show();
     // globalGame.drawingAllowed = false;
-    globalGame.objects = _.map(data.objects, function(obj) {
+    globalGame.objects = _.map(data.objects, function (obj) {
       // Extract the coordinates matching your role
       var customCoords = globalGame.my_role == "sketcher" ? obj.speakerCoords : obj.listenerCoords;
       // remove the speakerCoords and listenerCoords properties
       var customObj = _.chain(obj)
-	    .omit('speakerCoords', 'listenerCoords')
-	    .extend(obj, {trueX : customCoords.trueX, trueY : customCoords.trueY,
-			  gridX : customCoords.gridX, gridY : customCoords.gridY,
-			  box : customCoords.box})
-	    .value();
+        .omit('speakerCoords', 'listenerCoords')
+        .extend(obj, {
+          trueX: customCoords.trueX, trueY: customCoords.trueY,
+          gridX: customCoords.gridX, gridY: customCoords.gridY,
+          box: customCoords.box
+        })
+        .value();
 
       var imgObj = new Image(); //initialize object as an image (from HTML5)
       imgObj.src = customObj.url; // tell client where to find it
-      imgObj.onload = function(){ // Draw image as soon as it loads (this is a callback)
+      imgObj.onload = function () { // Draw image as soon as it loads (this is a callback)
         globalGame.ctx.drawImage(imgObj, parseInt(customObj.trueX), parseInt(customObj.trueY),
-				  customObj.width, customObj.height);
-          if (globalGame.my_role === globalGame.playerRoleNames.role1) {
-            highlightCell(globalGame, '#d15619', function(x) {return x.target_status == 'target';});
-          }
-          alreadyLoaded += 1
-          if (alreadyLoaded == 3) {
-            setTimeout(function() {
-              $('#occluder').hide();
-              globalGame.drawingAllowed = true;
-            },750);
-          }
+          customObj.width, customObj.height);
+        if (globalGame.my_role === globalGame.playerRoleNames.role1) {
+          highlightCell(globalGame, '#d15619', function (x) { return x.target_status == 'target'; });
+        }
+        alreadyLoaded += 1
+        if (alreadyLoaded == 3) {
+          setTimeout(function () {
+            $('#occluder').hide();
+            globalGame.drawingAllowed = true;
+          }, 750);
+        }
       };
-      return _.extend(customObj, {img: imgObj});
+      return _.extend(customObj, { img: imgObj });
     });
   };
 
 
   // Get rid of "waiting" screen and allow drawing if there are multiple players
-  if(data.players.length > 1) {
+  if (data.players.length > 1) {
     $('#messages').empty();
     globalGame.get_player(globalGame.my_id).message = "";
   }
@@ -102,7 +104,7 @@ var client_onserverupdate_received = function(data){
   globalGame.player_count = data.pc;
   globalGame.roundNum = data.roundNum;
   // update data object on first round, don't overwrite (FIXME)
-  if(!_.has(globalGame, 'data')) {
+  if (!_.has(globalGame, 'data')) {
     globalGame.data = data.dataObj;
   }
 
@@ -119,75 +121,77 @@ var client_onserverupdate_received = function(data){
 // The corresponding function where the server parses messages from
 // clients, look for "server_onMessage" in game.server.js.
 
-var client_onMessage = function(data) {
+var client_onMessage = function (data) {
 
   var commands = data.split('.');
   var command = commands[0];
   var subcommand = commands[1] || null;
   var commanddata = commands[2] || null;
 
-  switch(command) {
-  case 's': //server message
-    switch(subcommand) {
-    case 'end' :
-      // Redirect to exit survey
-      ondisconnect();
-      console.log("received end message...");
-      $('#sketchpad').hide();
-      break;
+  switch (command) {
+    case 's': //server message
+      switch (subcommand) {
+        case 'end':
+          // Redirect to exit survey
+          ondisconnect();
+          console.log("received end message...");
+          $('#sketchpad').hide();
+          break;
 
-    case 'feedback' :
-      // Prevent them from sending messages b/w trials
-      $('#chatbox').attr("disabled", "disabled");
-      var clickedObjName = commanddata;
+        case 'feedback':
+          // Prevent them from sending messages b/w trials
+          $('#chatbox').attr("disabled", "disabled");
+          var clickedObjName = commanddata;
 
-      // update local score
-      var target = _.filter(globalGame.objects, function(x){
-	return x.target_status == 'target';
-      })[0];
-      var scoreDiff = target.filename == clickedObjName ? 1 : 0;
-      globalGame.data.subject_information.score += scoreDiff;
-      // draw feedback
-      if (globalGame.my_role === globalGame.playerRoleNames.role1) {
-	       drawSketcherFeedback(globalGame, scoreDiff, clickedObjName);
-      } else {
-	       drawViewerFeedback(globalGame, scoreDiff, clickedObjName);
+          // update local score
+          var target = _.filter(globalGame.objects, function (x) {
+            return x.target_status == 'target';
+          })[0];
+          var scoreDiff = target.filename == clickedObjName ? 1 : 0;
+          globalGame.data.subject_information.score += scoreDiff;
+          // draw feedback
+          if (globalGame.my_role === globalGame.playerRoleNames.role1) {
+            drawSketcherFeedback(globalGame, scoreDiff, clickedObjName);
+          } else {
+            drawViewerFeedback(globalGame, scoreDiff, clickedObjName);
+          }
+          break;
+
+        case 'alert': // Not in database, so you can't play...
+          alert('You did not enter an ID');
+          window.location.replace('http://nodejs.org'); break;
+
+        case 'join': //join a game requested
+          var num_players = commanddata;
+          client_onjoingame(num_players, commands[3]); break;
+
+        case 'add_player': // New player joined... Need to add them to our list.
+          console.log("adding player" + commanddata);
+          console.log("cancelling timeout");
+          clearTimeout(globalGame.timeoutID);
+          if (hidden === 'hidden') {
+            flashTitle("GO!");
+          }
+          globalGame.players.push({
+            id: commanddata,
+            player: new game_player(globalGame)
+          }); break;
       }
-      break;
-
-    case 'alert' : // Not in database, so you can't play...
-      alert('You did not enter an ID');
-      window.location.replace('http://nodejs.org'); break;
-
-    case 'join' : //join a game requested
-      var num_players = commanddata;
-      client_onjoingame(num_players, commands[3]); break;
-
-    case 'add_player' : // New player joined... Need to add them to our list.
-      console.log("adding player" + commanddata);
-      console.log("cancelling timeout");
-      clearTimeout(globalGame.timeoutID);
-      if(hidden === 'hidden') {
-        flashTitle("GO!");
-      }
-      globalGame.players.push({id: commanddata,
-                 player: new game_player(globalGame)}); break;
-    }
   }
 };
 
-var client_addnewround = function(game) {
+var client_addnewround = function (game) {
   $('#roundnumber').append(game.roundNum);
   document.getElementById('sketchpad').focus();
 };
 
-var customSetup = function(game) {
+var customSetup = function (game) {
   game.sketchpad = new Sketchpad();
 
-  $(document).ready(function() {
-    $("#submitbutton").click(function(){
+  $(document).ready(function () {
+    $("#submitbutton").click(function () {
       if (globalGame.currStrokeNum > 0) { // only allow submit button to be pressed if at least one stroke made
-        var finished = ['doneDrawing',1];
+        var finished = ['doneDrawing', 1];
         globalGame.socket.send(finished.join('.'));
       } else {
         $('#feedback').html("Please make your sketch.");
@@ -197,14 +201,14 @@ var customSetup = function(game) {
 
   // Set up new round on client's browsers after submit round button is pressed.
   // This means clear the canvas, update round number, and update score on screen
-  game.socket.on('newRoundUpdate', function(data){
+  game.socket.on('newRoundUpdate', function (data) {
     // Reset sketchpad each round
     project.activeLayer.removeChildren();
 
     // reset drawing stuff
     globalGame.doneDrawing = false;
     globalGame.path = [];
-    
+
     // Reset stroke counter
     globalGame.currStrokeNum = 0;
 
@@ -226,22 +230,22 @@ var customSetup = function(game) {
 
     // Update display
     var score = game.data.subject_information.score;
-    if(game.roundNum + 2 > game.numRounds) {
+    if (game.roundNum + 2 > game.numRounds) {
       $('#roundnumber').empty();
       $('#sketchpad').hide();
       $('#instructs').html('Thanks for participating in our experiment! ' +
         "Before you submit your HIT, we'd like to ask you a few questions.");
-      $('#roundnumber').empty()	
+      $('#roundnumber').empty()
         .append("Round\n" + (game.roundNum + 1) + " of " + game.numRounds);
     } else {
       $('#roundnumber').empty()
         .append("Round\n" + (game.roundNum + 2) + " of " + game.numRounds);
     }
     $('#score').empty().append(score + ' of ' + (game.roundNum + 1) + ' correct for a bonus of $'
-			       + ((score * 3)/100).toFixed(2));
+      + ((score * 3) / 100).toFixed(2));
   });
 
-  game.socket.on('stroke', function(packet) {
+  game.socket.on('stroke', function (packet) {
 
     jsonData = packet[0]
     message = packet[1]
@@ -255,22 +259,22 @@ var customSetup = function(game) {
 
   });
 
-  game.socket.on('mutualDoneDrawing', function(role) {
+  game.socket.on('mutualDoneDrawing', function (role) {
     // console.log('the doneness of drawing is mutual knowledge');
     globalGame.doneDrawing = true;
     globalGame.drawingAllowed = false;
     if (globalGame.my_role === globalGame.playerRoleNames.role1) {
       $('#feedback').html(" ");
-      setTimeout(function(){$('#turnIndicator').html("Your partner's turn to guess the target!");},globalGame.feedbackDelay);
+      setTimeout(function () { $('#turnIndicator').html("Your partner's turn to guess the target!"); }, globalGame.feedbackDelay);
     } else if (globalGame.my_role === globalGame.playerRoleNames.role2) {
       $("#loading").fadeOut('fast');
-      setTimeout(function(){$('#turnIndicator').html('Your turn: Select the target!');},globalGame.feedbackDelay);
+      setTimeout(function () { $('#turnIndicator').html('Your turn: Select the target!'); }, globalGame.feedbackDelay);
     }
   });
 
 };
 
-var client_onjoingame = function(num_players, role) {
+var client_onjoingame = function (num_players, role) {
   // set role locally
   globalGame.my_role = role;
   globalGame.get_player(globalGame.my_id).role = globalGame.my_role;
@@ -279,8 +283,8 @@ var client_onjoingame = function(num_players, role) {
   // this.version = BrowserDetect.version;
   // this.OpSys = BrowserDetect.OS;
 
-  _.map(_.range(num_players - 1), function(i){
-    globalGame.players.unshift({id: null, player: new game_player(globalGame)});
+  _.map(_.range(num_players - 1), function (i) {
+    globalGame.players.unshift({ id: null, player: new game_player(globalGame) });
   });
 
   // Update w/ role
@@ -292,7 +296,7 @@ var client_onjoingame = function(num_players, role) {
       " When you are done, click SUBMIT. </p>" +
       "<p> To draw: Click & drag on canvas OR hold down Shift key while moving cursor. </p>" +
       "<p> Important: Please do NOT resize browser window or change zoom during the game.</p>".bold());
-      $("#submitbutton").show();
+    $("#submitbutton").show();
   } else if (role === globalGame.playerRoleNames.role2) {
     $('#instructs').html("<p>Your partner is going to draw one of these four objects." +
       " When they are done, click on the object they sketched. </p>" +
@@ -300,27 +304,27 @@ var client_onjoingame = function(num_players, role) {
     $("#loading").show();
   }
 
-  if(num_players == 1) {
+  if (num_players == 1) {
     // Set timeout only for first player...
-    this.timeoutID = setTimeout(function() {
-      if(_.size(this.urlParams) == 4) {
-  	this.submitted = true;
-  	window.opener.turk.submit(this.data, true);
-  	window.close();
+    this.timeoutID = setTimeout(function () {
+      if (_.size(this.urlParams) == 4) {
+        this.submitted = true;
+        window.opener.turk.submit(this.data, true);
+        window.close();
       } else {
-  	console.log("would have submitted the following :");
-  	console.log(this.data);
+        console.log("would have submitted the following :");
+        console.log(this.data);
       }
     }, 1000 * 60 * 15);
 
     globalGame.get_player(globalGame.my_id).message = ('Drawing will begin \n after another player connects... \n '
-						       + 'Please do not refresh the page!');
+      + 'Please do not refresh the page!');
   }
 
 
 
   // set mouse-tracking event handler
-  if(role === globalGame.playerRoleNames.role2) {
+  if (role === globalGame.playerRoleNames.role2) {
     globalGame.viewport.addEventListener("click", responseListener, false);
   } else {
     globalGame.sketchpad.setupTool();
@@ -334,12 +338,12 @@ var client_onjoingame = function(num_players, role) {
 function responseListener(evt) {
   // console.log('got to responseListener inside game.client.js');
   var bRect = globalGame.viewport.getBoundingClientRect();
-  var mouseX = (evt.clientX - bRect.left)*(globalGame.viewport.width/bRect.width);
-  var mouseY = (evt.clientY - bRect.top)*(globalGame.viewport.height/bRect.height);
+  var mouseX = (evt.clientX - bRect.left) * (globalGame.viewport.width / bRect.width);
+  var mouseY = (evt.clientY - bRect.top) * (globalGame.viewport.height / bRect.height);
   // only allow to respond after message has been sent
   if (globalGame.messageSent) {
     // find which shape was clicked
-    _.forEach(globalGame.objects, function(obj) {
+    _.forEach(globalGame.objects, function (obj) {
       // console.log('responseListener: globalGame.doneDrawing',globalGame.doneDrawing);
       if (hitTest(obj, mouseX, mouseY) && globalGame.doneDrawing) {
         globalGame.messageSent = false;
@@ -351,9 +355,9 @@ function responseListener(evt) {
 
         // Send packet about trial to server
         var dataURL = document.getElementById('sketchpad').toDataURL();
-        dataURL = dataURL.replace('data:image/png;base64,','');
-        var currPose = globalGame.objects[0]['pose'];  
-        var currCondition = globalGame.objects[0]['condition']; 
+        dataURL = dataURL.replace('data:image/png;base64,', '');
+        var currPose = globalGame.objects[0]['pose'];
+        var currCondition = globalGame.objects[0]['condition'];
         var packet = ["clickedObj", obj.filename, dataURL, currPose, currCondition];
         // console.log(packet);
         globalGame.socket.send(packet.join('.'));
@@ -366,24 +370,26 @@ function responseListener(evt) {
           var objectLocs = getObjectLocs(globalGame.objects);
           var trialNum = globalGame.roundNum + 1;
           var gameID = globalGame['data']['id'];
-          var timestamp = Date.now();          
+          var timestamp = Date.now();
 
           // send data to mongodb (also see writeData:clickedObj in game.server)
-          dbline = {role: globalGame.my_role,
-                    playerID: globalGame.my_id,
-                    gameID: gameID,
-                    timestamp: timestamp,
-                    trialNum: trialNum,
-                    responseType: 'clickedObj',
-                    intendedName: intendedName,
-                    clickedName: clickedName,
-                    correct: correct,
-                    objectLocs: objectLocs,
-                    pngString: pngString,
-                    currPose: currPose,
-                    currCondition: currCondition,
-                    dbname:globalGame.dbname,
-                    colname:globalGame.colname};
+          dbline = {
+            role: globalGame.my_role,
+            playerID: globalGame.my_id,
+            gameID: gameID,
+            timestamp: timestamp,
+            trialNum: trialNum,
+            responseType: 'clickedObj',
+            intendedName: intendedName,
+            clickedName: clickedName,
+            correct: correct,
+            objectLocs: objectLocs,
+            pngString: pngString,
+            currPose: currPose,
+            currCondition: currCondition,
+            dbname: globalGame.dbname,
+            colname: globalGame.colname
+          };
 
           // console.log(dbline);
           // jef 4/22/17: do NOT send data to mongo db until SSL certificate
@@ -426,20 +432,20 @@ function responseListener(evt) {
 };
 
 function getObjectLocs(objects) {
-  return _.flatten(_.map(objects, function(object) {
+  return _.flatten(_.map(objects, function (object) {
     return [object.filename,
-      object.speakerCoords.gridX,
-      object.listenerCoords.gridX];
+    object.speakerCoords.gridX,
+    object.listenerCoords.gridX];
   }));
 }
 
 function getIntendedTargetName(objects) {
-  return _.filter(objects, function(x){
+  return _.filter(objects, function (x) {
     return x.target_status == 'target';
   })[0]['filename'];
 }
 
-function hitTest(shape,mx,my) {
+function hitTest(shape, mx, my) {
   var dx = mx - shape.trueX;
   var dy = my - shape.trueY;
   return (0 < dx) && (dx < shape.width) && (0 < dy) && (dy < shape.height);

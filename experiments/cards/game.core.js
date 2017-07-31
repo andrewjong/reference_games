@@ -15,8 +15,9 @@ if (typeof _ === 'undefined') {
 }
 
 const gameOptions = {
-    CARDS_PER_HAND: 3,
-    CARDS_ON_TABLE: 4
+  CARDS_PER_HAND: 3,
+  CARDS_ON_TABLE: 4,
+  RESHUFFLE_PROBABILITY: 0.5
 }
 
 var game_core = function (options) {
@@ -26,6 +27,9 @@ var game_core = function (options) {
   // How many players in the game?
   this.players_threshold = 2;
 
+  // the value of 'p'
+  this.reshuffleP = gameOptions.RESHUFFLE_PROBABILITY;
+
   if (this.server) {
     // If we're initializing the server game copy, pre-create the list of trials
     // we'll use, make a player object, and tell the player who they are
@@ -33,25 +37,34 @@ var game_core = function (options) {
     this.expName = options.expName;
     this.player_count = options.player_count;
 
+    this.data = {
+      id: this.id,
+      trials: [],
+      catch_trials: [], system: {},
+      subject_information: {
+        gameID: this.id,
+        score: 0
+      }
+    };
+
     this.players = [{
       id: options.player_instances[0].id,
       instance: options.player_instances[0].player,
       player: new game_player(this, options.player_instances[0].player)
     }];
 
-    /* Game Start State */
-    
-    // Represent deck of cards as number array
-    this.deck = Array.from(Array(52).keys);
-    this.deck.sort(() => { return 0.5 - Math.random() }); // shuffle random order
-    console.log('Deck: ' + deck);
+    /* Game Starting State */
+    this.cards = {
+      deck: _.shuffle(Array.from(Array(52).keys)), // Represent deck of cards as number array, shuffle random order
+    }
 
     // Draw from the top cards of the deck
-    this.players[0].hand = deck.splice(0, gameOptions.CARDS_PER_HAND);
-    console.log("P1 hand: " + this.players[0].hand);
-    this.onTable = deck.splice(0, gameOptions.CARDS_ON_TABLE);
-    console.log("On table: " + this.onTable);
-    this.players[1].hand = deck.splice(0, gameOptions.CARDS_PER_HAND);
+    cards.p1Hand = cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
+    console.log("P1 hand: " + cards.p1Hand);
+    cards.onTable = cards.deck.splice(0, gameOptions.CARDS_ON_TABLE);
+    console.log("On table: " + cards.onTable);
+    cards.p2Hand = cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
+    console.log("P2 hand: " + cards.p2Hand);
 
     this.server_send_update();
   } else {
@@ -103,6 +116,12 @@ game_core.prototype.server_send_update = function () {
   //Make a snapshot of the current state, for updating the clients
   var local_game = this;
 
+  var state = {
+    gs: this.game_started,   // true when game's started
+    pt: this.players_threshold,
+    pc: this.player_count,
+  };
+
   // Add info about all players
   let player_packet = local_game.players.map(p => {
     return {
@@ -110,23 +129,15 @@ game_core.prototype.server_send_update = function () {
       player: null
     }
   })
-  var player_packet = _.map(local_game.players, function (p) {
-    return {
-      id: p.id,
-      player: null
-    };
+
+
+  _.extend(state, {
+    players: player_packet,
+    cards: local_game.cards  // add the cards to the sent state
   });
 
-  var state = {
-    gs: this.game_started,   // true when game's started
-    pt: this.players_threshold,
-    pc: this.player_count,
-  };
-
-  _.extend(state, { players: player_packet });
-
   //Send the snapshot to the players
-  this.state = state;
+  this.state = state; // synchronize our own state?
   this.get_active_players().forEach(p => {
     p.player.instance.emit('onserverupdate', state);
   })
