@@ -8,7 +8,7 @@ var has_require = typeof require !== 'undefined';
 
 if (typeof _ === 'undefined') {
   if (has_require) {
-    _ = require('underscore');
+    _ = require('lodash');
     utils = require(__base + '/sharedUtils/sharedUtils.js');
   }
   else throw 'mymodule requires underscore, see http://underscorejs.org';
@@ -23,9 +23,16 @@ const gameOptions = {
 var game_core = function (options) {
   // Store a flag if we are the server instance
   this.server = options.server;
+  this.email = 'stanford.csli.games@gmail.com';
+  this.dataStore = ['csv', 'mongo'];
+  this.experimentName = 'cards';
 
   // How many players in the game?
   this.players_threshold = 2;
+  this.playerRoleNames = {
+    role1: 'player1',
+    role2: 'player2'
+  }
 
   // the value of 'p'
   this.reshuffleP = gameOptions.RESHUFFLE_PROBABILITY;
@@ -86,8 +93,10 @@ var game_player = function (game_instance, player_instance) {
 // server side we set some classes to global types, so that
 // we can use them in other files (specifically, game.server.js)
 if ('undefined' != typeof global) {
-  module.exports = global.game_core = game_core;
-  module.exports = global.game_player = game_player;
+  module.exports = {
+    game_core,
+    game_player
+  }
 }
 
 // HELPER FUNCTIONS
