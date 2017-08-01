@@ -34,6 +34,14 @@ var game_core = function (options) {
     role2: 'player2'
   }
 
+  // Which round (a.k.a. "trial") are we on (initialize at -1 so that first round is 0-indexed)
+  this.roundNum = -1;
+  // Total number of rounds we want people to complete
+  this.numRounds = 1; // one in this case because each game has several turns
+
+  // which turn we're on. start at 0 so first round starts at 1
+  this.turnNum = 0;
+
   // the value of 'p'
   this.reshuffleP = gameOptions.RESHUFFLE_PROBABILITY;
 
@@ -62,17 +70,19 @@ var game_core = function (options) {
 
     /* Game Starting State */
     this.cards = {
-      deck: _.shuffle(Array.from(Array(52).keys)), // Represent deck of cards as number array, shuffle random order
+      deck: _.shuffle(Array.from(Array(52).keys())) // Represent deck of cards as number array, shuffle random order
     }
+    console.log('Deck: ' + this.cards.deck);
 
     // Draw from the top cards of the deck
-    cards.p1Hand = cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
-    console.log("P1 hand: " + cards.p1Hand);
-    cards.onTable = cards.deck.splice(0, gameOptions.CARDS_ON_TABLE);
-    console.log("On table: " + cards.onTable);
-    cards.p2Hand = cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
-    console.log("P2 hand: " + cards.p2Hand);
+    this.cards.p1Hand = this.cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
+    console.log("P1 hand: " + this.cards.p1Hand);
+    this.cards.onTable = this.cards.deck.splice(0, gameOptions.CARDS_ON_TABLE);
+    console.log("On table: " + this.cards.onTable);
+    this.cards.p2Hand = this.cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
+    console.log("P2 hand: " + this.cards.p2Hand);
 
+    console.log('server game core initialized!');
     this.server_send_update();
   } else {
     // If we're initializing a player's local game copy, create the player object
@@ -118,6 +128,23 @@ game_core.prototype.get_others = function (id) {
 game_core.prototype.get_active_players = function () {
   var noEmptiesList = _.map(this.players, function (p) { return p.player ? p : null; });
   return _.without(noEmptiesList, null);
+};
+
+// Advance to the next round
+game_core.prototype.newRound = function () {
+  // If you've reached the planned number of rounds, end the game  
+  if (this.roundNum == this.numRounds - 1) {
+    _.map(this.get_active_players(), function (p) {
+      p.player.instance.disconnect();
+    });
+  } else {
+    // console.log('got to newRound in game.core.js and not the final round');
+    this.roundNum += 1;
+
+    /* If we want multiple rounds, reinitialize the game state here. Multiple rounds is currently not implemented for cards! */
+
+    this.server_send_update();
+  }
 };
 
 // send an update from the server
