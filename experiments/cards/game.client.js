@@ -37,6 +37,28 @@ var client_onserverupdate_received = function (state) {
   // TODO: update phaser with some update function passing in state.cards
   // drawScreen(state)
   console.log("Client side (not passed to Phaser yet), state.cards: " + JSON.stringify(state.cards));
+  console.log(`globalGame.my_role: ${globalGame.my_role}`);
+
+  // Package the data into a package convenient for Phaser NOTE: these variables could technically be stored in globalGame. maybe change that later
+  console.log(`globalGame.game_started: ${globalGame.game_started}`);
+  if (globalGame.game_started) {
+    let pData = {
+      deck: state.cards.deck,
+      onTable: state.cards.onTable,
+    };
+    if (globalGame.my_role == 'player1') {
+      pData.isMyTurn = true;
+      pData.myHand = state.cards.p1Hand;
+      pData.theirHand = state.cards.p2Hand;
+    } else if (globalGame.my_role == 'player2') {
+      pData.isMyTurn = false;
+      pData.myHand = state.cards.p2Hand;
+      pData.theirHand = state.cards.p1Hand;
+    } else { // this shouldn't happen!
+      console.error("globalGame.my_role: " + globalGame.my_role);
+    }
+    updatePhaser(pData);
+  }
 };
 
 var client_onMessage = function (data) {

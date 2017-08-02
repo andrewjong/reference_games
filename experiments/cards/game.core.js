@@ -155,6 +155,10 @@ game_core.prototype.newRound = function () {
     });
   } else {
     // console.log('got to newRound in game.core.js and not the final round');
+    if (this.roundNum < 0 && (this.roundNum + 1 == 0)) {
+      console.log(`Setting game_started to true`);
+      this.game_started = true;
+    }
     this.roundNum += 1;
 
     /* If we want multiple rounds, reinitialize the game state here. Multiple rounds is currently not implemented for cards! */
