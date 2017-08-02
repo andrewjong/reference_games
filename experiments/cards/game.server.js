@@ -7,7 +7,7 @@
 
     MIT Licensed.
 */
-var
+const
   fs = require('fs'),
   utils = require(__base + 'sharedUtils/sharedUtils.js');
 
@@ -17,7 +17,7 @@ var
 // to the server (check the client_on_click function in game.client.js)
 // with the coordinates of the click, which this function reads and
 // applies.
-var onMessage = function (client, message) {
+const onMessage = function (client, message) {
   //Cut the message up into sub components
   var message_parts = message.split('.');
 
@@ -34,9 +34,9 @@ var onMessage = function (client, message) {
 
     // the player ended their turn
     case 'endTurn':
-      _.map(others, p => {
+      others.forEach(p => {
         p.player.instance.emit('endTurn');
-      });
+      })
 
       break;
 
@@ -72,8 +72,53 @@ var onMessage = function (client, message) {
   }
 };
 
+const setCustomEvents = function (socket) {
+  //empty
+};
+
+// Data output for the end of each turn
+const dataOutput = function () {
+  function commonOutput(client, message_data) {
+    return {
+      gameid: client.game.id,
+      time: Date.now(),
+      turnNum: client.game.state.turnNum + 1, // TODO: add turn number to game state
+      workerId: client.workerid,
+      assignmentId: client.assignmentid
+    };
+  };
+
+  const chatMessageOutput = function (client, message_data) {
+    var intendedName = getIntendedTargetName(client.game.trialInfo.currStim);
+    var output = _.extend(
+      commonOutput(client, message_data), {
+        intendedName,
+        role: client.role,
+        text: message_data[1].replace(/~~~/g, '.'),
+      }
+    );
+    console.log(JSON.stringify(output, null, 3));
+    return output;
+  };
+
+  const cardsOutput = function (client, message_data) {
+    const deck = client.game.deck;
+
+    var output = _.extend(
+      commonOutput(client, message_data),
+      deck
+    );
+    console.log(JSON.stringify(output, null, 3));
+    return output;
+  };
+
+  return {
+    'chatMessage': chatMessageOutput,
+    'cards': cardsOutput
+  };
+}();
 module.exports = {
-  writeData: writeData,
-  startGame: startGame,
-  onMessage: onMessage
+  onMessage: onMessage,
+  setCustomEvents: setCustomEvents,
+  dataOutput: dataOutput
 };

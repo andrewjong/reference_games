@@ -18,7 +18,7 @@ const graphics = {
 }
 
 let game; // the phaser game instance
-let isMyTurn = true; // turn boolean
+let isMyTurn; // turn boolean
 let deck, myHand, theirHand, onTable; // numerical arrays to represent each hand
 let deckSprites = {
     x: 140,
@@ -30,14 +30,47 @@ let deckSprites = {
 }
 let myHandGroup, theirHandGroup, onTableGroup; // phaser groups for sprites
 
-window.onload = function () {
-    game = new Phaser.Game(graphics.GAME_WIDTH, graphics.GAME_HEIGHT, Phaser.AUTO, 'viewport');
-    game.state.add("PlayGame", playGame)
-    game.state.start("PlayGame");
+// name compatibility stuff for clientBase.js, 'drawScreen()' is called in onconnect
+// const drawScreen = function(){
+//     console.log('dummy drawScreen called');
+// }
+const drawScreen = function(data, player){
+    console.log('drawScreen called');
+    console.log(`player.my_role: ${player.my_role}`);
+    startGame(data, player);
 }
 
-function playGame(game) { }
-playGame.prototype = {
+function startGame(data, player){
+    const cards = data.cards;
+    console.log('cards in startGame function of front-end.js: ' + JSON.stringify(cards));
+    // initialize the card representations as appropriate
+    deck = cards.deck;
+    onTable = cards.onTable;
+    if (player.my_role == 'player1'){
+        isMyTurn = true;
+        myHand = cards.p1Hand;
+        theirHand = cards.p2Hand;
+    } else if (player.my_role == 'player2'){
+        isMyTurn = false;
+        myHand = cards.p2Hand;
+        theirHand = cards.p1Hand;
+    } else { // Case role hasn't been assigned yet
+        isMyTurn = null;
+        myHand = [];
+        theirHand = [];
+    }
+    console.log('PHASER SIDE');
+    console.log('isMyTurn: ' + isMyTurn);
+    console.log('myHand: ' + isMyTurn);
+    console.log('theirHand: ' + theirHand)
+
+    game = new Phaser.Game(graphics.GAME_WIDTH, graphics.GAME_HEIGHT, Phaser.AUTO, 'viewport');
+    game.state.add("Play", play)
+    game.state.start("Play");
+}
+
+function play(game) { }
+play.prototype = {
     preload: function () {
         game.load.image('table', 'sprites/felt-background.png');
         game.load.spritesheet('cards', 'sprites/cards.png', graphics.CARD_WIDTH, graphics.CARD_HEIGHT);
@@ -48,10 +81,9 @@ playGame.prototype = {
         game.scale.pageAlignVertically = true;
     },
     create: function () {
+        console.log('Phaser client instance started');
         /* LOGISTICS */
-
         // Logistics initialized in game.core.js! 
-
 
         /* GRAPHICS */
         // Enable physics for overlap detection later
@@ -96,7 +128,7 @@ playGame.prototype = {
         const horizontalPad = centerInBar;
         this.button = game.add.button(game.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad,
             game.world.height - graphics.TURN_BUTTON_HEIGHT - centerInBar,
-            'end-turn', this.nextTurn, this, 0, 1, 2);
+            'end-turn', this.endTurn, this, 0, 1, 2);
 
         this.updateEachTurn();
     },
@@ -129,16 +161,17 @@ playGame.prototype = {
         // toggle turn settings
         this.turnText.setText(getTurnText());
     },
-    // nextTurn: function () {
-    //     isMyTurn = !isMyTurn;
-    //     // reshuffle cards
-    //     [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.onTableSprites, deck.slice(this.nextCardIndex, 52));
-    //     this.nextCardIndex += 4;
-    //     reshuffleAnimation(this.onTableSprites, this.cardsAdded, game, this);
-    //     obj = this;
-    //     setTimeout(function () {
-    //         obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
-    //     }, 5000 / 2);
-    //     this.updateEachTurn();
-    // }
+    endTurn: function () {
+        console.log('TODO: Implement end turn');
+        // isMyTurn = !isMyTurn;
+        // // reshuffle cards
+        // [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.onTableSprites, deck.slice(this.nextCardIndex, 52));
+        // this.nextCardIndex += 4;
+        // reshuffleAnimation(this.onTableSprites, this.cardsAdded, game, this);
+        // obj = this;
+        // setTimeout(function () {
+        //     obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
+        // }, 5000 / 2);
+        // this.updateEachTurn();
+    }
 }

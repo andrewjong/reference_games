@@ -27,6 +27,11 @@ var game_core = function (options) {
   this.dataStore = ['csv', 'mongo'];
   this.experimentName = 'cards';
 
+  this.world = {
+    width: 1000,
+    height: 700
+  }
+
   // How many players in the game?
   this.players_threshold = 2;
   this.playerRoleNames = {
@@ -86,17 +91,28 @@ var game_core = function (options) {
     this.server_send_update();
   } else {
     // If we're initializing a player's local game copy, create the player object
+    // Don't initialize any client state until after another client connects and server sends update
     this.players = [{
       id: null,
       instance: null,
       player: new game_player(this)
     }];
+
+    this.cards = {
+      deck: Array.from(Array(52).keys()),
+      p1Hand: [],
+      onTable: [],
+      p2Hand: []
+    }
+    console.log('cards: ' + JSON.stringify(this.cards));
   }
 };
 
 var game_player = function (game_instance, player_instance) {
   this.instance = player_instance;
   this.game = game_instance;
+  this.role = '';
+  this.message = '';
   this.id = '';
 };
 
@@ -175,6 +191,7 @@ game_core.prototype.server_send_update = function () {
   //Send the snapshot to the players
   this.state = state; // synchronize our own state?
   this.get_active_players().forEach(p => {
+    console.log('Emiting server update to player ' + p.id);
     p.player.instance.emit('onserverupdate', state);
   })
 };

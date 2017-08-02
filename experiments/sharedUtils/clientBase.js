@@ -52,7 +52,9 @@ var ondisconnect = function(data) {
 
 // The server responded that we are now in a game
 var onconnect = function(data) {
+  console.log('onconnect called in clientBase.js');
   this.my_id = data.id;
+  console.log('my_id: ' + this.my_id);
   this.players[0].id = this.my_id;
   this.urlParams = getURLParams();
   drawScreen(this, this.get_player(this.my_id));

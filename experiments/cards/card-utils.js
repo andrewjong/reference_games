@@ -44,7 +44,10 @@ function makeOnTableGroup(cards) {
 let makeCardGroup = function (cards) {
   /* Note: This function is defined as a variable as it's not meant to be hoisted */
   /* Placement */
+  // if (cards === undefined) return []; // case that no cards are available yet, prevent undefined errors
+  console.log('cards.length: ' + cards.length);
   let cardGroup = new Array(cards.length);
+
   let groupWidth = cards.length * graphics.CARD_CELL_WIDTH;
   let startX = game.world.centerX - groupWidth / 2;
   for (let i = 0; i < cardGroup.length; ++i) {
@@ -206,7 +209,7 @@ function swapPosition(card1, card2) {
 
   // Logistics
   // switch which group the cards belong to
-  if (card1.parentGroup === card2.parentGroup){
+  if (card1.parentGroup === card2.parentGroup) {
     const parentGroup = card1.parentGroup;
     const index1 = parentGroup.indexOf(card1);
     const index2 = parentGroup.indexOf(card2);
@@ -219,9 +222,9 @@ function swapPosition(card1, card2) {
     const c2Index = c2Group.indexOf(card2);
 
     // put card2 where card1 was
-    c1Group.splice(c1Index, 1, card2); 
+    c1Group.splice(c1Index, 1, card2);
     // put card1 where card2 was
-    c2Group.splice(c2Index, 1, card1); 
+    c2Group.splice(c2Index, 1, card1);
 
     // update membership
     card1.parentGroup = c2Group;
@@ -336,14 +339,16 @@ function randBetween(min, max) {
 }
 
 function getTurnText() {
-    const isPartner = isMyTurn ? '' : 'partner\'s '
-    return 'It\'s your ' + isPartner + 'turn.'
+  // TODO: make this dependent on a different variable than isMyTurn. using isMyTurn seems like bad practice
+  if (isMyTurn === null) return 'Game has not started yet'; // case game not initialized yet. 
+  const isPartner = isMyTurn ? '' : 'partner\'s '
+  return 'It\'s your ' + isPartner + 'turn.'
 }
 
 function getCounterText(num, counterType) {
-    const plural = (num == 1) ? '' : 's';
-    const descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
-    return `${num} card${plural} ${descrip}`;
+  const plural = (num == 1) ? '' : 's';
+  const descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
+  return `${num} card${plural} ${descrip}`;
 }
 
 /**
@@ -358,11 +363,12 @@ Array.prototype.swap = function (x, y) {
   return this;
 }
 
-module.exports = {
-  makeCard: makeCard,
-  makeHand: makeHand,
-  drawCards: drawCards,
-  cardGroupOverlap: cardGroupOverlap,
-  swapPos: swapPosition,
-  randBetween: randBetween
-}
+if (typeof module !== 'undefined')
+  module.exports = {
+    makeCard: makeCard,
+    makeHand: makeHand,
+    drawCards: drawCards,
+    cardGroupOverlap: cardGroupOverlap,
+    swapPos: swapPosition,
+    randBetween: randBetween
+  }
