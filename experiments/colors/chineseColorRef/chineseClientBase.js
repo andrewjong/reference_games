@@ -23,7 +23,7 @@ var ondisconnect = function (data) {
   }
   else {
     $('#instructs').html('哎呀！另一个玩家失去了连接。' +
-      '填写这个调查会提交你的HIT，并且你还会受到全赔偿金。若有任何困难，请联系我们在stanford.csli.games@gmail.com');
+      '填写这个调查会提交你的HIT，并且你还会受到全赔偿金。若有任何困难，请联系我们在stanfordpraglab@gmail.com');
   }
   $('#message_panel').hide();
   $('#submitbutton').hide();
