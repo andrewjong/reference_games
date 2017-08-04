@@ -69,11 +69,12 @@ app.get( '/*' , function( req, res ) {
     return utils.handleInvalidID(req, res);
   } else {
     // If the database shows they've already participated, block them
-    console.log("Checking previous participant...")
-    utils.checkPreviousParticipant(id, (exists) => {
-      console.log("Blocking previous participant");
-      return exists ? utils.handleDuplicate(req, res) : utils.serveFile(req, res);
-    });
+    // console.log("Checking previous participant...")
+    console.log('Skipping check for previous participant');
+    // utils.checkPreviousParticipant(id, (exists) => {
+    //   console.log("Blocking previous participant");
+    //   return exists ? utils.handleDuplicate(req, res) : utils.serveFile(req, res);
+    // });
   }
 }); 
 
