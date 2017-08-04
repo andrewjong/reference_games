@@ -174,6 +174,7 @@ function dropdownTip(data) {
       globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
         { 'understood': commands[1] }); break;
     case 'submit':
+      document.getElementById("thanks").innerHTML = "谢谢你的合作！你可以关闭网页。";
       globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
         {
           'comments': $('#comments').val(),

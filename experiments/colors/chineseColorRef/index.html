@@ -89,7 +89,7 @@
 		<option value="self-taught">第二语言，自学</option>
 	      </select>
 	      <br><br>
-	      <p>你有没有仔细看规定，有没有认为你可以正确完成这个HIT？</p>
+	      <p>你有没有仔细看规定，有没有认为你可以正确完成这个任务？</p>
 	      <select onChange="dropdownTip('understood::' + this.value)">
 		<option value = ""></option>
 		<option value="yes">是</option>
@@ -112,10 +112,12 @@
 	      <textarea id='comments' rows="4" cols="50"></textarea>
 	      <br>
 
-	      <p>注意：点击这个按键会自动提交HIT并且关闭网页。没有必要输入代码。<p>
+	      <p>注意：点击这个按键会自动提交并且关闭网页。没有必要输入代码。<p>
 	      <p>若有提交有困难，请联系我们关于赔偿金。邮箱地址 stanfordpraglab@gmail.com</p>
 	      
-	      <div><button id="surveySubmit" onclick="dropdownTip('submit')" type="button">提交HIT</button></div>
+          <div><button id="surveySubmit" onclick="dropdownTip('submit')" type="button">提交</button></div>
+          <br>
+          <p id=thanks></p>
 	    </div>
             </span>
     </div>
