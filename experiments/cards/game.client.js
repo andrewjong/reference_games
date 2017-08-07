@@ -2,7 +2,7 @@
 var globalGame = {};
 
 var client_onserverupdate_received = function (state) {
-  console.log('Server update received on client: ' + state.my_id);
+  console.log('Server update received on client: ' + globalGame.my_id);
 
   // Update client versions of variables with data received from
   // server_send_update function in game.core.js
@@ -57,7 +57,10 @@ var client_onserverupdate_received = function (state) {
     } else { // this shouldn't happen!
       console.error("globalGame.my_role: " + globalGame.my_role);
     }
+    console.log('Calling updatePhaser with pData: ' + JSON.stringify(pData));
     updatePhaser(pData);
+  } else {
+    console.log('Did not update Phaser')
   }
 };
 

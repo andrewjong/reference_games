@@ -56,6 +56,7 @@ var game_core = function (options) {
     this.id = options.id;
     this.expName = options.expName;
     this.player_count = options.player_count;
+    this.game_started = false;
 
     this.data = {
       id: this.id,

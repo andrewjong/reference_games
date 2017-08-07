@@ -4,7 +4,6 @@
  *
  */
 
-
 /**
  * Takes in an array of numbers (that represent cards) and returns a Phaser group 
  * with the sprites for each card, placed at the correct location for each player
@@ -18,7 +17,7 @@ function makeHandGroup(cards, forMe) {
   let yOffset = graphics.HAND_OFFSET_FROM_CENTER; // the offset to place the cards
   if (!forMe) yOffset *= -1; // place on the opposite side if other player
   handGroup.forEach(c => {
-    c.y = pgame.world.centerY + yOffset
+    c.y = phaser.world.centerY + yOffset
     c.snapPosition = c.position.clone();
     c.parentGroup = handGroup;
   });
@@ -34,9 +33,9 @@ function makeHandGroup(cards, forMe) {
 function makeOnTableGroup(cards) {
   let onTableGroup = makeCardGroup(cards);
   // put the group in the right place
-  onTableGroup.centerX = pgame.world.centerX;
+  onTableGroup.centerX = phaser.world.centerX;
   onTableGroup.forEach(c => {
-    c.y = pgame.world.centerY
+    c.y = phaser.world.centerY
     c.snapPosition = c.position.clone();
     c.parentGroup = onTableGroup;
   });
@@ -52,14 +51,16 @@ let makeCardGroup = function (cards) {
   /* Note: This function is defined as a variable as it's not meant to be hoisted */
   /* Placement */
   // if (cards === undefined) return []; // case that no cards are available yet, prevent undefined errors
-  console.log('cards.length: ' + cards.length);
+  console.log('Making card group of length: ' + cards.length);
   let cardGroup = new Array(cards.length);
 
   let groupWidth = cards.length * graphics.CARD_CELL_WIDTH;
-  let startX = pgame.world.centerX - groupWidth / 2;
+  console.log('phaser.world: ' + phaser.world);
+  console.log('phaser.world.centerX' + phaser.world.centerX);
+  let startX = phaser.world.centerX - groupWidth / 2;
   for (let i = 0; i < cardGroup.length; ++i) {
     // add a sprite off the game screen
-    let cardSprite = pgame.add.sprite(-10, -10, 'cards', cards[i]);
+    let cardSprite = phaser.add.sprite(-10, -10, 'cards', cards[i]);
     // set the anchor and scale
     cardSprite.anchor.set(0.5);
     cardSprite.scale.set(graphics.CARD_SCALE);
@@ -88,20 +89,20 @@ let makeCardGroup = function (cards) {
  * @param {Number} startIndex the index to begin the table in the deck
  * @param {Number} numCards number of cards to draw (should be 4)
  */
-function drawCards(startIndex, numCards, game, obj) {
+function drawCards(startIndex, numCards, phaser, obj) {
   console.log(`startIndex = ${startIndex}`);
   let table = [];
   [0, 1, 2, 3].forEach(function (i) {
-    let x = game.world.centerX + (i - 1.5) * graphics.cardGap;
-    let y = game.world.centerY;
+    let x = phaser.world.centerX + (i - 1.5) * graphics.cardGap;
+    let y = phaser.world.centerY;
 
-    let b = game.add.sprite(140, game.world.centerY, 'cardback');
+    let b = phaser.add.sprite(140, phaser.world.centerY, 'cardback');
     b.scale.set(graphics.cardScale);
     b.anchor = new Phaser.Point(0.5, 0.5);
 
-    moveTo(b, x, y, 1000 / 2, 1100 / 2, game, true, false);
+    moveTo(b, x, y, 1000 / 2, 1100 / 2, phaser, true, false);
     setTimeout(function () {
-      table.push(makeCard(startIndex + i, x, y, game, obj));
+      table.push(makeCard(startIndex + i, x, y, phaser, obj));
     }, 1800 / 2);
   });
   return table;
@@ -279,7 +280,7 @@ function makeDeckSprites() {
   else if (deckSprites.cards.length < deck.length) {
     // add extra card sprites if needed
     for (let i = deckSprites.cards.length; i < deck.length; i++) {
-      const cardSprite = pgame.add.sprite(deckSprites.x - deckSprites.x_offset, pgame.world.centerY - deckSprites.y_offset, 'cardback');
+      const cardSprite = phaser.add.sprite(deckSprites.x - deckSprites.x_offset, phaser.world.centerY - deckSprites.y_offset, 'cardback');
       cardSprite.anchor.set(0.5);
       cardSprite.scale.set(graphics.CARD_SCALE);
       deckSprites.cards.push(cardSprite);
@@ -289,10 +290,13 @@ function makeDeckSprites() {
   }
 }
 
-function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool, destroyBool) {
-  game.physics.arcade.enable(sprite);
-  game.physics.arcade.moveToXY(sprite, x, y, 0, moveTime);
-  game.time.events.add(waitTime, function () {
+/**
+ * @deprecated
+ */
+function moveTo(sprite, x, y, moveTime, waitTime, phaser, fadeBool, destroyBool) {
+  phaser.physics.arcade.enable(sprite);
+  phaser.physics.arcade.moveToXY(sprite, x, y, 0, moveTime);
+  phaser.time.events.add(waitTime, function () {
     sprite.position.setTo(x, y);
     sprite.body.reset();
     if (fadeBool) {
@@ -304,6 +308,9 @@ function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool, destroyBool) {
   });
 }
 
+/**
+ * @deprecated
+ */
 function reshuffleAnimation(cards, numToAdd, game, obj) {
   let backs = [];
   cards.forEach(function (c) {
@@ -333,7 +340,7 @@ function reshuffleAnimation(cards, numToAdd, game, obj) {
  * Gives easing to movement of card sprite
  */
 function snapTo(card, pos) {
-  pgame.add.tween(card).to(pos, 400, Phaser.Easing.Back.Out, true);
+  phaser.add.tween(card).to(pos, 400, Phaser.Easing.Back.Out, true);
 }
 
 /**
@@ -341,7 +348,7 @@ function snapTo(card, pos) {
  */
 function fadeIn(card, time) {
   card.alpha = 0;
-  pgame.add.tween(card).to({ alpha: 1 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
+  phaser.add.tween(card).to({ alpha: 1 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
 }
 
 /**
@@ -349,7 +356,7 @@ function fadeIn(card, time) {
  */
 function fadeOut(card, time) {
   card.alpha = 1;
-  pgame.add.tween(card).to({ alpha: 0 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
+  phaser.add.tween(card).to({ alpha: 0 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
 }
 
 /**

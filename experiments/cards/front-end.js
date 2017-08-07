@@ -19,7 +19,7 @@ const graphics = {
 
 const gg = globalGame;
 
-let pgame; // the phaser game instance
+let phaser; // the phaser game instance
 let isMyTurn; // turn boolean
 let deck, myHand, theirHand, onTable; // numerical arrays to represent each hand
 let deckSprites = {
@@ -42,99 +42,104 @@ let turnText;
  * @param data state of the game
  */
 function drawScreen(data/*, player*/) { // we don't need the player variable anymore
-    console.log('drawScreen called');
+    console.log('drawScreen called for client ' + globalGame.my_id);
     // console.log(`player.my_role: ${player.my_role}`); // this is probably undefined, use the globalGame option instead
     // console.log(`globalGame.my_role: ${globalGame.my_role}`); // we know this is undefined here because roles are only assigned once both connect
 
     const cards = data.cards;
     console.log('cards in startGame function of front-end.js: ' + JSON.stringify(cards));
     // initialize some temporary empty card representations (these get updated later with onServerUpdate below)
-    deck = cards.deck;
-    onTable = cards.onTable;
-    isMyTurn = null;
-    myHand = [];
-    theirHand = [];
-
-    startGame();
+    // deck = []//cards.deck;
+    // onTable = []//cards.onTable;
+    // isMyTurn = null;
+    // myHand = [];
+    // theirHand = [];
 }
 
-/**
- * Create the phaser game instance
- */
-function startGame() {
-    console.log('PHASER SIDE');
-    console.log('isMyTurn: ' + isMyTurn);
-    console.log('myHand: ' + isMyTurn);
-    console.log('theirHand: ' + theirHand)
-
-    pgame = new Phaser.Game(graphics.GAME_WIDTH, graphics.GAME_HEIGHT, Phaser.AUTO, 'viewport');
-    pgame.state.add("Play", play)
-    pgame.state.start("Play");
-}
-
+let loaded = false;
+let pendingUpdate = null;
 /** 
  * This function handles graphical updates when game.client.js is notified in client_onserverupdate_received .
  * Data sent into Phaser should be prepackaged into 
  * @param cards an object with "myHand", "theirHand", "onTable", "deck" Number arrays and "isMyTurn" boolean.
  */
 function updatePhaser(cards) {
+    console.log("updatePhaser called")
+    isMyTurn = cards.isMyTurn;
+    deck = cards.deck.slice();
+    theirHand = cards.theirHand.slice();
+    onTable = cards.onTable.slice();
+    myHand = cards.myHand.slice();
+
+    if (loaded === false) {
+        console.log(`Creating a new phaser game instance`);
+        pendingUpdate = cards;
+        phaser = new Phaser.Game(graphics.GAME_WIDTH, graphics.GAME_HEIGHT, Phaser.AUTO, 'viewport');
+        phaser.state.add('Play', playState);
+        phaser.state.start('Play');
+    } else {
+        console.log("Skipping load-first because loaded is true");
+        updateGraphics(cards);
+    }
+}
+
+function updateGraphics(cards) {
     console.log('unparsed cards in updatePhaser function of front-end.js: ' + JSON.stringify(cards));
     // If out of sync, update the local copy
-    // // player turn
-    // if (isMyTurn != cards.isMyTurn) {
-    //     isMyTurn = cards.isMyTurn;
-    //     turnText.setText(getTurnText());
-    // }
-    // // deck
-    // if (!_.isEqual(deck, cards.deck)) {
-    //     deck = cards.deck.slice();
-    //     makeDeckSprites();
-    // }
+    // player turn
+    if (isMyTurn != cards.isMyTurn) {
+        turnText.setText(getTurnText());
+    }
+    // deck
+    if (!_.isEqual(deck, cards.deck)) {
+        makeDeckSprites();
+    }
     // The below card groups are in graphical ordering. ie theirHand is on top, onTable in middle, myHand on bottom
     // their hand
     if (!_.isEqual(theirHand, cards.theirHand)) {
-        theirHand = cards.theirHand.slice();
         destroyAll(theirHandGroup);
         theirHandGroup = makeHandGroup(theirHand, false);
     }
     // on table
     if (!_.isEqual(onTable, cards.onTable)) {
-        onTable = cards.onTable.slice();
         destroyAll(onTableGroup)
         onTableGroup = makeOnTableGroup(onTable);
     }
     // my hand
     if (!_.isEqual(myHand, cards.myHand)) {
-        myHand = cards.myHand.slice();
         destroyAll(myHandGroup);
         myHandGroup = makeHandGroup(myHand, true);
     }
     console.log('--Cards after updatePhaser--');
     logCardState();
-}
 
-function play(game) { }
-play.prototype = {
+}
+function playState(phaser) { }
+playState.prototype = {
+    init: function () {
+        phaser.stage.disableVisibilityChange = true; // make updates regardless of window focus
+    },
     preload: function () {
-        pgame.load.image('table', 'sprites/felt-background.png');
-        pgame.load.spritesheet('cards', 'sprites/cards.png', graphics.CARD_WIDTH, graphics.CARD_HEIGHT);
-        pgame.load.image('cardback', 'sprites/cardback.png', graphics.CARD_WIDTH, graphics.CARD_HEIGHT);
-        pgame.load.spritesheet('end-turn', 'sprites/end-turn-button.png', graphics.TURN_BUTTON_WIDTH, graphics.TURN_BUTTON_HEIGHT);
-        pgame.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-        pgame.scale.pageAlignHorizontally = true;
-        pgame.scale.pageAlignVertically = true;
+        console.log('playState preload called');
+        phaser.load.image('table', 'sprites/felt-background.png');
+        phaser.load.spritesheet('cards', 'sprites/cards.png', graphics.CARD_WIDTH, graphics.CARD_HEIGHT);
+        phaser.load.image('cardback', 'sprites/cardback.png', graphics.CARD_WIDTH, graphics.CARD_HEIGHT);
+        phaser.load.spritesheet('end-turn', 'sprites/end-turn-button.png', graphics.TURN_BUTTON_WIDTH, graphics.TURN_BUTTON_HEIGHT);
+        phaser.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+        phaser.scale.pageAlignHorizontally = true;
+        phaser.scale.pageAlignVertically = true;
     },
     create: function () {
-        console.log('Phaser client instance started');
+        console.log('playState create called');
         /* LOGISTICS */
         // Logistics initialized in game.core.js! 
 
         /* GRAPHICS */
         // Enable physics for overlap detection later
-        pgame.physics.startSystem(Phaser.Physics.ARCADE);
+        phaser.physics.startSystem(Phaser.Physics.ARCADE);
 
         // Table top background
-        let tableBackground = pgame.add.sprite(0, 0, 'table');
+        let tableBackground = phaser.add.sprite(0, 0, 'table');
         tableBackground.width = graphics.GAME_WIDTH;
         tableBackground.height = graphics.GAME_HEIGHT;
 
@@ -146,8 +151,8 @@ play.prototype = {
 
         // text stating how many cards are left in the deck and how many were reshuffled in the previous round
         const counterStyle = { font: '20px Arial', fill: '#FFF', align: 'center' };
-        this.cardsLeftText = pgame.add.text(140, pgame.world.centerY + graphics.DECK_PADDING, getCounterText(deck.length, 'left'), counterStyle);
-        this.cardsAddedText = pgame.add.text(140, pgame.world.centerY - graphics.DECK_PADDING, getCounterText(0, 'reshuffled'), counterStyle);
+        this.cardsLeftText = phaser.add.text(140, phaser.world.centerY + graphics.DECK_PADDING, getCounterText(deck.length, 'left'), counterStyle);
+        this.cardsAddedText = phaser.add.text(140, phaser.world.centerY - graphics.DECK_PADDING, getCounterText(0, 'reshuffled'), counterStyle);
         const counterTexts = [this.cardsLeftText, this.cardsAddedText];
         counterTexts.forEach(function (text) {
             text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
@@ -155,32 +160,25 @@ play.prototype = {
         });
 
         // Text stating whose turn it is
-        const bar = pgame.add.graphics();
-        const barWidth = pgame.world.width;
+        const bar = phaser.add.graphics();
+        const barWidth = phaser.world.width;
         const barHeight = graphics.TURN_BAR_HEIGHT;
-        const barYOffset = pgame.world.height - barHeight;
+        const barYOffset = phaser.world.height - barHeight;
         bar.beginFill('#000', 0.2);
         bar.drawRect(0, barYOffset, barWidth, barHeight);
 
         const turnTextStyle = { font: 'bold 32px Arial', fill: '#FFF', boundsAlignH: 'center', boundsAlignV: 'middle' };
-        turnText = pgame.add.text(0, 0, getTurnText(), turnTextStyle);
+        turnText = phaser.add.text(0, 0, getTurnText(), turnTextStyle);
         turnText.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
         turnText.setTextBounds(0, barYOffset, barWidth, barHeight);
 
         // End turn button
         const centerInBar = (barHeight - graphics.TURN_BUTTON_HEIGHT) / 2;
         const horizontalPad = centerInBar;
-        this.button = pgame.add.button(pgame.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad,
-            pgame.world.height - graphics.TURN_BUTTON_HEIGHT - centerInBar,
+        this.button = phaser.add.button(phaser.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad,
+            phaser.world.height - graphics.TURN_BUTTON_HEIGHT - centerInBar,
             'end-turn', this.endTurn, this, 0, 1, 2);
 
-        this.updateEachTurn();
-    },
-    update: function () {
-        /* Stuff in here about sending server information */
-
-    },
-    updateEachTurn: function () {
         if (isMyTurn) {
             // Enable the end-turn button
             this.button.setFrames(0, 1, 2);
@@ -195,15 +193,16 @@ play.prototype = {
             // Disable input on the table group
             onTableGroup.forEach(disableCard);
         }
-        // // update card counters
-        // this.cardsLeft = 52 - this.nextCardIndex + this.cardsAdded;
-        // this.cardsLeftText.setText(getCounterText(this.cardsLeft, 'left'));
-        // this.cardsAddedText.setText(getCounterText(this.cardsAdded, 'added'));
+        loaded = true;
+        console.log('Phaser client instance loaded');
+        if (pendingUpdate != null) {
+            console.log('Actually updating after load');
+            updateGraphics(pendingUpdate);
+        }
+    },
+    update: function () {
+        /* Stuff in here about sending server information */
 
-        // update deck to show correct number of cards
-        makeDeckSprites();
-        // toggle turn settings
-        turnText.setText(getTurnText());
     },
     endTurn: function () {
         console.log('TODO: Implement end turn');
