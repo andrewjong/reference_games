@@ -1,4 +1,8 @@
-// *G*raphic options for sprites and placement
+/**
+ * @file The file in which the graphics (Phaser game instance) is initialized, loaded, and created.
+ */
+
+// Graphic options for sprites and placement
 const graphics = {
     GAME_WIDTH: 1000,
     GAME_HEIGHT: 700,
@@ -40,8 +44,8 @@ let pendingUpdate = null; // a var for storing the state before the phaser insta
  * Data sent into Phaser should be prepackaged into 
  * @param cards an object with "myHand", "theirHand", "onTable", "deck" Number arrays and "isMyTurn" boolean.
  */
-function updatePhaser(cards) {
-    console.log("updatePhaser called")
+function startPhaser(cards) {
+    console.log("startPhaser called")
     isMyTurn = cards.isMyTurn;
     deck = cards.deck.slice();
     theirHand = cards.theirHand.slice();
@@ -56,7 +60,7 @@ function updatePhaser(cards) {
         phaser.state.start('Play');
     } else {
         console.log("Skipping load-first because loaded is true");
-        updateGraphics(cards);
+        setGraphics(cards);
     }
 }
 
@@ -64,12 +68,12 @@ function updatePhaser(cards) {
  * Handles the graphical updates
  * @param {Array<Number>} cards 
  */
-function updateGraphics(cards) {
+function setGraphics(cards) {
     console.log('unparsed cards in updatePhaser function of front-end.js: ' + JSON.stringify(cards));
     // If out of sync, update the local copy
     // player turn
     if (isMyTurn != cards.isMyTurn) {
-        turnText.setText(getTurnText());
+        turnText.setText(getTurnString());
     }
     // deck
     if (!_.isEqual(deck, cards.deck)) {
@@ -109,6 +113,7 @@ function updateGraphics(cards) {
     logState();
 
 }
+
 function playState(phaser) { }
 playState.prototype = {
     init: function () {
@@ -146,8 +151,8 @@ playState.prototype = {
 
         // text stating how many cards are left in the deck and how many were reshuffled in the previous round
         const counterStyle = { font: '20px Arial', fill: '#FFF', align: 'center' };
-        this.cardsLeftText = phaser.add.text(140, phaser.world.centerY + graphics.DECK_PADDING, getCounterText(deck.length, 'left'), counterStyle);
-        this.cardsAddedText = phaser.add.text(140, phaser.world.centerY - graphics.DECK_PADDING, getCounterText(0, 'reshuffled'), counterStyle);
+        this.cardsLeftText = phaser.add.text(140, phaser.world.centerY + graphics.DECK_PADDING, getCounterString(deck.length, 'left'), counterStyle);
+        this.cardsAddedText = phaser.add.text(140, phaser.world.centerY - graphics.DECK_PADDING, getCounterString(0, 'reshuffled'), counterStyle);
         const counterTexts = [this.cardsLeftText, this.cardsAddedText];
         counterTexts.forEach(function (text) {
             text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
@@ -163,7 +168,7 @@ playState.prototype = {
         bar.drawRect(0, barYOffset, barWidth, barHeight);
 
         const turnTextStyle = { font: 'bold 32px Arial', fill: '#FFF', boundsAlignH: 'center', boundsAlignV: 'middle' };
-        turnText = phaser.add.text(0, 0, getTurnText(), turnTextStyle);
+        turnText = phaser.add.text(0, 0, getTurnString(), turnTextStyle);
         turnText.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
         turnText.setTextBounds(0, barYOffset, barWidth, barHeight);
 
@@ -178,7 +183,7 @@ playState.prototype = {
         console.log('Phaser client instance loaded');
         if (pendingUpdate != null) {
             console.log('Updating with the pending update');
-            updateGraphics(pendingUpdate);
+            setGraphics(pendingUpdate);
         }
     },
     update: function () {
@@ -198,54 +203,4 @@ playState.prototype = {
         // }, 5000 / 2);
         // this.updateEachTurn();
     }
-}
-
-/**
- * Sends an update to the server of which frames were swapped
- * @param {Number} c1 
- * @param {Number} c2 
- */
-function sendSwapUpdate(c1, c2) {
-    const packet = ["swapUpdate", c1, c2];
-    console.log('swapUpdate packet: ' + packet)
-    console.log("Emitting swapUpdate with packet...");
-    globalGame.socket.send(packet.join('.'));
-}
-/**
- * Sends an update to the server of the current state of the cards
- */
-function sendCardsUpdate() {
-    let p1Hand, p2Hand;
-    if (globalGame.my_role == 'player1') {
-        p1Hand = myHand;
-        p2Hand = theirHand;
-    } else if (globalGame.my_role == 'player2') {
-        p1Hand = theirHand;
-        p2Hand = myHand;
-    }
-    // send a packet, with each array separated by comma
-    const sep = '|';
-    const packet = ["cardsUpdate", deck.join(sep), onTable.join(sep), p1Hand.join(sep), p2Hand.join(sep)];
-    console.log('cardsUpdate packet: ' + JSON.stringify(packet));
-    console.log("Emitting cards update with cardsUpdate packet...");
-    globalGame.socket.send(packet.join('.'));
-}
-
-/**
- * Handles an update to swap two cards, both in the representation and the graphics.
- * @param {Number} c1 a number 0-51 representing a card
- * @param {Number} c2 a number 0-51 representing a card
- */
-function handleSwapUpdate(c1, c2) {
-    // should only be receiving swap updates from the other player. other player can't swap ours
-    let swappableCards = theirHandGroup.concat(onTableGroup);
-    console.log(`Handling swap update: ${c1}, ${c2}`);
-    // get the sprites corresponding to the numbers
-    spritesToSwap = swappableCards.filter(c => {
-        console.log(c.frame);
-        return c.frame === c1 || c.frame === c2
-    });
-    // there should only be two cards
-    console.assert(spritesToSwap.length === 2, c1, c2, spritesToSwap);
-    swapPosition(spritesToSwap[0], spritesToSwap[1]);
 }

@@ -58,7 +58,7 @@ var client_onserverupdate_received = function (state) {
       console.error("globalGame.my_role: " + globalGame.my_role);
     }
     console.log('Calling updatePhaser with pData: ' + JSON.stringify(pData));
-    updatePhaser(pData);
+    startPhaser(pData);
   } else {
     console.log('Did not update Phaser')
   }
@@ -130,7 +130,7 @@ var client_onjoingame = function (num_players, role) {
   }
 };
 
-let customSetup = function (game) {
+const customSetup = function (game) {
   game.socket.on('swapUpdate', swapped => {
     console.log('swapUpdate received on client ' + game.my_id + ': ' + JSON.stringify(swapped));
     handleSwapUpdate(swapped.c1, swapped.c2);

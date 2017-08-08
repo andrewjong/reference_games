@@ -1,12 +1,3 @@
-/*  Copyright (c) 2012 Sven "FuzzYspo0N" Bergström, 2013 Robert XD Hawkins
-    
-    written by : http://underscorediscovery.com
-    written for : http://buildnewgames.com/real-time-multiplayer/
-    
-    modified for collective behavior experiments on Amazon Mechanical Turk
-
-    MIT Licensed.
-*/
 const
   fs = require('fs'),
   utils = require(__base + 'sharedUtils/sharedUtils.js');
@@ -19,21 +10,21 @@ const
 // applies.
 const onMessage = function (client, message) {
   //Cut the message up into sub components
-  var message_parts = message.split('.');
+  const message_parts = message.split('.');
 
   //The first is always the type of message
-  var message_type = message_parts[0];
+  const message_type = message_parts[0];
 
   // logging for debug
   if (message_type != 'h') // skip the inactive window message
     console.log('Server received: ' + message_parts);
 
   //Extract important variables
-  var gc = client.game;
-  var id = gc.id;
-  var all = gc.get_active_players();
-  var target = gc.get_player(client.userid);
-  var others = gc.get_others(client.userid);
+  const gc = client.game;
+  const id = gc.id;
+  const all = gc.get_active_players();
+  const target = gc.get_player(client.userid);
+  const others = gc.get_others(client.userid);
   switch (message_type) {
 
     // the player ended their turn
@@ -79,7 +70,7 @@ const onMessage = function (client, message) {
     case 'chatMessage':
       if (client.game.player_count == 2 && !gc.paused) {
         // Update others
-        var msg = message_parts[1].replace(/~~~/g, '.');
+        const msg = message_parts[1].replace(/~~~/g, '.');
         _.map(all, function (p) {
           p.player.instance.emit('chatMessage', { user: client.userid, msg: msg });
         });

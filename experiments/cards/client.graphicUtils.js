@@ -1,6 +1,6 @@
 /**
  * @file 
- * Provides functions that help with Phaser graphics for use in front-end.js
+ * Provides functions that help with Phaser graphics for use in client.graphics.js
  *
  */
 
@@ -12,7 +12,7 @@
  * @param {boolean} forMe true if cards are for me, false if for other player
  */
 function makeHandGroup(cards, forMe) {
-  let handGroup = makeCardGroup(cards);
+  const handGroup = makeCardGroup(cards);
   // put the group in the right place
   let yOffset = graphics.HAND_OFFSET_FROM_CENTER; // the offset to place the cards
   if (!forMe) yOffset *= -1; // place on the opposite side if other player
@@ -31,7 +31,7 @@ function makeHandGroup(cards, forMe) {
  * @param {Array<Number>} cards the array to create sprites from
  */
 function makeOnTableGroup(cards) {
-  let onTableGroup = makeCardGroup(cards);
+  const onTableGroup = makeCardGroup(cards);
   // put the group in the right place
   onTableGroup.centerX = phaser.world.centerX;
   onTableGroup.forEach(c => {
@@ -47,23 +47,23 @@ function makeOnTableGroup(cards) {
  * at the default location.
  * @param {Array<Number>} cards the array to create sprites from
  */
-let makeCardGroup = function (cards) {
+const makeCardGroup = function (cards) {
   /* Note: This function is defined as a variable as it's not meant to be hoisted */
   /* Placement */
   // if (cards === undefined) return []; // case that no cards are available yet, prevent undefined errors
   // console.log('Making card group of length: ' + cards.length);
-  let cardGroup = new Array(cards.length);
+  const cardGroup = new Array(cards.length);
 
-  let groupWidth = cards.length * graphics.CARD_CELL_WIDTH;
-  let startX = phaser.world.centerX - groupWidth / 2;
+  const groupWidth = cards.length * graphics.CARD_CELL_WIDTH;
+  const startX = phaser.world.centerX - groupWidth / 2;
   for (let i = 0; i < cardGroup.length; ++i) {
     // add a sprite off the game screen
-    let cardSprite = phaser.add.sprite(-10, -10, 'cards', cards[i]);
+    const cardSprite = phaser.add.sprite(-10, -10, 'cards', cards[i]);
     // set the anchor and scale
     cardSprite.anchor.set(0.5);
     cardSprite.scale.set(graphics.CARD_SCALE);
     // put the card in the correct location
-    let cardX = startX + i * graphics.CARD_CELL_WIDTH;
+    const cardX = startX + i * graphics.CARD_CELL_WIDTH;
     cardSprite.x = cardX + graphics.CARD_CELL_WIDTH / 2;
     cardGroup[i] = cardSprite;
   }
@@ -133,24 +133,32 @@ function disableCard(card) {
 }
 
 /**
- * Helper function for cards on the start of their drag
- * @param {Sprite} card 
- * @param {Mouse?} pointer 
+ * The callback for what to do on the start of dragging a card.
+ * Increases the cards scale to simulate picking it up.
+ * @param {Sprite} card the card being operated on
+ * @param {Cursor} pointer 
  */
 let startDrag = function (card, pointer) {
   // make the card bigger for the illusion of picking it up
   card.scale.set(graphics.CARD_SCALE * 1.1);
   // for debugging
-  loc = myHandGroup.indexOf(card) != -1 ? 'hand' : 'table';
+  const loc = myHandGroup.indexOf(card) != -1 ? 'hand' : 'table';
   console.log(loc);
 }
 
+/**
+ * The callback for what to do at the stop of dragging a card.
+ * Swaps cards if there was an overlap, else snaps it back to its original position.
+ * Reset the card scale to simulate placing it back on the table.
+ * @param {Sprite} card the card being operated on
+ * @param {Cursor} pointer 
+ */
 let stopDrag = function (card, pointer) {
   // Reset the card's scale for the illusion of putting it back down
   card.scale.set(graphics.CARD_SCALE);
 
   // See if an overlap event and its resulting action occurred
-  swappableCards = myHandGroup.concat(onTableGroup);
+  const swappableCards = myHandGroup.concat(onTableGroup);
   // console.log("This card: " + card.frame);
   // console.log("Swappable cards: " + JSON.stringify(swappableCards.map(a => a.frame)));
   let didOverlap = false;
@@ -167,9 +175,7 @@ let stopDrag = function (card, pointer) {
   // Snap the card back if there was no overlap
   if (!didOverlap) {
     snapTo(card, card.snapPosition);
-  } else {
-    // sendCardsUpdate();
-  }
+  } 
 }
 
 /**
@@ -221,7 +227,7 @@ function swapPosition(card1, card2) {
   }, 700);
 
   // switch the snap positions
-  let temp = card1.snapPosition;
+  const temp = card1.snapPosition;
   card1.snapPosition = card2.snapPosition;
   card2.snapPosition = temp;
 
@@ -256,13 +262,12 @@ function swapPosition(card1, card2) {
   logState();
 }
 
-
 /**
  * Creates/destroys the sprites that represent the deck based on the current value of deck.length
  */
 function makeDeckSprites() {
-  let dx = deckSprites.dx;
-  let dy = deckSprites.dy;
+  const dx = deckSprites.dx;
+  const dy = deckSprites.dy;
   if (deckSprites.cards.length > deck.length) {
     // destroy extra card sprites if present
     for (let i = deckSprites.cards.length; i > deck.length; i--) {
@@ -362,14 +367,22 @@ function randBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function getTurnText() {
+/**
+ * Get the string describing the turn.
+ */
+function getTurnString() {
   // TODO: make this dependent on a different variable than isMyTurn. using isMyTurn seems like bad practice
   if (isMyTurn === null) return 'Game has not started yet'; // case game not initialized yet. 
   const isPartner = isMyTurn ? '' : 'partner\'s '
   return 'It\'s your ' + isPartner + 'turn.'
 }
 
-function getCounterText(num, counterType) {
+/**
+ * Get the string describing information about the cards.
+ * @param {Number} num number of cards
+ * @param {String} counterType either 'left' for 'left in deck' or 'reshuffled'
+ */
+function getCounterString(num, counterType) {
   const plural = (num == 1) ? '' : 's';
   const descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
   return `${num} card${plural} ${descrip}`;
