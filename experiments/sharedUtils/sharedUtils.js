@@ -41,30 +41,32 @@ var handleInvalidID = function (req, res) {
 };
 
 var checkPreviousParticipant = function (workerId, callback) {
-  var p = { 'workerId': workerId };
-  var postData = {
-    dbname: '3dObjects',
-    query: p,
-    projection: { '_id': 1 }
-  };
-  sendPostRequest(
-    'http://localhost:' + port + '/db/exists',
-    { json: postData },
-    (error, res, body) => {
-      try {
-        if (!error && res.statusCode === 200) {
-          console.log("success! Received data " + JSON.stringify(body));
-          callback(body);
-        } else {
-          throw `${error}`;
-        }
-      } catch (err) {
-        console.log(err);
-        console.log('no database; allowing participant to continue');
-        return callback(false);
-      }
-    }
-  );
+  console.log('skipping check for previous participant');
+  return callback(false);
+  // var p = { 'workerId': workerId };
+  // var postData = {
+  //   dbname: '3dObjects',
+  //   query: p,
+  //   projection: { '_id': 1 }
+  // };
+  // sendPostRequest(
+  //   'http://localhost:' + port + '/db/exists',
+  //   { json: postData },
+  //   (error, res, body) => {
+  //     try {
+  //       if (!error && res.statusCode === 200) {
+  //         console.log("success! Received data " + JSON.stringify(body));
+  //         callback(body);
+  //       } else {
+  //         throw `${error}`;
+  //       }
+  //     } catch (err) {
+  //       console.log(err);
+  //       console.log('no database; allowing participant to continue');
+  //       return callback(false);
+  //     }
+  //   }
+  // );
 };
 
 // var writeDataToCSV = function(game, _dataPoint) {
