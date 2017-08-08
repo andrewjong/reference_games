@@ -41,14 +41,19 @@ const onMessage = function (client, message) {
       break;
 
     // a change was made to the cards on the table / in the hands
-    case 'cardUpdate':
+    case 'cardsUpdate':
+      console.log('Server received: ' + message_parts);
+      cards = {
+        deck: message_parts[1],
+        onTable: message_parts[2],
+        p1Hand: message_parts[3],
+        p2Hand: message_parts[4]
+      }
+      // pass the update along to each of the other clients
       others.forEach(p => {
-        p.player.instance.emit('cardUpdate', {
-          // TODO: fill this with the updated cards. currently not sure how to represent to the other player
-
-        });
+        console.log("Emitting cardsUpdate to player: " + p.id);
+        p.player.instance.emit('cardsUpdate', cards);
       })
-
       break;
 
     // a player is typing

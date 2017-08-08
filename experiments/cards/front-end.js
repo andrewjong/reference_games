@@ -17,13 +17,11 @@ const graphics = {
     TURN_BUTTON_HEIGHT: 46
 }
 
-const gg = globalGame;
-
-let phaser; // the phaser game instance
+let phaser; // the phaser game instance. 'phaser' is used instead of the conventional 'game' to prevent confusion with the existing game
 let isMyTurn; // turn boolean
 let deck, myHand, theirHand, onTable; // numerical arrays to represent each hand
 let deckSprites = {
-    x: 140,
+    x: 140, // x location
     x_offset: 0, // the total current x offset of the top card
     y_offset: 0, // the total current y offset of the top card
     dx: 0.1, // how much to offset x per card
@@ -31,35 +29,14 @@ let deckSprites = {
     cards: [] // contain card sprites
 }
 let myHandGroup, theirHandGroup, onTableGroup; // phaser groups for sprites
-let turnText;
+let turnText; // text that displays whose turn it is
+let turnButton; // button to end the turn
 
+let loaded = false; // state for whether the phaser game is fully loaded (true after create is called)
+let pendingUpdate = null; // a var for storing the state before the phaser instance is created
 
-// This is essentially a state setup function
-// It exists due to name compatibility stuff within clientBase.js, because 'drawScreen()' is called in onconnect
-// else 
-/**
- * Initilaizes Phaser client-side
- * @param data state of the game
- */
-function drawScreen(data/*, player*/) { // we don't need the player variable anymore
-    console.log('drawScreen called for client ' + globalGame.my_id);
-    // console.log(`player.my_role: ${player.my_role}`); // this is probably undefined, use the globalGame option instead
-    // console.log(`globalGame.my_role: ${globalGame.my_role}`); // we know this is undefined here because roles are only assigned once both connect
-
-    const cards = data.cards;
-    console.log('cards in startGame function of front-end.js: ' + JSON.stringify(cards));
-    // initialize some temporary empty card representations (these get updated later with onServerUpdate below)
-    // deck = []//cards.deck;
-    // onTable = []//cards.onTable;
-    // isMyTurn = null;
-    // myHand = [];
-    // theirHand = [];
-}
-
-let loaded = false;
-let pendingUpdate = null;
 /** 
- * This function handles graphical updates when game.client.js is notified in client_onserverupdate_received .
+ * This function handles updates when game.client.js is notified in client_onserverupdate_received .
  * Data sent into Phaser should be prepackaged into 
  * @param cards an object with "myHand", "theirHand", "onTable", "deck" Number arrays and "isMyTurn" boolean.
  */
@@ -83,6 +60,10 @@ function updatePhaser(cards) {
     }
 }
 
+/**
+ * Handles the graphical updates
+ * @param {Array<Number>} cards 
+ */
 function updateGraphics(cards) {
     console.log('unparsed cards in updatePhaser function of front-end.js: ' + JSON.stringify(cards));
     // If out of sync, update the local copy
@@ -109,6 +90,20 @@ function updateGraphics(cards) {
     if (!_.isEqual(myHand, cards.myHand)) {
         destroyAll(myHandGroup);
         myHandGroup = makeHandGroup(myHand, true);
+    }
+    if (isMyTurn) {
+        // Enable the end-turn button
+        turnButton.setFrames(0, 1, 2);
+        turnButton.inputEnabled = true;
+        // Enable input on the table group
+        onTableGroup.forEach(enableCard);
+        // onTableGroup.forEach(c => c.inputEnabled = false);
+    } else {
+        // Disable the end-turn button
+        turnButton.setFrames(3, 3, 3);
+        turnButton.inputEnabled = false;
+        // Disable input on the table group
+        onTableGroup.forEach(disableCard);
     }
     console.log('--Cards after updatePhaser--');
     logCardState();
@@ -175,28 +170,14 @@ playState.prototype = {
         // End turn button
         const centerInBar = (barHeight - graphics.TURN_BUTTON_HEIGHT) / 2;
         const horizontalPad = centerInBar;
-        this.button = phaser.add.button(phaser.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad,
+        turnButton = phaser.add.button(phaser.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad,
             phaser.world.height - graphics.TURN_BUTTON_HEIGHT - centerInBar,
             'end-turn', this.endTurn, this, 0, 1, 2);
 
-        if (isMyTurn) {
-            // Enable the end-turn button
-            this.button.setFrames(0, 1, 2);
-            this.button.inputEnabled = true;
-            // Enable input on the table group
-            onTableGroup.forEach(enableCard);
-            // onTableGroup.forEach(c => c.inputEnabled = false);
-        } else {
-            // Disable the end-turn button
-            this.button.setFrames(3, 3, 3);
-            this.button.inputEnabled = false;
-            // Disable input on the table group
-            onTableGroup.forEach(disableCard);
-        }
         loaded = true;
         console.log('Phaser client instance loaded');
         if (pendingUpdate != null) {
-            console.log('Actually updating after load');
+            console.log('Updating with the pending update');
             updateGraphics(pendingUpdate);
         }
     },
@@ -217,4 +198,24 @@ playState.prototype = {
         // }, 5000 / 2);
         // this.updateEachTurn();
     }
+}
+
+/**
+ * Sends an update to the server of the current state of the cards
+ */
+function sendCardsUpdate() {
+    let p1Hand, p2Hand;
+    if (globalGame.my_role == 'player1') {
+        p1Hand = myHand;
+        p2Hand = theirHand;
+    } else if (globalGame.my_role == 'player2') {
+        p1Hand = theirHand;
+        p2Hand = myHand;
+    }
+    // send a packet, with each array separated by comma
+    const sep = '|';
+    const packet = ["cardsUpdate", deck.join(sep), onTable.join(sep), p1Hand.join(sep), p2Hand.join(sep)];
+    console.log('cardsUpdate packet: ' + JSON.stringify(packet));
+    console.log("Emitting cards update with cardsUpdate packet...");
+    globalGame.socket.send(packet.join('.'));
 }

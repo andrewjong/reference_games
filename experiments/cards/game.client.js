@@ -133,7 +133,7 @@ var client_onjoingame = function (num_players, role) {
 let customSetup = function (game) {
   // Update about the cards in both player's hands and on the table
   game.socket.on('cardsUpdate', cardsPacket => {
-
+    console.log('cardsUpdate received on client ' + game.my_id + ': ' + JSON.stringify(cardsPacket));
   });
 
   // End turn contains data of how many cards were reshuffled/discarded at the end of the turn
@@ -147,4 +147,11 @@ let customSetup = function (game) {
   });
 
 
+}
+
+// This is essentially a state setup function
+// It exists due to name compatibility stuff within clientBase.js, because 'drawScreen()' is called in onconnect
+// else 
+function drawScreen(data) {
+    console.log('drawScreen called for client ' + globalGame.my_id);
 }

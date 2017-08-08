@@ -81,10 +81,10 @@ var game_core = function (options) {
     console.log('Deck: ' + this.cards.deck);
 
     // Draw from the top cards of the deck
-    this.cards.p1Hand = this.cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
-    console.log("P1 hand: " + this.cards.p1Hand);
     this.cards.onTable = this.cards.deck.splice(0, gameOptions.CARDS_ON_TABLE);
     console.log("On table: " + this.cards.onTable);
+    this.cards.p1Hand = this.cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
+    console.log("P1 hand: " + this.cards.p1Hand);
     this.cards.p2Hand = this.cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
     console.log("P2 hand: " + this.cards.p2Hand);
 
@@ -100,9 +100,9 @@ var game_core = function (options) {
     }];
 
     this.cards = {
-      deck: Array.from(Array(52).keys()),
-      p1Hand: [],
+      deck: Array(52).fill(-1), // array with dummy values to represent the full size of the deck
       onTable: [],
+      p1Hand: [],
       p2Hand: []
     }
     console.log('cards: ' + JSON.stringify(this.cards));

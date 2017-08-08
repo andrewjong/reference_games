@@ -51,12 +51,10 @@ let makeCardGroup = function (cards) {
   /* Note: This function is defined as a variable as it's not meant to be hoisted */
   /* Placement */
   // if (cards === undefined) return []; // case that no cards are available yet, prevent undefined errors
-  console.log('Making card group of length: ' + cards.length);
+  // console.log('Making card group of length: ' + cards.length);
   let cardGroup = new Array(cards.length);
 
   let groupWidth = cards.length * graphics.CARD_CELL_WIDTH;
-  console.log('phaser.world: ' + phaser.world);
-  console.log('phaser.world.centerX' + phaser.world.centerX);
   let startX = phaser.world.centerX - groupWidth / 2;
   for (let i = 0; i < cardGroup.length; ++i) {
     // add a sprite off the game screen
@@ -153,12 +151,12 @@ let stopDrag = function (card, pointer) {
 
   // See if an overlap event and its resulting action occurred
   swappableCards = myHandGroup.concat(onTableGroup);
-  console.log("This card: " + card.frame);
-  console.log("Swappable cards: " + JSON.stringify(swappableCards.map(a => a.frame)));
+  // console.log("This card: " + card.frame);
+  // console.log("Swappable cards: " + JSON.stringify(swappableCards.map(a => a.frame)));
   let didOverlap = false;
   swappableCards.some(o => {
     if (!(card === o) && card.overlap(o) && shouldSwap(card, o)) {
-      console.log(`Found overlap for ${o.frame}`);
+      // console.log(`Found overlap for ${o.frame}`);
       swapPosition(card, o);
       didOverlap = true;
     }
@@ -168,6 +166,8 @@ let stopDrag = function (card, pointer) {
   // Snap the card back if there was no overlap
   if (!didOverlap) {
     snapTo(card, card.snapPosition);
+  } else {
+    sendCardsUpdate();
   }
 }
 
