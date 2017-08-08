@@ -175,7 +175,7 @@ let stopDrag = function (card, pointer) {
   // Snap the card back if there was no overlap
   if (!didOverlap) {
     snapTo(card, card.snapPosition);
-  } 
+  }
 }
 
 /**
@@ -223,7 +223,10 @@ function swapPosition(card1, card2) {
   snapTo(card2, card1.snapPosition);
   setTimeout(function () {
     // reenable the cards
-    [card1, card2].forEach(c => c.tint = graphics.ENABLED_TINT);
+    [card1, card2].forEach(c => {
+      if (c.inputEnabled)
+        c.tint = graphics.ENABLED_TINT
+    });
   }, 700);
 
   // switch the snap positions
@@ -391,7 +394,7 @@ function getCounterString(num, counterType) {
 /**
  * Logs the state of the cards game on the client side.
  */
-function logState(){
+function logState() {
   console.log('isMyTurn: ' + isMyTurn);
   console.log('Deck: ' + deck);
   console.log('Their Hand: ' + theirHand);
