@@ -24,6 +24,10 @@ const onMessage = function (client, message) {
   //The first is always the type of message
   var message_type = message_parts[0];
 
+  // logging for debug
+  if (message_type != 'h') // skip the inactive window message
+    console.log('Server received: ' + message_parts);
+
   //Extract important variables
   var gc = client.game;
   var id = gc.id;
@@ -42,7 +46,6 @@ const onMessage = function (client, message) {
 
     // a change was made to the cards on the table / in the hands
     case 'cardsUpdate':
-      console.log('Server received: ' + message_parts);
       cards = {
         deck: message_parts[1],
         onTable: message_parts[2],
@@ -55,6 +58,14 @@ const onMessage = function (client, message) {
         p.player.instance.emit('cardsUpdate', cards);
       })
       break;
+    case 'swapUpdate':
+      others.forEach(p => {
+        console.log("Emitting swapUpdate to player: " + p.id);
+        p.player.instance.emit('swapUpdate', {
+          c1: message_parts[1], c2: message_parts[2]
+        });
+      })
+
 
     // a player is typing
     case 'playerTyping':

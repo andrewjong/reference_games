@@ -106,7 +106,7 @@ function updateGraphics(cards) {
         onTableGroup.forEach(disableCard);
     }
     console.log('--Cards after updatePhaser--');
-    logCardState();
+    logState();
 
 }
 function playState(phaser) { }
@@ -201,6 +201,17 @@ playState.prototype = {
 }
 
 /**
+ * Sends an update to the server of which frames were swapped
+ * @param {Number} c1 
+ * @param {Number} c2 
+ */
+function sendSwapUpdate(c1, c2) {
+    const packet = ["swapUpdate", c1, c2];
+    console.log('swapUpdate packet: ' + packet)
+    console.log("Emitting swapUpdate with packet...");
+    globalGame.socket.send(packet.join('.'));
+}
+/**
  * Sends an update to the server of the current state of the cards
  */
 function sendCardsUpdate() {
@@ -218,4 +229,23 @@ function sendCardsUpdate() {
     console.log('cardsUpdate packet: ' + JSON.stringify(packet));
     console.log("Emitting cards update with cardsUpdate packet...");
     globalGame.socket.send(packet.join('.'));
+}
+
+/**
+ * Handles an update to swap two cards, both in the representation and the graphics.
+ * @param {Number} c1 a number 0-51 representing a card
+ * @param {Number} c2 a number 0-51 representing a card
+ */
+function handleSwapUpdate(c1, c2) {
+    // should only be receiving swap updates from the other player. other player can't swap ours
+    let swappableCards = theirHandGroup.concat(onTableGroup);
+    console.log(`Handling swap update: ${c1}, ${c2}`);
+    // get the sprites corresponding to the numbers
+    spritesToSwap = swappableCards.filter(c => {
+        console.log(c.frame);
+        return c.frame === c1 || c.frame === c2
+    });
+    // there should only be two cards
+    console.assert(spritesToSwap.length === 2, c1, c2, spritesToSwap);
+    swapPosition(spritesToSwap[0], spritesToSwap[1]);
 }

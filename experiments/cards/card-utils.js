@@ -158,6 +158,7 @@ let stopDrag = function (card, pointer) {
     if (!(card === o) && card.overlap(o) && shouldSwap(card, o)) {
       // console.log(`Found overlap for ${o.frame}`);
       swapPosition(card, o);
+      sendSwapUpdate(card.frame, o.frame);
       didOverlap = true;
     }
   })
@@ -167,7 +168,7 @@ let stopDrag = function (card, pointer) {
   if (!didOverlap) {
     snapTo(card, card.snapPosition);
   } else {
-    sendCardsUpdate();
+    // sendCardsUpdate();
   }
 }
 
@@ -252,16 +253,9 @@ function swapPosition(card1, card2) {
   myHand = myHandGroup.map(c => c.frame);
   onTable = onTableGroup.map(c => c.frame);
 
-  logCardState();
+  logState();
 }
-function logCardState(){
-  console.log('isMyTurn: ' + isMyTurn);
-  console.log('Deck: ' + deck);
-  console.log('Their Hand: ' + theirHand);
-  console.log('On Table: ' + onTable);
-  console.log('My Hand: ' + myHand);
 
-}
 
 /**
  * Creates/destroys the sprites that represent the deck based on the current value of deck.length
@@ -361,8 +355,8 @@ function fadeOut(card, time) {
 
 /**
  * Random number between min and max
- * @param {*Number} min
- * @param {*Number} max
+ * @param {Number} min
+ * @param {Number} max
  */
 function randBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -379,6 +373,17 @@ function getCounterText(num, counterType) {
   const plural = (num == 1) ? '' : 's';
   const descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
   return `${num} card${plural} ${descrip}`;
+}
+
+/**
+ * Logs the state of the cards game on the client side.
+ */
+function logState(){
+  console.log('isMyTurn: ' + isMyTurn);
+  console.log('Deck: ' + deck);
+  console.log('Their Hand: ' + theirHand);
+  console.log('On Table: ' + onTable);
+  console.log('My Hand: ' + myHand);
 }
 
 /**

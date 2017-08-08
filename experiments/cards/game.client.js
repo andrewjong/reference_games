@@ -131,6 +131,10 @@ var client_onjoingame = function (num_players, role) {
 };
 
 let customSetup = function (game) {
+  game.socket.on('swapUpdate', swapped => {
+    console.log('swapUpdate received on client ' + game.my_id + ': ' + JSON.stringify(swapped));
+    handleSwapUpdate(swapped.c1, swapped.c2);
+  })
   // Update about the cards in both player's hands and on the table
   game.socket.on('cardsUpdate', cardsPacket => {
     console.log('cardsUpdate received on client ' + game.my_id + ': ' + JSON.stringify(cardsPacket));
@@ -145,7 +149,6 @@ let customSetup = function (game) {
   game.socket.on('newTurn', cardsDealt => {
 
   });
-
 
 }
 
