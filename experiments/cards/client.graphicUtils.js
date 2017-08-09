@@ -413,6 +413,21 @@ function logState() {
 }
 
 /**
+ * Set the turn button to be enabled or disabled.
+ * @param {Boolean} isEnabled 
+ */
+function turnButtonSetEnabled(isEnabled) {
+  if (isEnabled) {
+    // Enable the end-turn button
+    turnButton.setFrames(0, 1, 2);
+    turnButton.inputEnabled = true;
+  } else {
+    // Disable the end-turn button
+    turnButton.setFrames(3, 3, 3);
+    turnButton.inputEnabled = false;
+  }
+}
+/**
  * Swaps the elements at two indices of an array
  * @param {Number} index1 
  * @param {Number} index2

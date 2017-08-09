@@ -39,16 +39,17 @@ function handleSwapUpdate(c1, c2) {
 function sendEndTurn() {
     console.log("Emitting endTurn...");
     globalGame.socket.send('endTurn');
+    //TODO: maybe combine 'endTurn' and 'newTurn' into 'nextTurn'. Easier that way so don't have to back & forth with server so much
 }
 
 /**
- * Handle ending the turn, specifically the reshuffle animation.
+ * Handle transitioning to the next turn, specifically the reshuffle animation.
  * @param {Object{newDeck, n}} reshuffled 
  */
-function handleEndTurn(reshuffled) {
+function handleNextTurn(reshuffled) {
     reshuffleAnimation(reshuffled.n);
-
-    // isMyTurn = !isMyTurn;
+    isMyTurn = !isMyTurn;
+    turnButtonSetEnabled(isMyTurn);
     // // reshuffle cards
     // [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.onTableSprites, deck.slice(this.nextCardIndex, 52));
     // this.nextCardIndex += 4;

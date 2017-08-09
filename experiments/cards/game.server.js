@@ -43,11 +43,10 @@ const onMessage = function (client, message) {
     // reshuffling logic here
       const reshuffle = cardLogic.reshuffle(gc.reshuffleP, gc.cards.onTable, gc.cards.deck);
       all.forEach(p => {
-        p.player.instance.emit('endTurn', reshuffle);
+        p.player.instance.emit('nextTurn', reshuffle);
       });
 
       break;
-    case 'newTurn':
 
     // a change was made to the cards on the table / in the hands
     case 'cardsUpdate':

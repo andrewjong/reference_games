@@ -96,23 +96,12 @@ function setGraphics(cards) {
         destroyAll(myHandGroup);
         myHandGroup = makeHandGroup(myHand, true);
     }
-    if (isMyTurn) {
-        // Enable the end-turn button
-        turnButton.setFrames(0, 1, 2);
-        turnButton.inputEnabled = true;
-        // Enable input on the table group
-        onTableGroup.forEach(enableCard);
-        // onTableGroup.forEach(c => c.inputEnabled = false);
-    } else {
-        // Disable the end-turn button
-        turnButton.setFrames(3, 3, 3);
-        turnButton.inputEnabled = false;
-        // Disable input on the table group
-        onTableGroup.forEach(disableCard);
-    }
-    console.log('--Cards after updatePhaser--');
-    logState();
+    // set appropriate enable and disables on sprites
+    turnButtonSetEnabled(isMyTurn);
+    onTableGroup.forEach(isMyTurn ? enableCard : disableCard);
 
+    console.log('Cards after updatePhaser: ');
+    logState();
 }
 
 /**

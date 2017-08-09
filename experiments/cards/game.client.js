@@ -140,15 +140,11 @@ const customSetup = function (game) {
     console.log('cardsUpdate received on client ' + game.my_id + ': ' + JSON.stringify(cardsPacket));
   });
 
-  // End turn contains data of how many cards were reshuffled/discarded at the end of the turn
-  game.socket.on('endTurn', reshuffled => {
+  // Next turn contains data for transitioning to the next turn
+  game.socket.on('nextTurn', reshuffled => {
     console.log('endTurn received on client ' + game.my_id + ': ' + JSON.stringify(reshuffled));
-    handleEndTurn(reshuffled);
-  });
-
-  // New turn updates the new cards that are dealt on the table at the beginning of a turn
-  game.socket.on('newTurn', cardsDealt => {
-
+    game.turnNum++;
+    handleNextTurn(reshuffled);
   });
 
 }
