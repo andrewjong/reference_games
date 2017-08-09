@@ -259,8 +259,9 @@ function swapPosition(card1, card2) {
   }
 
   // Update the cards in the array representations
-  myHand = myHandGroup.map(c => c.frame);
+  theirHand = theirHandGroup.map(c => c.frame);
   onTable = onTableGroup.map(c => c.frame);
+  myHand = myHandGroup.map(c => c.frame);
 
   logState();
 }

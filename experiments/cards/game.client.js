@@ -57,10 +57,10 @@ var client_onserverupdate_received = function (state) {
     } else { // this shouldn't happen!
       console.error("globalGame.my_role: " + globalGame.my_role);
     }
-    console.log('Calling updatePhaser with pData: ' + JSON.stringify(pData));
+    console.log('Calling startPhaser with pData: ' + JSON.stringify(pData));
     startPhaser(pData);
   } else {
-    console.log('Did not update Phaser')
+    console.log('Waiting for game start')
   }
 };
 
