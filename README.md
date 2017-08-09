@@ -5,10 +5,10 @@ This is a fork of https://github.com/hawkrobe/reference_games that adds two expe
 
 - _cards_, a new game to collect corpora in a changing environment, is located in ```experiments/cards```. This branch lives on the default branch: cards-master.
 
-For background knowledge about these games, please consult [Andrew Jong](andrewjong@cs.stanford.edu "andrewjong@cs.stanford.edu"), [Jennifer Hu](jenniferhu@college.harvard.edu "jennhu@college.harvard.edu"), [Will Monroe](wmonroe4@stanford.edu "wmonroe4@stanford.edu"), or [Chris Potts](cgpotts@stanford.edu "cgpotts@stanford.edu").
+For background knowledge about these two games, please consult [Andrew Jong](andrewjong@cs.stanford.edu "andrewjong@cs.stanford.edu"), [Jennifer Hu](jenniferhu@college.harvard.edu "jennhu@college.harvard.edu"), [Will Monroe](wmonroe4@stanford.edu "wmonroe4@stanford.edu"), or [Chris Potts](cgpotts@stanford.edu "cgpotts@stanford.edu").
 
 
-**To test locally, see https://github.com/hawkrobe/reference_games**
+**To test locally, see instructions at https://github.com/hawkrobe/reference_games**
 
 ## Deploying On Heroku
 (At the moment, this is mainly for _chineseColorRef_, but will expand to _cards_ once it is in a deployable state.)
