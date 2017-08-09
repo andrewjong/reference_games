@@ -2,6 +2,8 @@ const
   fs = require('fs'),
   utils = require(__base + 'sharedUtils/sharedUtils.js');
 
+const cardLogic = require(__base + 'cards/card-logic.js');
+
 // This is the function where the server parses and acts on messages
 // sent from 'clients' aka the browsers of people playing the
 // game. For example, if someone clicks on the map, they send a packet
@@ -27,13 +29,25 @@ const onMessage = function (client, message) {
   const others = gc.get_others(client.userid);
   switch (message_type) {
 
+    // player swapped two cards
+    case 'swapUpdate':
+      others.forEach(p => {
+        console.log("Emitting swapUpdate to player: " + p.id);
+        p.player.instance.emit('swapUpdate', {
+          c1: message_parts[1], c2: message_parts[2]
+        });
+      })
+      break;
     // the player ended their turn
     case 'endTurn':
-      others.forEach(p => {
-        p.player.instance.emit('endTurn');
-      })
+    // reshuffling logic here
+      const reshuffle = cardLogic.reshuffle(gc.reshuffleP, gc.cards.onTable, gc.cards.deck);
+      all.forEach(p => {
+        p.player.instance.emit('endTurn', reshuffle);
+      });
 
       break;
+    case 'newTurn':
 
     // a change was made to the cards on the table / in the hands
     case 'cardsUpdate':
@@ -49,13 +63,6 @@ const onMessage = function (client, message) {
         p.player.instance.emit('cardsUpdate', cards);
       })
       break;
-    case 'swapUpdate':
-      others.forEach(p => {
-        console.log("Emitting swapUpdate to player: " + p.id);
-        p.player.instance.emit('swapUpdate', {
-          c1: message_parts[1], c2: message_parts[2]
-        });
-      })
 
 
     // a player is typing
@@ -124,6 +131,7 @@ const dataOutput = function () {
     'cards': cardsOutput
   };
 }();
+
 module.exports = {
   onMessage: onMessage,
   setCustomEvents: setCustomEvents,

@@ -40,9 +40,10 @@ let loaded = false; // state for whether the phaser game is fully loaded (true a
 let pendingUpdate = null; // a var for storing the state before the phaser instance is created
 
 /** 
- * This function handles updates when game.client.js is notified in client_onserverupdate_received .
- * Data sent into Phaser should be prepackaged into 
- * @param cards an object with "myHand", "theirHand", "onTable", "deck" Number arrays and "isMyTurn" boolean.
+ * This function handles the initial update when game.client.js is notified in client_onserverupdate_received by 
+ * starting Phaser. Data sent into Phaser should be prepackaged into an object with "myHand", "theirHand", "onTable", 
+ * "deck" Number arrays and "isMyTurn" boolean.
+ * @param cards an object representing the starting state
  */
 function startPhaser(cards) {
     console.log("startPhaser called")
@@ -53,7 +54,7 @@ function startPhaser(cards) {
     myHand = cards.myHand.slice();
 
     if (loaded === false) {
-        console.log(`Creating a new phaser game instance`);
+        console.log(`Phaser not yet loaded. Creating a new phaser game instance before handling update`);
         pendingUpdate = cards;
         phaser = new Phaser.Game(graphics.GAME_WIDTH, graphics.GAME_HEIGHT, Phaser.AUTO, 'viewport');
         phaser.state.add('Play', playState);
@@ -65,7 +66,7 @@ function startPhaser(cards) {
 }
 
 /**
- * Handles the graphical updates
+ * Sets the graphics to match the starting card state
  * @param {Array<Number>} cards 
  */
 function setGraphics(cards) {
@@ -114,10 +115,15 @@ function setGraphics(cards) {
 
 }
 
+/**
+ * Phaser states: init, preload, create, update, etc
+ * @param {Phaser} phaser the phaer game instance
+ */
 function playState(phaser) { }
 playState.prototype = {
     init: function () {
         phaser.stage.disableVisibilityChange = true; // make updates regardless of window focus
+        phaser.physics.startSystem(Phaser.Physics.ARCADE);
     },
     preload: function () {
         console.log('playState preload called');
@@ -177,7 +183,7 @@ playState.prototype = {
         const horizontalPad = centerInBar;
         turnButton = phaser.add.button(phaser.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad,
             phaser.world.height - graphics.TURN_BUTTON_HEIGHT - centerInBar,
-            'end-turn', this.endTurn, this, 0, 1, 2);
+            'end-turn', sendEndTurn, this, 0, 1, 2);
 
         loaded = true;
         console.log('Phaser client instance loaded');
@@ -189,18 +195,5 @@ playState.prototype = {
     update: function () {
         /* Stuff in here about sending server information */
 
-    },
-    endTurn: function () {
-        console.log('TODO: Implement end turn');
-        // isMyTurn = !isMyTurn;
-        // // reshuffle cards
-        // [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.onTableSprites, deck.slice(this.nextCardIndex, 52));
-        // this.nextCardIndex += 4;
-        // reshuffleAnimation(this.onTableSprites, this.cardsAdded, game, this);
-        // obj = this;
-        // setTimeout(function () {
-        //     obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
-        // }, 5000 / 2);
-        // this.updateEachTurn();
     }
 }

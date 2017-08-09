@@ -141,8 +141,9 @@ const customSetup = function (game) {
   });
 
   // End turn contains data of how many cards were reshuffled/discarded at the end of the turn
-  game.socket.on('endTurn', numReshuffled => {
-
+  game.socket.on('endTurn', reshuffled => {
+    console.log('endTurn received on client ' + game.my_id + ': ' + JSON.stringify(reshuffled));
+    handleEndTurn(reshuffled);
   });
 
   // New turn updates the new cards that are dealt on the table at the beginning of a turn

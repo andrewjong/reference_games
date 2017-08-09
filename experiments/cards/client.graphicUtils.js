@@ -170,8 +170,8 @@ let stopDrag = function (card, pointer) {
       didOverlap = true;
     }
   })
+  // console.log("didOverlap: " + didOverlap);
 
-  console.log("didOverlap: " + didOverlap);
   // Snap the card back if there was no overlap
   if (!didOverlap) {
     snapTo(card, card.snapPosition);
@@ -293,9 +293,47 @@ function makeDeckSprites() {
 }
 
 /**
- * @deprecated
+ * Animates the reshuffling/discarding of the cards on the table (onTableGroup)
+ * @param {Number} numReshuffle the number of cards to reshuffle
  */
-function moveTo(sprite, x, y, moveTime, waitTime, phaser, fadeBool, destroyBool) {
+function reshuffleAnimation(numReshuffle) {
+  let backs = [];
+  // create back sprites
+  onTableGroup.forEach(c => {
+    console.log('x: ' + c.x + ', y: ' + c.y);
+    let back = phaser.add.sprite(c.x, c.y, 'cardback');
+    back.scale.set(graphics.CARD_SCALE);
+    back.anchor.set(0.5);
+    fadeOut(c, 500);
+    c.destroy();
+    fadeIn(back, 500);
+    backs.push(back);
+  });
+  // collect the backs in the center
+  setTimeout(function () {
+    backs.forEach(function (b) {
+      moveTo(b, phaser.world.centerX, phaser.world.centerY, 600 / 2, 600 / 2, false, false);
+    })
+  }, 1000 / 2);
+  setTimeout(function () {
+    for (let i = 0; i < backs.length; i++) {
+      let b = backs[i];
+      let x = (i < numReshuffle) ? 140 : 1500;
+      moveTo(b, x, phaser.world.centerY, 600 * (1 + i) / 2, 600 * (1 + i) / 2, false, true);
+    }
+  }, 3000 / 2);
+}
+/**
+ * Move a sprite to a location, with the option of fading or destroying it in the process.
+ * @param {Phaser.Sprite} sprite the sprite
+ * @param {Number} x x pos to move to
+ * @param {Number} y y pos t omove to
+ * @param {Number} moveTime time to move there
+ * @param {Number} waitTime time before moving
+ * @param {Boolean} fadeBool whether to fade out
+ * @param {Boolean} destroyBool whether to destroy sprite on finish
+ */
+function moveTo(sprite, x, y, moveTime, waitTime, fadeBool, destroyBool) {
   phaser.physics.arcade.enable(sprite);
   phaser.physics.arcade.moveToXY(sprite, x, y, 0, moveTime);
   phaser.time.events.add(waitTime, function () {
@@ -309,34 +347,6 @@ function moveTo(sprite, x, y, moveTime, waitTime, phaser, fadeBool, destroyBool)
     }
   });
 }
-
-/**
- * @deprecated
- */
-function reshuffleAnimation(cards, numToAdd, game, obj) {
-  let backs = [];
-  cards.forEach(function (c) {
-    fadeOut(c, 500);
-    let back = game.add.sprite(c.x, c.y, 'cardback');
-    back.scale.set(graphics.cardScale);
-    back.anchor = new Phaser.Point(0.5, 0.5);
-    fadeIn(back, 500);
-    backs.push(back);
-  });
-  setTimeout(function () {
-    backs.forEach(function (b) {
-      moveTo(b, game.world.centerX, game.world.centerY, 600 / 2, 600 / 2, game, false, false);
-    })
-  }, 1000 / 2);
-  setTimeout(function () {
-    for (let i = 0; i < backs.length; i++) {
-      let b = backs[i];
-      let x = (i < numToAdd) ? 140 : 1500;
-      moveTo(b, x, game.world.centerY, 600 * (1 + i) / 2, 600 * (1 + i) / 2, game, false, true);
-    }
-  }, 3000 / 2);
-}
-
 
 /**
  * Gives easing to movement of card sprite

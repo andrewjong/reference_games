@@ -34,6 +34,33 @@ function handleSwapUpdate(c1, c2) {
 }
 
 /**
+ * Lets the server know the turn has ended.
+ */
+function sendEndTurn() {
+    console.log("Emitting endTurn...");
+    globalGame.socket.send('endTurn');
+}
+
+/**
+ * Handle ending the turn, specifically the reshuffle animation.
+ * @param {Object{newDeck, n}} reshuffled 
+ */
+function handleEndTurn(reshuffled) {
+    reshuffleAnimation(reshuffled.n);
+
+    // isMyTurn = !isMyTurn;
+    // // reshuffle cards
+    // [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.onTableSprites, deck.slice(this.nextCardIndex, 52));
+    // this.nextCardIndex += 4;
+    // reshuffleAnimation(this.onTableSprites, this.cardsAdded, game, this);
+    // obj = this;
+    // setTimeout(function () {
+    //     obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
+    // }, 5000 / 2);
+    // this.updateEachTurn();
+}
+
+/**
  * Sends an update to the server of the current state of the cards
  * TODO: Currently not used. possibly delete
  */

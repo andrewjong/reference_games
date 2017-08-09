@@ -14,8 +14,8 @@ function reshuffle(p, cards, deck) {
             deck.push(c.frame);
         }
     });
-    Phaser.ArrayUtils.shuffle(deck);
-    return [deck.length, n];
+    const newDeck = _.shuffle(deck);
+    return {newDeck, n};
 }
 
 const cardsInSuit = 12;
