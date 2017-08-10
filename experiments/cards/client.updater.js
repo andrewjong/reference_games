@@ -71,24 +71,3 @@ function handleNewTurn(newTurn){
     //TODO: animations for dealing the new turn cards
     updatePhaser({isMyTurn: iMT, deck: newTurn.deck, onTable: newTurn.onTable});
 }
-
-/**
- * Sends an update to the server of the current state of the cards
- * TODO: Currently not used. possibly delete
- */
-function sendCardsUpdate() {
-    let p1Hand, p2Hand;
-    if (globalGame.my_role == 'player1') {
-        p1Hand = myHand;
-        p2Hand = theirHand;
-    } else if (globalGame.my_role == 'player2') {
-        p1Hand = theirHand;
-        p2Hand = myHand;
-    }
-    // send a packet, with each array separated by comma
-    const sep = '|';
-    const packet = ["cardsUpdate", deck.join(sep), onTable.join(sep), p1Hand.join(sep), p2Hand.join(sep)];
-    console.log('cardsUpdate packet: ' + JSON.stringify(packet));
-    console.log("Emitting cards update with cardsUpdate packet...");
-    globalGame.socket.send(packet.join('.'));
-}

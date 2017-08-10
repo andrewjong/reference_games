@@ -68,22 +68,6 @@ const onMessage = function (client, message) {
       target.instance.emit('newTurn', newTurn);
       break;
 
-    // a change was made to the cards on the table / in the hands
-    case 'cardsUpdate':
-      cards = {
-        deck: message_parts[1],
-        onTable: message_parts[2],
-        p1Hand: message_parts[3],
-        p2Hand: message_parts[4]
-      }
-      // pass the update along to each of the other clients
-      others.forEach(p => {
-        console.log("Emitting cardsUpdate to player: " + p.id);
-        p.player.instance.emit('cardsUpdate', cards);
-      })
-      break;
-
-
     // a player is typing
     case 'playerTyping':
       _.map(others, function (p) {
@@ -111,36 +95,42 @@ const setCustomEvents = function (socket) {
 
 // Data output for the end of each turn
 const dataOutput = function () {
+  const gc = client.game;
   function commonOutput(client, message_data) {
     return {
-      gameid: client.game.id,
-      time: Date.now(),
-      turnNum: client.game.state.turnNum + 1, // TODO: add turn number to game state
-      workerId: client.workerid,
-      assignmentId: client.assignmentid
+      assignmentId: gc.assignmentid,
+      workerId: gc.workerid,
+      gameid: gc.id,
+      epochTime: Date.now(),
+      humanTime: Date(), 
+      turnNum: client.game.turnNum + 1, // TODO: add turn number to game state
     };
   };
 
   const chatMessageOutput = function (client, message_data) {
-    var intendedName = getIntendedTargetName(client.game.trialInfo.currStim);
-    var output = _.extend(
-      commonOutput(client, message_data), {
-        intendedName,
-        role: client.role,
-        text: message_data[1].replace(/~~~/g, '.'),
-      }
-    );
+    const output = Object.assign(commonOutput(client, message_data), {
+      role: client.role,
+      text: message_data[1].replace(/~~~/g, '.'),
+    });
+
     console.log(JSON.stringify(output, null, 3));
     return output;
   };
 
   const cardsOutput = function (client, message_data) {
-    const deck = client.game.deck;
+    const output = Object.assign(commonOutput(client, message_data), {
+      // whoseTurn: ,
+      // stage: ,
+      // p1Hand: ,
+      // p2Hand: ,
+      // onTable: ,
+      // deck: client.game.deck,
+      // deckSize: 
+      // numSwapped: 
+      // reshuffleP: 
+      // numReshuffled:
+    });
 
-    var output = _.extend(
-      commonOutput(client, message_data),
-      deck
-    );
     console.log(JSON.stringify(output, null, 3));
     return output;
   };

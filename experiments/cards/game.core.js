@@ -18,7 +18,7 @@ var game_core = function (options) {
   // Store a flag if we are the server instance
   this.server = options.server;
   this.email = 'stanford.csli.games@gmail.com';
-  this.dataStore = ['csv', 'mongo'];
+  this.dataStore = [];
   this.experimentName = 'cards';
 
   this.options = {
