@@ -23,6 +23,7 @@ var client_onserverupdate_received = function (state) {
   } else {
     $('#chatbox').attr("disabled", "disabled");
   }
+
   globalGame.game_started = state.gs;
   globalGame.players_threshold = state.pt;
   globalGame.player_count = state.pc;
@@ -42,6 +43,7 @@ var client_onserverupdate_received = function (state) {
   // Package the data into a package convenient for Phaser NOTE: these variables could technically be stored in globalGame. maybe change that later
   console.log(`globalGame.game_started: ${globalGame.game_started}`);
   if (globalGame.game_started) {
+    $('#viewport').empty();
     let pData = {
       deck: state.cards.deck,
       onTable: state.cards.onTable,
@@ -159,5 +161,5 @@ const customSetup = function (game) {
 // It exists due to name compatibility stuff within clientBase.js, because 'drawScreen()' is called in onconnect
 // else 
 function drawScreen(data) {
-    console.log('drawScreen called for client ' + globalGame.my_id);
+  console.log('drawScreen called for client ' + globalGame.my_id);
 }

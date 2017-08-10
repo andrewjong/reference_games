@@ -56,16 +56,15 @@ const onMessage = function (client, message) {
     // client is requesting information to start the next turn
     case 'nextTurnRequest':
       deck = utils.toNumArray(message_parts[1]);
-      onTable = cardLogic.dealCards(deck, gc.options.CARDS_ON_TABLE); //FIXME: this might break if gameOptions is inaccessible
+      onTable = cardLogic.dealCards(deck, gc.options.CARDS_ON_TABLE); 
       const newTurn = { deck, onTable };
+      gc.turnNum++;
 
-      // FIXME: I feel a bit uncomfortable about the new draw being done per each client, instead of explicitly synced amongst clients. Like technically should be the same, but seems bad practice
+      // FIXME: I feel uncomfortable about the new draw being done per each client, instead of synced with the server. Technically data should be the same, but seems bad practice
 
-      // send to target
       // TODO: SOMETHING HERE ABOUT WRITING THE START STATE DATA
 
-      // FIXME: bug here on 'target'
-      console.log('Looking for correct player');
+      console.log("Emitting newTurn to player: " + target.i);
       target.instance.emit('newTurn', newTurn);
       break;
 
