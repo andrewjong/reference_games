@@ -1,6 +1,11 @@
+/**
+ * @file receives updates from the server
+ */
+
 // A window global for our game root variable.
 var globalGame = {};
 
+// This gets called once when the server initializes the game for both players
 var client_onserverupdate_received = function (state) {
   console.log('Server update received on client: ' + globalGame.my_id);
 
@@ -127,11 +132,12 @@ var client_onjoingame = function (num_players, role) {
       }
     }, 1000 * 60 * 15); // 15 minute timeout
     console.log(globalGame.my_id);
-    globalGame.get_player(globalGame.my_id).message = ('Waiting for another player to connect... '
-      + 'Please do not refresh the page!');
+    globalGame.get_player(globalGame.my_id).message = (`The goal of the game is to collaboratively get a 6 card
+    straight. Communication with your partner is key!`);
   }
 };
 
+// Custom event listeners
 const customSetup = function (game) {
   game.socket.on('swapUpdate', swapped => {
     console.log('swapUpdate received on client ' + game.my_id + ': ' + JSON.stringify(swapped));
@@ -157,9 +163,7 @@ const customSetup = function (game) {
 
 }
 
-// This is essentially a state setup function
-// It exists due to name compatibility stuff within clientBase.js, because 'drawScreen()' is called in onconnect
-// else 
+// This function only exists for compatibility within clientBase.js, as 'drawScreen()' is called in onconnect
 function drawScreen(data) {
   console.log('drawScreen called for client ' + globalGame.my_id);
 }

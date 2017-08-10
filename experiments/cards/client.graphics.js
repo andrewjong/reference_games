@@ -22,7 +22,7 @@ const graphics = {
 }
 
 let phaser; // the phaser game instance. 'phaser' is used instead of the conventional 'game' to prevent confusion with the existing game
-let isMyTurn; // turn boolean
+let isMyTurn = false; // turn boolean
 let deck, myHand, theirHand, onTable; // numerical arrays to represent each hand
 let deckSprites = {
     x: 140, // x location
@@ -47,12 +47,11 @@ let pendingUpdate = null; // a var for storing the state before the phaser insta
  */
 function startPhaser(cards) {
     console.log("startPhaser called")
-    isMyTurn = cards.isMyTurn;
-    deck = cards.deck.slice();
-    theirHand = cards.theirHand.slice();
-    onTable = cards.onTable.slice();
-    myHand = cards.myHand.slice();
-
+    deck = theirHand = onTable = myHand = [];
+    // deck = cards.deck.slice();
+    // theirHand = cards.theirHand.slice();
+    // onTable = cards.onTable.slice();
+    // myHand = cards.myHand.slice();
     if (loaded === false) {
         console.log(`Phaser not yet loaded. Creating a new phaser game instance before handling update`);
         pendingUpdate = cards;
@@ -61,38 +60,43 @@ function startPhaser(cards) {
         phaser.state.start('Play');
     } else {
         console.log("Skipping load-first because loaded is true");
-        setGraphics(cards);
+        updatePhaser(cards);
     }
 }
 
 /**
- * Sets the graphics to match the starting card state
+ * Update Phaser to match the given card state
  * @param {Array<Number>} cards 
  */
-function setGraphics(cards) {
-    console.log('unparsed cards in updatePhaser function of front-end.js: ' + JSON.stringify(cards));
+function updatePhaser(cards) {
+    console.log('unparsed cards in updatePhaser function of client.graphics.js: ' + JSON.stringify(cards));
     // If out of sync, update the local copy
     // player turn
-    if (isMyTurn != cards.isMyTurn) {
+    if (cards.isMyTurn !== undefined && isMyTurn != cards.isMyTurn) {
+        isMyTurn = cards.isMyTurn;
         turnText.setText(getTurnString());
     }
     // deck
+    deck = cards.deck;
     makeDeckSprites();
     // The below card groups are in graphical ordering. ie theirHand is on top, onTable in middle, myHand on bottom
     // their hand
-    if (!_.isEqual(theirHand, cards.theirHand)) {
+    if (cards.theirHand !== undefined && !_.isEqual(theirHand, cards.theirHand)) {
         destroyAll(theirHandGroup);
+        theirHand = cards.theirHand;
         theirHandGroup = makeHandGroup(theirHand, false);
     }
     // on table
-    if (!_.isEqual(onTable, cards.onTable)) {
+    if (cards.onTable !== undefined && !_.isEqual(onTable, cards.onTable)) {
         destroyAll(onTableGroup)
+        onTable = cards.onTable;
         onTableGroup = makeOnTableGroup(onTable);
         // TODO: maybe these can slide in?
     }
     // my hand
-    if (!_.isEqual(myHand, cards.myHand)) {
+    if (cards.myHand !== undefined && !_.isEqual(myHand, cards.myHand)) {
         destroyAll(myHandGroup);
+        myHand = cards.myHand;
         myHandGroup = makeHandGroup(myHand, true);
     }
     // set appropriate enable and disables on sprites
@@ -139,9 +143,9 @@ playState.prototype = {
 
         // Draw hands for this player and that player
         // Note: these groups are NOT Phaser groups. They're js arrays with sprites
-        theirHandGroup = makeHandGroup(theirHand, false);
-        onTableGroup = makeOnTableGroup(onTable);
-        myHandGroup = makeHandGroup(myHand, true);
+        // theirHandGroup = makeHandGroup(theirHand, false);
+        // onTableGroup = makeOnTableGroup(onTable);
+        // myHandGroup = makeHandGroup(myHand, true);
 
         // text stating how many cards are left in the deck and how many were reshuffled in the previous round
         const counterStyle = { font: '20px Arial', fill: '#FFF', align: 'center' };
@@ -177,7 +181,7 @@ playState.prototype = {
         console.log('Phaser client instance loaded');
         if (pendingUpdate != null) {
             console.log('Updating with the pending update');
-            setGraphics(pendingUpdate);
+            updatePhaser(pendingUpdate);
         }
     },
     update: function () {

@@ -58,21 +58,17 @@ function handleEndTurn(reshuffled) {
     console.log('nextTurnRequest packet: ' + packet);
     console.log("Emitting nextTurnRequest with packet...");
     globalGame.socket.send(packet.join('.'));
-    // // reshuffle cards
-    // obj = this;
-    // setTimeout(function () {
-    //     obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
-    // }, 5000 / 2);
-    // this.updateEachTurn();
 }
 
 /**
  * Handle the update for the new turn
- * @param {Object} newTurn 
+ * @param {Object} newTurn object containing the new turn info: Array<Number> deck, Array<Number> onTable
  */
 function handleNewTurn(newTurn){
     console.log('New turn received!');
+    const iMT = !isMyTurn;
     //TODO: animations for dealing the new turn cards
+    updatePhaser({isMyTurn: iMT, deck: newTurn.deck, onTable: newTurn.onTable});
 }
 
 /**
