@@ -141,10 +141,16 @@ const customSetup = function (game) {
   });
 
   // Next turn contains data for transitioning to the next turn
-  game.socket.on('nextTurn', reshuffled => {
+  game.socket.on('endTurn', reshuffled => {
     console.log('endTurn received on client ' + game.my_id + ': ' + JSON.stringify(reshuffled));
     game.turnNum++;
-    handleNextTurn(reshuffled);
+    handleEndTurn(reshuffled);
+  });
+
+  // New turn update for the start of the next turn
+  game.socket.on('newTurn', newTurn => {
+    console.log('newTurn received on client ' + game.my_id + ': ' + JSON.stringify(newTurn));
+    handleNewTurn(newTurn);
   });
 
 }

@@ -261,6 +261,14 @@ var series = function makeSeries(lb,ub) {
    return series;
 }
 
+/**
+ * Converts a csv string to a numbers array. E.g. "1,2,3,4" becomes [1,2,3,4]
+ * @param {Number} string the string to convert
+ */
+const toNumArray = function(string) {
+  return string.split(',').map(n => Number(n));
+}
+
 // --- above added by jefan March 2017
 
 module.exports = {
@@ -280,5 +288,6 @@ module.exports = {
   randomCircle,
   randomPoint,
   randomSpline,
-  colorDiff
+  colorDiff,
+  toNumArray
 };

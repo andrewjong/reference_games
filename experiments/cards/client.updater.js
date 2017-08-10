@@ -37,28 +37,42 @@ function handleSwapUpdate(c1, c2) {
  * Lets the server know the turn has ended.
  */
 function sendEndTurn() {
-    console.log("Emitting endTurn...");
-    globalGame.socket.send('endTurn');
-    //TODO: maybe combine 'endTurn' and 'newTurn' into 'nextTurn'. Easier that way so don't have to back & forth with server so much
+    const packet = ['endTurn', deck, onTable];
+    console.log('endTurn packet: ' + packet);
+    console.log("Emitting endTurn with packet...");
+    globalGame.socket.send(packet.join('.'));
 }
 
 /**
- * Handle transitioning to the next turn, specifically the reshuffle animation.
+ * Handle ending the turn, specifically the reshuffle animation, disabling input, and letting the server know ready for the next turn
  * @param {Object{newDeck, n}} reshuffled 
  */
-function handleNextTurn(reshuffled) {
+function handleEndTurn(reshuffled) {
+    deck = reshuffled.newDeck;
+
     reshuffleAnimation(reshuffled.n);
-    isMyTurn = !isMyTurn;
-    turnButtonSetEnabled(isMyTurn);
+    turnButtonSetEnabled(false);
+    //TODO: disable card swaps while transitioning turns
+
+    const packet = ['nextTurnRequest', deck];
+    console.log('nextTurnRequest packet: ' + packet);
+    console.log("Emitting nextTurnRequest with packet...");
+    globalGame.socket.send(packet.join('.'));
     // // reshuffle cards
-    // [this.cardsLeft, this.cardsAdded] = reshuffle(0.5, this.onTableSprites, deck.slice(this.nextCardIndex, 52));
-    // this.nextCardIndex += 4;
-    // reshuffleAnimation(this.onTableSprites, this.cardsAdded, game, this);
     // obj = this;
     // setTimeout(function () {
     //     obj.table = drawCards(obj.nextCardIndex, 4, game, obj);
     // }, 5000 / 2);
     // this.updateEachTurn();
+}
+
+/**
+ * Handle the update for the new turn
+ * @param {Object} newTurn 
+ */
+function handleNewTurn(newTurn){
+    console.log('New turn received!');
+    //TODO: animations for dealing the new turn cards
 }
 
 /**

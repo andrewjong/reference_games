@@ -14,18 +14,18 @@ if (typeof _ === 'undefined') {
   else throw 'mymodule requires underscore, see http://underscorejs.org';
 }
 
-const gameOptions = {
-  CARDS_PER_HAND: 3,
-  CARDS_ON_TABLE: 4,
-  RESHUFFLE_PROBABILITY: 0.5
-}
-
 var game_core = function (options) {
   // Store a flag if we are the server instance
   this.server = options.server;
   this.email = 'stanford.csli.games@gmail.com';
   this.dataStore = ['csv', 'mongo'];
   this.experimentName = 'cards';
+
+  this.options = {
+    CARDS_PER_HAND: 3,
+    CARDS_ON_TABLE: 4,
+    RESHUFFLE_PROBABILITY: 0.5
+  }
 
   this.world = {
     width: 1000,
@@ -48,7 +48,7 @@ var game_core = function (options) {
   this.turnNum = 0;
 
   // the value of 'p'
-  this.reshuffleP = gameOptions.RESHUFFLE_PROBABILITY;
+  this.reshuffleP = this.options.RESHUFFLE_PROBABILITY;
 
   if (this.server) {
     // If we're initializing the server game copy, pre-create the list of trials
@@ -80,12 +80,12 @@ var game_core = function (options) {
     }
     console.log('Deck: ' + this.cards.deck);
 
-    // Draw from the top cards of the deck
-    this.cards.onTable = this.cards.deck.splice(0, gameOptions.CARDS_ON_TABLE);
+    // Deal from the top cards of the deck
+    this.cards.onTable = this.cards.deck.splice(0, this.options.CARDS_ON_TABLE);
     console.log("On table: " + this.cards.onTable);
-    this.cards.p1Hand = this.cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
+    this.cards.p1Hand = this.cards.deck.splice(0, this.options.CARDS_PER_HAND);
     console.log("P1 hand: " + this.cards.p1Hand);
-    this.cards.p2Hand = this.cards.deck.splice(0, gameOptions.CARDS_PER_HAND);
+    this.cards.p2Hand = this.cards.deck.splice(0, this.options.CARDS_PER_HAND);
     console.log("P2 hand: " + this.cards.p2Hand);
 
     console.log('server game core initialized!');
@@ -98,14 +98,6 @@ var game_core = function (options) {
       instance: null,
       player: new game_player(this)
     }];
-
-    this.cards = {
-      deck: Array(52).fill(-1), // array with dummy values to represent the full size of the deck
-      onTable: [],
-      p1Hand: [],
-      p2Hand: []
-    }
-    console.log('cards: ' + JSON.stringify(this.cards));
   }
 };
 
@@ -168,7 +160,7 @@ game_core.prototype.newRound = function () {
   }
 };
 
-// send an update from the server
+// send an update from the server about the initial state. Called only once at the beginning
 game_core.prototype.server_send_update = function () {
   //Make a snapshot of the current state, for updating the clients
   var local_game = this;

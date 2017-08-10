@@ -90,6 +90,7 @@ function setGraphics(cards) {
     if (!_.isEqual(onTable, cards.onTable)) {
         destroyAll(onTableGroup)
         onTableGroup = makeOnTableGroup(onTable);
+        // TODO: maybe these can slide in?
     }
     // my hand
     if (!_.isEqual(myHand, cards.myHand)) {

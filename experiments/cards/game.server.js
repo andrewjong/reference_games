@@ -18,8 +18,10 @@ const onMessage = function (client, message) {
   const message_type = message_parts[0];
 
   // logging for debug
-  if (message_type != 'h') // skip the inactive window message
-    console.log('Server received: ' + message_parts);
+  if (message_type != 'h') {// skip the inactive window message
+    console.log('Server received message:');
+    message_parts.forEach((m, i) => console.log(`->[${i}]: <${typeof m}> ${m}`));
+  }
 
   //Extract important variables
   const gc = client.game;
@@ -27,25 +29,44 @@ const onMessage = function (client, message) {
   const all = gc.get_active_players();
   const target = gc.get_player(client.userid);
   const others = gc.get_others(client.userid);
+  let deck;
+  let onTable;
   switch (message_type) {
 
     // player swapped two cards
     case 'swapUpdate':
       others.forEach(p => {
         console.log("Emitting swapUpdate to player: " + p.id);
-        p.player.instance.emit('swapUpdate', {
-          c1: message_parts[1], c2: message_parts[2]
-        });
+        p.player.instance.emit('swapUpdate', { c1: message_parts[1], c2: message_parts[2] });
       })
       break;
     // the player ended their turn
     case 'endTurn':
-    // reshuffling logic here
-      const reshuffle = cardLogic.reshuffle(gc.reshuffleP, gc.cards.onTable, gc.cards.deck);
+      // reshuffling logic here
+      deck = utils.toNumArray(message_parts[1]);
+      onTable = utils.toNumArray(message_parts[2]);
+      const reshuffle = cardLogic.reshuffle(gc.reshuffleP, onTable, deck);
+      // TODO: SOMETHING HERE ABOUT WRITING THE END STATE DATA
       all.forEach(p => {
-        p.player.instance.emit('nextTurn', reshuffle);
+        console.log("Emitting endTurn to player: " + p.id);
+        p.player.instance.emit('endTurn', reshuffle);
       });
 
+      break;
+    // client is requesting information to start the next turn
+    case 'nextTurnRequest':
+      deck = utils.toNumArray(message_parts[1]);
+      onTable = cardLogic.dealCards(deck, gc.options.CARDS_ON_TABLE); //FIXME: this might break if gameOptions is inaccessible
+      const newTurn = { deck, onTable };
+
+      // FIXME: I feel a bit uncomfortable about the new draw being done per each client, instead of explicitly synced amongst clients. Like technically should be the same, but seems bad practice
+
+      // send to target
+      // TODO: SOMETHING HERE ABOUT WRITING THE START STATE DATA
+
+      // FIXME: bug here on 'target'
+      console.log('Looking for correct player');
+      target.instance.emit('newTurn', newTurn);
       break;
 
     // a change was made to the cards on the table / in the hands

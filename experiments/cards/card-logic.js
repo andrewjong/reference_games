@@ -8,7 +8,7 @@
  */
 function reshuffle(p, cards, deck) {
     let n = 0;
-    cards.forEach(function (c) {
+    cards.forEach(c => {
         if (Math.random() <= p) {
             n++;
             deck.push(c.frame);
@@ -18,7 +18,16 @@ function reshuffle(p, cards, deck) {
     return {newDeck, n};
 }
 
-const cardsInSuit = 12;
+/**
+ * 'Deals' the first n cards from a deck. The deck is modified.
+ * @param {Array<Number>} deck the deck of cards
+ * @param {Number} number how many to deal
+ */
+function dealCards(deck, number){
+   return deck.splice(0, number);
+}
+
+const cardsInSuit = 12; // number of cards in a suit
 /**
  * Determines if there is a straight among the 2 hands in a standard 52 card deck
  *
@@ -59,7 +68,8 @@ function getSuit(cardValue) {
 
 if (typeof module !== 'undefined')
     module.exports = {
-        reshuffle: reshuffle,
-        hasWrappedStraight: hasWrappedStraight,
-        getSuit: getSuit
+        reshuffle,
+        dealCards,
+        hasWrappedStraight,
+        getSuit
     }

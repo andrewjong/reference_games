@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "start" : "node app.js --expname colors/chineseColorRef",
-		"cards" : "node app.js --expname cards"
+    "cards" : "node app.js --expname cards",
+    "debug" : "node app.js --expname cards"
   },
   "dependencies": {
     "body-parser": "^1.17.2",
