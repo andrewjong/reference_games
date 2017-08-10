@@ -5,135 +5,99 @@ var converter = require("color-convert");
 var DeltaE = require('../node_modules/delta-e');
 var mkdirp = require('mkdirp');
 var sendPostRequest = require('request').post;
+const port = process.env.PORT || 4000;
 
-var serveFile = function(req, res) {
+// Mongoose stuff
+const mongoose = require('mongoose');
+const mongoDB = mongoose.connect(process.env.MONGODB_URI, { useMongoClient: true });
+mongoDB
+  .then(db => console.log("MongoDB connected :)"))
+  .catch(err => console.log(`Couldn't connect to MongoDB! Data is not being saved\n${err}`));
+
+const gameSchema = new mongoose.Schema({
+  line: String
+})
+// Use different models if chatMessage or clickedObj because they have different number of fields
+const ChatMessage = mongoose.model('chatMessage', gameSchema);
+const ClickedObj = mongoose.model('clickedObj', gameSchema);
+
+var serveFile = function (req, res) {
   var fileName = req.params[0];
   console.log('\t :: Express :: file requested: ' + fileName);
-  if(req.query.workerId) {
+  if (req.query.workerId) {
     console.log(" by workerID " + req.query.workerId);
   }
-  return res.sendFile(fileName, {root: __base}); 
+  return res.sendFile(fileName, { root: __base });
 };
 
-var handleDuplicate = function(req, res) {
+var handleDuplicate = function (req, res) {
   console.log("duplicate id: blocking request");
-  return res.redirect('https://rxdhawkins.me:8888/sharedUtils/duplicate.html');
+  return res.redirect('sharedUtils/duplicate.html');
 };
 
-var handleInvalidID = function(req, res) {
+var handleInvalidID = function (req, res) {
   console.log("invalid id: blocking request");
-  return res.redirect('https://rxdhawkins.me:8888/sharedUtils/invalid.html');
+  return res.redirect('/colors/chineseColorRef/forms/invalid.html');
 };
 
-var checkPreviousParticipant = function(workerId, callback) {
-  var p = {'workerId': workerId};
-  var postData = {
-    dbname: '3dObjects',
-    query: p,
-    projection: {'_id': 1}
+var checkPreviousParticipant = function (workerId, callback) {
+  console.log('skipping check for previous participant');
+  return callback(false);
+};
+
+var writeDataToMongo = function (game, line) {
+  //The data
+  const postData = {
+    line: line
   };
-  sendPostRequest(
-    'http://localhost:4000/db/exists',
-    {json: postData},
-    (error, res, body) => {
-      try {
-	if (!error && res.statusCode === 200) {
-	  console.log("success! Received data " + JSON.stringify(body));
-	  callback(body);
-	} else {
-	  throw `${error}`;
-	}
-      } catch (err) {
-	console.log(err);
-	console.log('no database; allowing participant to continue');
-	return callback(false);
-      }
-    }
-  );
+  console.log("postData: " + JSON.stringify(postData));
+  // Use a different Model per message type
+  let mongoData;
+  if (line.eventType == 'chatMessage') {
+    console.log('Using model chatMessage');
+    mongoData = new ChatMessage(postData);
+  }
+  else if (line.eventType == 'clickedObj'){
+    console.log('Using model clickedObj');
+    mongoData = new ClickedObj(postData);
+  }
+  // Save to Mongo
+  mongoData.save(err => {
+    if (err) console.log('Error writing to mongo! ' + err);
+    else console.log('Data saved successfully to mongo');
+  });
 };
 
-var writeDataToCSV = function(game, _dataPoint) {
-  var dataPoint = _.clone(_dataPoint);  
-  var eventType = dataPoint.eventType;
-
-  // Omit sensitive data
-  if(game.anonymizeCSV) 
-    dataPoint = _.omit(dataPoint, ['workerId', 'assignmentId']);
-  
-  // Establish stream to file if it doesn't already exist
-  if(!_.has(game.streams, eventType))
-    establishStream(game, dataPoint);    
-
-  var line = _.values(dataPoint).join('\t') + "\n";
-  game.streams[eventType].write(line, err => {if(err) throw err;});
-};
-
-var writeDataToMongo = function(game, line) {
-  var postData = _.extend({
-    dbname: game.projectName,
-    colname: game.experimentName
-  }, line);
-  sendPostRequest(
-    'http://localhost:4000/db/insert',
-    { json: postData },
-    (error, res, body) => {
-      if (!error && res.statusCode === 200) {
-        console.log(`sent data to store`);
-      } else {
-	console.log(`error sending data to store: ${error} ${body}`);
-      }
-    }
-  );
-};
-
-var UUID = function() {
+var UUID = function () {
   var baseName = (Math.floor(Math.random() * 10) + '' +
-        Math.floor(Math.random() * 10) + '' +
-        Math.floor(Math.random() * 10) + '' +
-        Math.floor(Math.random() * 10));
+    Math.floor(Math.random() * 10) + '' +
+    Math.floor(Math.random() * 10) + '' +
+    Math.floor(Math.random() * 10));
   var template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
-  var id = baseName + '-' + template.replace(/[xy]/g, function(c) {
-    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+  var id = baseName + '-' + template.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
   return id;
 };
 
-var getLongFormTime = function() {
+var getLongFormTime = function () {
   var d = new Date();
   var day = [d.getFullYear(), (d.getMonth() + 1), d.getDate()].join('-');
   var time = [d.getHours() + 'h', d.getMinutes() + 'm', d.getSeconds() + 's'].join('-');
   return day + '-' + time;
 };
 
-var establishStream = function(game, dataPoint) {
-  var startTime = getLongFormTime();
-  var dirPath = ['..', 'data', game.expName, dataPoint.eventType].join('/');
-  var fileName = startTime + "-" + game.id + ".csv";
-  var filePath = [dirPath, fileName].join('/');
-
-  // Create path if it doesn't already exist
-  mkdirp.sync(dirPath, err => {if (err) console.error(err);});
-
-  // Write header
-  var header = _.keys(dataPoint).join('\t') + '\n';
-  fs.writeFile(filePath, header, err => {if(err) console.error(err);});
-
-  // Create stream
-  var stream = fs.createWriteStream(filePath, {'flags' : 'a'});
-  game.streams[dataPoint.eventType] = stream;
-};
-
-var getObjectLocHeaderArray = function() {
-  var arr =  _.map(_.range(1,5), function(i) {
-    return _.map(['Name', 'SenderLoc', 'ReceiverLoc'], function(v) {
+var getObjectLocHeaderArray = function () {
+  var arr = _.map(_.range(1, 5), function (i) {
+    return _.map(['Name', 'SenderLoc', 'ReceiverLoc'], function (v) {
       return 'object' + i + v;
     });
   });
   return _.flatten(arr);
 };
 
-var hsl2lab = function(hsl) {
+var hsl2lab = function (hsl) {
   return converter.hsl.lab(hsl);
 };
 
@@ -145,15 +109,15 @@ function fillArray(value, len) {
   return arr;
 }
 
-var checkInBounds = function(object, options) {
+var checkInBounds = function (object, options) {
   return (object.x + (object.w || object.d) < options.width) &&
-         (object.y + (object.h || object.d) < options.height);
+    (object.y + (object.h || object.d) < options.height);
 };
 
 var randomColor = function (options) {
   var h = ~~(Math.random() * 360);
   var s = ~~(Math.random() * 100);
-  var l = _.has(options, 'fixedL') ? 50 : ~~(Math.random() * 100) ;
+  var l = _.has(options, 'fixedL') ? 50 : ~~(Math.random() * 100);
   return [h, s, l];
 };
 
@@ -163,7 +127,7 @@ var randomSpline = function () {
 };
 
 // returns an object with x, y, w, h fields
-var randomRect = function(options) {
+var randomRect = function (options) {
   if (_.isEmpty(options)) {
     throw "Error, must provide options to randomRect!";
   }
@@ -173,7 +137,7 @@ var randomRect = function(options) {
 
   var rect = randomPoint(options);
   rect.h = _.sample(wRange),
-  rect.w = _.sample(hRange)
+    rect.w = _.sample(hRange)
 
   if (!checkInBounds(rect, options)) {
     return this.randomRect(options);
@@ -182,7 +146,7 @@ var randomRect = function(options) {
   return rect;
 }
 
-var randomCircle = function(options) {
+var randomCircle = function (options) {
   if (_.isEmpty(options)) {
     throw "Error, must provide options to randomCircle!";
   }
@@ -201,7 +165,7 @@ var randomCircle = function(options) {
   return circle;
 }
 
-var randomPoint = function(options) {
+var randomPoint = function (options) {
 
   var xRange = _.range(options.xMin, options.xMax);
   var yRange = _.range(options.yMin, options.yMax);
@@ -212,7 +176,7 @@ var randomPoint = function(options) {
   }
 }
 
-var colorDiff = function(color1, color2) {
+var colorDiff = function (color1, color2) {
   var subLAB = _.object(['L', 'A', 'B'], hsl2lab(color1));
   var tarLAB = _.object(['L', 'A', 'B'], hsl2lab(color2));
   var diff = Math.round(DeltaE.getDeltaE00(subLAB, tarLAB));
@@ -222,51 +186,43 @@ var colorDiff = function(color1, color2) {
 
 // --- below added by jefan March 2017
 // extracts all the values of the javascript dictionary by key
-var vec = function extractEntries(dict,key) {
-    vec = []
-    for (i=0; i<dict.length; i++) {
-        vec.push(dict[i][key]);    
-    } 
-    return vec;
+var vec = function extractEntries(dict, key) {
+  vec = []
+  for (i = 0; i < dict.length; i++) {
+    vec.push(dict[i][key]);
+  }
+  return vec;
 }
 
 // finds matches to specific value given key
-var vec = function matchingValue(dict,key,value) {
+var vec = function matchingValue(dict, key, value) {
   vec = []
-  for (i=0; i<dict.length; i++) {
-    if (dict[i][key]==value) {      
-        vec.push(dict[i]);    
+  for (i = 0; i < dict.length; i++) {
+    if (dict[i][key] == value) {
+      vec.push(dict[i]);
     }
-  } 
+  }
   return vec;
 }
 
 // add entry to dictionary object
-var dict = function addEntry(dict,key,value) {
-  for (i=0; i<dict.length; i++) {
-      dict[i][key] = value;   
-  } 
-  return dict;  
+var dict = function addEntry(dict, key, value) {
+  for (i = 0; i < dict.length; i++) {
+    dict[i][key] = value;
+  }
+  return dict;
 }
 
 // make integer series from lb (lower) to ub (upper)
-var series = function makeSeries(lb,ub) {
-    series = new Array();
-    if (ub<=lb) {
-      throw new Error("Upper bound should be greater than lower bound!");
-    }
-   for (var i = lb; i<(ub+1); i++) {
-      series = series.concat(i);
-   }
-   return series;
-}
-
-/**
- * Converts a csv string to a numbers array. E.g. "1,2,3,4" becomes [1,2,3,4]
- * @param {Number} string the string to convert
- */
-const toNumArray = function(string) {
-  return string.split(',').map(n => Number(n));
+var series = function makeSeries(lb, ub) {
+  series = new Array();
+  if (ub <= lb) {
+    throw new Error("Upper bound should be greater than lower bound!");
+  }
+  for (var i = lb; i < (ub + 1); i++) {
+    series = series.concat(i);
+  }
+  return series;
 }
 
 // --- above added by jefan March 2017
@@ -278,8 +234,8 @@ module.exports = {
   handleDuplicate,
   handleInvalidID,
   getLongFormTime,
-  establishStream,
-  writeDataToCSV,
+  // establishStream,
+  // writeDataToCSV,
   writeDataToMongo,
   hsl2lab,
   fillArray,
@@ -288,6 +244,5 @@ module.exports = {
   randomCircle,
   randomPoint,
   randomSpline,
-  colorDiff,
-  toNumArray
+  colorDiff
 };

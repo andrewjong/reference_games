@@ -17,8 +17,8 @@ if (typeof _ === 'undefined') {
 var game_core = function (options) {
   // Store a flag if we are the server instance
   this.server = options.server;
-  this.email = 'stanford.csli.games@gmail.com';
-  this.dataStore = [];
+  this.email = 'stanfordpraglab@gmail.com';
+  this.dataStore = ['mongo'];
   this.experimentName = 'cards';
 
   this.options = {
