@@ -396,9 +396,8 @@ function getTurnString() {
  * @param {Number} num number of cards
  * @param {String} counterType either 'left' for 'left in deck' or 'reshuffled'
  */
-function getCounterString(num, counterType) {
+function getCounterString(num, descrip) {
   const plural = (num == 1) ? '' : 's';
-  const descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
   return `${num} card${plural} ${descrip}`;
 }
 

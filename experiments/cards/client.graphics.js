@@ -35,6 +35,7 @@ let deckSprites = {
 let myHandGroup, theirHandGroup, onTableGroup; // phaser groups for sprites
 let turnText; // text that displays whose turn it is
 let turnButton; // button to end the turn
+let remainingText, reshuffledText; // cards remaining in deck and reshuffled last round
 
 let loaded = false; // state for whether the phaser game is fully loaded (true after create is called)
 let pendingUpdate = null; // a var for storing the state before the phaser instance is created
@@ -48,10 +49,6 @@ let pendingUpdate = null; // a var for storing the state before the phaser insta
 function startPhaser(cards) {
     console.log("startPhaser called")
     deck = theirHand = onTable = myHand = [];
-    // deck = cards.deck.slice();
-    // theirHand = cards.theirHand.slice();
-    // onTable = cards.onTable.slice();
-    // myHand = cards.myHand.slice();
     if (loaded === false) {
         console.log(`Phaser not yet loaded. Creating a new phaser game instance before handling update`);
         pendingUpdate = cards;
@@ -79,6 +76,7 @@ function updatePhaser(cards) {
     // deck
     deck = cards.deck;
     makeDeckSprites();
+    remainingText.setText(getCounterString(deck.length, 'in deck'));
     // The below card groups are in graphical ordering. ie theirHand is on top, onTable in middle, myHand on bottom
     // their hand
     if (cards.theirHand !== undefined && !_.isEqual(theirHand, cards.theirHand)) {
@@ -91,7 +89,7 @@ function updatePhaser(cards) {
         destroyAll(onTableGroup)
         onTable = cards.onTable;
         onTableGroup = makeOnTableGroup(onTable);
-        // TODO: maybe these can slide in?
+        // TODO: these should be animated
     }
     // my hand
     if (cards.myHand !== undefined && !_.isEqual(myHand, cards.myHand)) {
@@ -108,7 +106,7 @@ function updatePhaser(cards) {
 }
 
 /**
- * Phaser states: init, preload, create, update, etc
+ * Phaser states: init, preload, create
  * @param {Phaser} phaser the phaer game instance
  */
 function playState(phaser) { }
@@ -118,7 +116,7 @@ playState.prototype = {
         phaser.physics.startSystem(Phaser.Physics.ARCADE);
     },
     preload: function () {
-        console.log('playState preload called');
+        console.log('Phaser preload called');
         phaser.load.image('table', 'sprites/felt-background.png');
         phaser.load.spritesheet('cards', 'sprites/cards.png', graphics.CARD_WIDTH, graphics.CARD_HEIGHT);
         phaser.load.image('cardback', 'sprites/cardback.png', graphics.CARD_WIDTH, graphics.CARD_HEIGHT);
@@ -128,11 +126,7 @@ playState.prototype = {
         phaser.scale.pageAlignVertically = true;
     },
     create: function () {
-        console.log('playState create called');
-        /* LOGISTICS */
-        // Logistics initialized in game.core.js! 
-
-        /* GRAPHICS */
+        console.log('Phaser create called');
         // Enable physics for overlap detection later
         phaser.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -141,18 +135,11 @@ playState.prototype = {
         tableBackground.width = graphics.GAME_WIDTH;
         tableBackground.height = graphics.GAME_HEIGHT;
 
-        // Draw hands for this player and that player
-        // Note: these groups are NOT Phaser groups. They're js arrays with sprites
-        // theirHandGroup = makeHandGroup(theirHand, false);
-        // onTableGroup = makeOnTableGroup(onTable);
-        // myHandGroup = makeHandGroup(myHand, true);
-
         // text stating how many cards are left in the deck and how many were reshuffled in the previous round
         const counterStyle = { font: '20px Arial', fill: '#FFF', align: 'center' };
-        this.cardsLeftText = phaser.add.text(140, phaser.world.centerY + graphics.DECK_PADDING, getCounterString(deck.length, 'left'), counterStyle);
-        this.cardsAddedText = phaser.add.text(140, phaser.world.centerY - graphics.DECK_PADDING, getCounterString(0, 'reshuffled'), counterStyle);
-        const counterTexts = [this.cardsLeftText, this.cardsAddedText];
-        counterTexts.forEach(function (text) {
+        remainingText = phaser.add.text(140, phaser.world.centerY + graphics.DECK_PADDING, '', counterStyle);
+        reshuffledText = phaser.add.text(140, phaser.world.centerY - graphics.DECK_PADDING, '', counterStyle);
+        [remainingText, reshuffledText].forEach(text => {
             text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
             text.anchor = new Phaser.Point(0.5, 0.5);
         });
@@ -183,9 +170,5 @@ playState.prototype = {
             console.log('Updating with the pending update');
             updatePhaser(pendingUpdate);
         }
-    },
-    update: function () {
-        /* Stuff in here about sending server information */
-
     }
 }

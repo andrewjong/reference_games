@@ -52,6 +52,7 @@ function handleEndTurn(reshuffled) {
 
     reshuffleAnimation(reshuffled.n);
     turnButtonSetEnabled(false);
+    reshuffledText.setText(getCounterString(reshuffled.n, 'reshuffled'));
     //TODO: disable card swaps while transitioning turns
 
     const packet = ['nextTurnRequest', deck];
