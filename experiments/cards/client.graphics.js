@@ -77,9 +77,7 @@ function setGraphics(cards) {
         turnText.setText(getTurnString());
     }
     // deck
-    if (!_.isEqual(deck, cards.deck)) {
-        makeDeckSprites();
-    }
+    makeDeckSprites();
     // The below card groups are in graphical ordering. ie theirHand is on top, onTable in middle, myHand on bottom
     // their hand
     if (!_.isEqual(theirHand, cards.theirHand)) {
