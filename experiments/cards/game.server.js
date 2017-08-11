@@ -95,12 +95,11 @@ const setCustomEvents = function (socket) {
 
 // Data output for the end of each turn
 const dataOutput = function () {
-  const gc = client.game;
   function commonOutput(client, message_data) {
     return {
-      assignmentId: gc.assignmentid,
-      workerId: gc.workerid,
-      gameid: gc.id,
+      assignmentId: client.game.assignmentId,
+      workerId: client.game.workerId,
+      gameid: client.game.id,
       epochTime: Date.now(),
       humanTime: Date(), 
       turnNum: client.game.turnNum + 1, // TODO: add turn number to game state
