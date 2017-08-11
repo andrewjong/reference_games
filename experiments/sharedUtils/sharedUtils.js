@@ -54,13 +54,17 @@ var writeDataToMongo = function (game, line) {
   // Use a different Model per message type
   let mongoData;
   if (line.eventType == 'chatMessage') {
-    console.log('Using model chatMessage');
+    console.log('Using model chatmessage');
     mongoData = new ChatMessage(postData);
   }
   else if (line.eventType == 'clickedObj'){
     console.log('Using model clickedObj');
     mongoData = new State(postData);
-  }
+  } 
+  else if (line.eventType == 'state'){
+    console.log('Using model state');
+    mongoData = new State(postData);
+  } 
   // Save to Mongo
   mongoData.save(err => {
     if (err) console.log('Error writing to mongo! ' + err);
@@ -227,6 +231,14 @@ var series = function makeSeries(lb, ub) {
 
 // --- above added by jefan March 2017
 
+/**
+ * Convert a string of csv numbers to a numbers array
+ * @param {String} string string of numbers separated by commas
+ */
+const toNumArray = function(string){
+  return string.split(',').map(n => Number(n));
+}
+
 module.exports = {
   UUID,
   checkPreviousParticipant,
@@ -244,5 +256,6 @@ module.exports = {
   randomCircle,
   randomPoint,
   randomSpline,
-  colorDiff
+  colorDiff,
+  toNumArray
 };
