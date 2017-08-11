@@ -50,6 +50,10 @@ html , body {
 	font-size: 120%
 }
 
+#viewport {
+	user-select: none;
+	font-size: 32px;
+}
 #roundnumber {
 	height: 2%;
 	width: 8%;

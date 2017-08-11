@@ -1,4 +1,10 @@
 /**
+ * @file 
+ * Provides functions that help with Phaser graphics for use in client.graphics.js
+ *
+ */
+
+/**
  * Takes in an array of numbers (that represent cards) and returns a Phaser group 
  * with the sprites for each card, placed at the correct location for each player
  * 
@@ -6,12 +12,12 @@
  * @param {boolean} forMe true if cards are for me, false if for other player
  */
 function makeHandGroup(cards, forMe) {
-  let handGroup = makeCardGroup(cards);
+  const handGroup = makeCardGroup(cards);
   // put the group in the right place
   let yOffset = graphics.HAND_OFFSET_FROM_CENTER; // the offset to place the cards
   if (!forMe) yOffset *= -1; // place on the opposite side if other player
   handGroup.forEach(c => {
-    c.y = game.world.centerY + yOffset
+    c.y = phaser.world.centerY + yOffset
     c.snapPosition = c.position.clone();
     c.parentGroup = handGroup;
   });
@@ -25,11 +31,11 @@ function makeHandGroup(cards, forMe) {
  * @param {Array<Number>} cards the array to create sprites from
  */
 function makeOnTableGroup(cards) {
-  let onTableGroup = makeCardGroup(cards);
+  const onTableGroup = makeCardGroup(cards);
   // put the group in the right place
-  onTableGroup.centerX = game.world.centerX;
+  onTableGroup.centerX = phaser.world.centerX;
   onTableGroup.forEach(c => {
-    c.y = game.world.centerY
+    c.y = phaser.world.centerY
     c.snapPosition = c.position.clone();
     c.parentGroup = onTableGroup;
   });
@@ -41,20 +47,23 @@ function makeOnTableGroup(cards) {
  * at the default location.
  * @param {Array<Number>} cards the array to create sprites from
  */
-let makeCardGroup = function (cards) {
+const makeCardGroup = function (cards) {
   /* Note: This function is defined as a variable as it's not meant to be hoisted */
   /* Placement */
-  let cardGroup = new Array(cards.length);
-  let groupWidth = cards.length * graphics.CARD_CELL_WIDTH;
-  let startX = game.world.centerX - groupWidth / 2;
+  // if (cards === undefined) return []; // case that no cards are available yet, prevent undefined errors
+  // console.log('Making card group of length: ' + cards.length);
+  const cardGroup = new Array(cards.length);
+
+  const groupWidth = cards.length * graphics.CARD_CELL_WIDTH;
+  const startX = phaser.world.centerX - groupWidth / 2;
   for (let i = 0; i < cardGroup.length; ++i) {
     // add a sprite off the game screen
-    let cardSprite = game.add.sprite(-10, -10, 'cards', cards[i]);
+    const cardSprite = phaser.add.sprite(-10, -10, 'cards', cards[i]);
     // set the anchor and scale
     cardSprite.anchor.set(0.5);
     cardSprite.scale.set(graphics.CARD_SCALE);
     // put the card in the correct location
-    let cardX = startX + i * graphics.CARD_CELL_WIDTH;
+    const cardX = startX + i * graphics.CARD_CELL_WIDTH;
     cardSprite.x = cardX + graphics.CARD_CELL_WIDTH / 2;
     cardGroup[i] = cardSprite;
   }
@@ -73,29 +82,38 @@ let makeCardGroup = function (cards) {
 }
 /**
  * Returns a 4-card array and adds it to the game in the table position
+ * @deprecated: keeping around for animations code 
  *
  * @param {Number} startIndex the index to begin the table in the deck
  * @param {Number} numCards number of cards to draw (should be 4)
  */
-function drawCards(startIndex, numCards, game, obj) {
+function drawCards(startIndex, numCards, phaser, obj) {
   console.log(`startIndex = ${startIndex}`);
   let table = [];
   [0, 1, 2, 3].forEach(function (i) {
-    let x = game.world.centerX + (i - 1.5) * graphics.cardGap;
-    let y = game.world.centerY;
+    let x = phaser.world.centerX + (i - 1.5) * graphics.cardGap;
+    let y = phaser.world.centerY;
 
-    let b = game.add.sprite(140, game.world.centerY, 'cardback');
+    let b = phaser.add.sprite(140, phaser.world.centerY, 'cardback');
     b.scale.set(graphics.cardScale);
     b.anchor = new Phaser.Point(0.5, 0.5);
 
-    moveTo(b, x, y, 1000 / 2, 1100 / 2, game, true, false);
+    moveTo(b, x, y, 1000 / 2, 1100 / 2, phaser, true, false);
     setTimeout(function () {
-      table.push(makeCard(startIndex + i, x, y, game, obj));
+      table.push(makeCard(startIndex + i, x, y, phaser, obj));
     }, 1800 / 2);
   });
   return table;
 }
 
+/**
+ * Destroys an array of card sprites
+ * @param {Array<Sprite>} sprites 
+ */
+function destroyAll(sprites) {
+  if (!(sprites === undefined))
+    sprites.forEach(s => s.destroy());
+}
 /**
  * Set input enable on card and set no tint
  * @param {Sprite} card 
@@ -115,36 +133,45 @@ function disableCard(card) {
 }
 
 /**
- * Helper function for cards on the start of their drag
- * @param {Sprite} card 
- * @param {Mouse?} pointer 
+ * The callback for what to do on the start of dragging a card.
+ * Increases the cards scale to simulate picking it up.
+ * @param {Sprite} card the card being operated on
+ * @param {Cursor} pointer 
  */
 let startDrag = function (card, pointer) {
   // make the card bigger for the illusion of picking it up
   card.scale.set(graphics.CARD_SCALE * 1.1);
   // for debugging
-  loc = myHandGroup.indexOf(card) != -1 ? 'hand' : 'table';
+  const loc = myHandGroup.indexOf(card) != -1 ? 'hand' : 'table';
   console.log(loc);
 }
 
+/**
+ * The callback for what to do at the stop of dragging a card.
+ * Swaps cards if there was an overlap, else snaps it back to its original position.
+ * Reset the card scale to simulate placing it back on the table.
+ * @param {Sprite} card the card being operated on
+ * @param {Cursor} pointer 
+ */
 let stopDrag = function (card, pointer) {
   // Reset the card's scale for the illusion of putting it back down
   card.scale.set(graphics.CARD_SCALE);
 
   // See if an overlap event and its resulting action occurred
-  swappableCards = myHandGroup.concat(onTableGroup);
-  console.log("This card: " + card.frame);
-  console.log("Swappable cards: " + JSON.stringify(swappableCards.map(a => a.frame)));
+  const swappableCards = myHandGroup.concat(onTableGroup);
+  // console.log("This card: " + card.frame);
+  // console.log("Swappable cards: " + JSON.stringify(swappableCards.map(a => a.frame)));
   let didOverlap = false;
   swappableCards.some(o => {
     if (!(card === o) && card.overlap(o) && shouldSwap(card, o)) {
-      console.log(`Found overlap for ${o.frame}`);
+      // console.log(`Found overlap for ${o.frame}`);
       swapPosition(card, o);
+      sendSwapUpdate(card.frame, o.frame);
       didOverlap = true;
     }
   })
+  // console.log("didOverlap: " + didOverlap);
 
-  console.log("didOverlap: " + didOverlap);
   // Snap the card back if there was no overlap
   if (!didOverlap) {
     snapTo(card, card.snapPosition);
@@ -196,17 +223,20 @@ function swapPosition(card1, card2) {
   snapTo(card2, card1.snapPosition);
   setTimeout(function () {
     // reenable the cards
-    [card1, card2].forEach(c => c.tint = graphics.ENABLED_TINT);
+    [card1, card2].forEach(c => {
+      if (c.inputEnabled)
+        c.tint = graphics.ENABLED_TINT
+    });
   }, 700);
 
   // switch the snap positions
-  let temp = card1.snapPosition;
+  const temp = card1.snapPosition;
   card1.snapPosition = card2.snapPosition;
   card2.snapPosition = temp;
 
   // Logistics
   // switch which group the cards belong to
-  if (card1.parentGroup === card2.parentGroup){
+  if (card1.parentGroup === card2.parentGroup) {
     const parentGroup = card1.parentGroup;
     const index1 = parentGroup.indexOf(card1);
     const index2 = parentGroup.indexOf(card2);
@@ -219,9 +249,9 @@ function swapPosition(card1, card2) {
     const c2Index = c2Group.indexOf(card2);
 
     // put card2 where card1 was
-    c1Group.splice(c1Index, 1, card2); 
+    c1Group.splice(c1Index, 1, card2);
     // put card1 where card2 was
-    c2Group.splice(c2Index, 1, card1); 
+    c2Group.splice(c2Index, 1, card1);
 
     // update membership
     card1.parentGroup = c2Group;
@@ -229,19 +259,19 @@ function swapPosition(card1, card2) {
   }
 
   // Update the cards in the array representations
-  myHand = myHandGroup.map(c => c.frame);
+  theirHand = theirHandGroup.map(c => c.frame);
   onTable = onTableGroup.map(c => c.frame);
-  console.log('Their Hand: ' + theirHand);
-  console.log('On Table: ' + onTable);
-  console.log('My Hand: ' + myHand);
+  myHand = myHandGroup.map(c => c.frame);
+
+  logState();
 }
 
 /**
  * Creates/destroys the sprites that represent the deck based on the current value of deck.length
  */
 function makeDeckSprites() {
-  let dx = deckSprites.dx;
-  let dy = deckSprites.dy;
+  const dx = deckSprites.dx;
+  const dy = deckSprites.dy;
   if (deckSprites.cards.length > deck.length) {
     // destroy extra card sprites if present
     for (let i = deckSprites.cards.length; i > deck.length; i--) {
@@ -253,7 +283,7 @@ function makeDeckSprites() {
   else if (deckSprites.cards.length < deck.length) {
     // add extra card sprites if needed
     for (let i = deckSprites.cards.length; i < deck.length; i++) {
-      const cardSprite = game.add.sprite(deckSprites.x - deckSprites.x_offset, game.world.centerY - deckSprites.y_offset, 'cardback');
+      const cardSprite = phaser.add.sprite(deckSprites.x - deckSprites.x_offset, phaser.world.centerY - deckSprites.y_offset, 'cardback');
       cardSprite.anchor.set(0.5);
       cardSprite.scale.set(graphics.CARD_SCALE);
       deckSprites.cards.push(cardSprite);
@@ -263,10 +293,51 @@ function makeDeckSprites() {
   }
 }
 
-function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool, destroyBool) {
-  game.physics.arcade.enable(sprite);
-  game.physics.arcade.moveToXY(sprite, x, y, 0, moveTime);
-  game.time.events.add(waitTime, function () {
+/**
+ * Animates the reshuffling/discarding of the cards on the table (onTableGroup)
+ * @param {Number} numReshuffle the number of cards to reshuffle
+ */
+function reshuffleAnimation(numReshuffle) {
+  let backs = [];
+  // create back sprites
+  onTableGroup.forEach(c => {
+    console.log('x: ' + c.x + ', y: ' + c.y);
+    let back = phaser.add.sprite(c.x, c.y, 'cardback');
+    back.scale.set(graphics.CARD_SCALE);
+    back.anchor.set(0.5);
+    fadeOut(c, 500);
+    c.destroy();
+    fadeIn(back, 500);
+    backs.push(back);
+  });
+  // collect the backs in the center
+  setTimeout(function () {
+    backs.forEach(function (b) {
+      moveTo(b, phaser.world.centerX, phaser.world.centerY, 600 / 2, 600 / 2, false, false);
+    })
+  }, 1000 / 2);
+  setTimeout(function () {
+    for (let i = 0; i < backs.length; i++) {
+      let b = backs[i];
+      let x = (i < numReshuffle) ? 140 : 1500;
+      moveTo(b, x, phaser.world.centerY, 600 * (1 + i) / 2, 600 * (1 + i) / 2, false, true);
+    }
+  }, 3000 / 2);
+}
+/**
+ * Move a sprite to a location, with the option of fading or destroying it in the process.
+ * @param {Phaser.Sprite} sprite the sprite
+ * @param {Number} x x pos to move to
+ * @param {Number} y y pos t omove to
+ * @param {Number} moveTime time to move there
+ * @param {Number} waitTime time before moving
+ * @param {Boolean} fadeBool whether to fade out
+ * @param {Boolean} destroyBool whether to destroy sprite on finish
+ */
+function moveTo(sprite, x, y, moveTime, waitTime, fadeBool, destroyBool) {
+  phaser.physics.arcade.enable(sprite);
+  phaser.physics.arcade.moveToXY(sprite, x, y, 0, moveTime);
+  phaser.time.events.add(waitTime, function () {
     sprite.position.setTo(x, y);
     sprite.body.reset();
     if (fadeBool) {
@@ -278,36 +349,11 @@ function moveTo(sprite, x, y, moveTime, waitTime, game, fadeBool, destroyBool) {
   });
 }
 
-function reshuffleAnimation(cards, numToAdd, game, obj) {
-  let backs = [];
-  cards.forEach(function (c) {
-    fadeOut(c, 500);
-    let back = game.add.sprite(c.x, c.y, 'cardback');
-    back.scale.set(graphics.cardScale);
-    back.anchor = new Phaser.Point(0.5, 0.5);
-    fadeIn(back, 500);
-    backs.push(back);
-  });
-  setTimeout(function () {
-    backs.forEach(function (b) {
-      moveTo(b, game.world.centerX, game.world.centerY, 600 / 2, 600 / 2, game, false, false);
-    })
-  }, 1000 / 2);
-  setTimeout(function () {
-    for (let i = 0; i < backs.length; i++) {
-      let b = backs[i];
-      let x = (i < numToAdd) ? 140 : 1500;
-      moveTo(b, x, game.world.centerY, 600 * (1 + i) / 2, 600 * (1 + i) / 2, game, false, true);
-    }
-  }, 3000 / 2);
-}
-
-
 /**
  * Gives easing to movement of card sprite
  */
 function snapTo(card, pos) {
-  game.add.tween(card).to(pos, 400, Phaser.Easing.Back.Out, true);
+  phaser.add.tween(card).to(pos, 400, Phaser.Easing.Back.Out, true);
 }
 
 /**
@@ -315,7 +361,7 @@ function snapTo(card, pos) {
  */
 function fadeIn(card, time) {
   card.alpha = 0;
-  game.add.tween(card).to({ alpha: 1 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
+  phaser.add.tween(card).to({ alpha: 1 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
 }
 
 /**
@@ -323,29 +369,64 @@ function fadeIn(card, time) {
  */
 function fadeOut(card, time) {
   card.alpha = 1;
-  game.add.tween(card).to({ alpha: 0 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
+  phaser.add.tween(card).to({ alpha: 0 }, time, Phaser.Easing.Linear.Out, true, 0, 0, false);
 }
 
 /**
  * Random number between min and max
- * @param {*Number} min
- * @param {*Number} max
+ * @param {Number} min
+ * @param {Number} max
  */
 function randBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function getTurnText() {
-    const isPartner = isMyTurn ? '' : 'partner\'s '
-    return 'It\'s your ' + isPartner + 'turn.'
+/**
+ * Get the string describing the turn.
+ */
+function getTurnString() {
+  // TODO: make this dependent on a different variable than isMyTurn. using isMyTurn seems like bad practice
+  if (isMyTurn === null) return 'Game has not started yet'; // case game not initialized yet. 
+  const isPartner = isMyTurn ? '' : 'partner\'s '
+  return 'It\'s your ' + isPartner + 'turn.'
 }
 
-function getCounterText(num, counterType) {
-    const plural = (num == 1) ? '' : 's';
-    const descrip = (counterType == 'left') ? 'left in deck' : 'reshuffled';
-    return `${num} card${plural} ${descrip}`;
+/**
+ * Get the string describing information about the cards.
+ * @param {Number} num number of cards
+ * @param {String} counterType either 'left' for 'left in deck' or 'reshuffled'
+ */
+function getCounterString(num, descrip) {
+  const plural = (num == 1) ? '' : 's';
+  return `${num} card${plural} ${descrip}`;
 }
 
+/**
+ * Logs the state of the cards game on the client side.
+ */
+function logState() {
+  console.log('isMyTurn: ' + isMyTurn);
+  console.log('Deck: ' + deck);
+  console.log('Their Hand: ' + theirHand);
+  console.log('On Table: ' + onTable);
+  console.log('My Hand: ' + myHand);
+}
+
+/**
+ * Set the turn button to be enabled or disabled.
+ * @param {Boolean} isEnabled 
+ */
+function turnButtonSetEnabled(isEnabled) {
+  if (isEnabled) {
+    // Enable the end-turn button
+    turnButton.setFrames(0, 1, 2);
+    turnButton.inputEnabled = true;
+  } else {
+    // Disable the end-turn button
+    turnButton.setFrames(3, 3, 3);
+    turnButton.inputEnabled = false;
+  }
+}
 /**
  * Swaps the elements at two indices of an array
  * @param {Number} index1 
@@ -358,11 +439,12 @@ Array.prototype.swap = function (x, y) {
   return this;
 }
 
-module.exports = {
-  makeCard: makeCard,
-  makeHand: makeHand,
-  drawCards: drawCards,
-  cardGroupOverlap: cardGroupOverlap,
-  swapPos: swapPosition,
-  randBetween: randBetween
-}
+if (typeof module !== 'undefined')
+  module.exports = {
+    makeCard: makeCard,
+    makeHand: makeHand,
+    drawCards: drawCards,
+    cardGroupOverlap: cardGroupOverlap,
+    swapPos: swapPosition,
+    randBetween: randBetween
+  }

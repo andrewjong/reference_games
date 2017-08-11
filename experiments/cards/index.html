@@ -3,6 +3,7 @@
 
 <head>
     <title>Card Game - Stanford Research</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <!-- Load style sheet -->
     <link href="index.css" media="screen" rel="stylesheet" type="text/css">
 
@@ -18,17 +19,17 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
     <!-- Load Phaser -->
-    <script type="text/javascript" src="phaser.min.js"></script>
+    <script type="text/javascript" src="phaser.js"></script>
 
     <!-- Load the common game code. -->
     <script type="text/javascript" src="game.core.js"></script>
 
     <!-- Finally, Load the game client code. -->
-    <script type="text/javascript" src="cardsClientBase.js"></script>
+    <script type="text/javascript" src="/sharedUtils/clientBase.js"></script>
     <script type="text/javascript" src="game.client.js"></script>
-    <script type="text/javascript" src="front-end.js"></script>
-    <script type="text/javascript" src="game-logic.js"></script>
-    <script type="text/javascript" src="card-utils.js"></script>
+    <script type="text/javascript" src="client.graphics.js"></script>
+    <script type="text/javascript" src="client.graphicUtils.js"></script>
+    <script type="text/javascript" src="client.updater.js"></script>
 
     <style>
         * {
@@ -44,16 +45,21 @@
         #messages li {
             padding: 5px 10px;
         }
-        /*#messages li:nth-child(odd) { background: #eee; }*/
     </style>
-
 </head>
 
 <body>
     <div id='main'>
         <span>
             <!-- GAME VIEWPORT -->
-            <div id="viewport" > </div>
+            <div id="viewport" > 
+                <br>
+                Waiting for another player...
+                <br>
+                Please do not refresh!
+                <br>
+                <image src="forms/images/loading.gif">
+            </div>
 
             <!-- CHAT BOX -->
             <div id='message_panel' >
@@ -67,68 +73,6 @@
                 </div>
             </div>
 
-
-            <!-- EXIT SURVEY (INVISIBLE TILL END) -->
-            <div id="exit_survey" style="display:none">
-
-            <br><br><br><br><br>
-
-            <h3> Thanks for participating in our experiment! </h3>
-            <h3> Before you submit your HIT, we'd like to ask you a few questions. </h3>
-
-            <br><br><br>
-
-            <p> Did you believe you were playing against another human player? </p>
-            <select onChange="dropdownTip('human::' + this.value)">
-                <option value=""></option>
-                <option value="yes">Yes, I thought they were a human</option>
-                <option value="no">No, I thought it was a computer program</option>
-            </select>
-
-            <p id='humanResult' style="display:none;color:red">
-                Thank you for your response -- in fact, all players were paired with other human turkers! <p>
-
-            <br> <br>
-
-            <p> Are you a native English speaker? </p>
-            <select onChange="dropdownTip('language::' + this.value)">
-                <option value = ""></option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-            </select>
-
-            <br><br>
-
-            <p> Did you read the instructions and do you think you did the HIT correctly? </p>
-            <select onChange="dropdownTip('confused::' + this.value)">
-                <option value = ""></option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-                <option value="confused">I was confused</option>
-            </select>
-            
-            <br><br>
-
-            <p> How much did you like working with your partner? </p>
-            <select onChange="dropdownTip('partner::' + this.value)">
-                <option value = ""></option>
-                <option value="not much">Not that much</option>
-                <option value="okay">My partner was fine</option>
-                <option value="liked">I liked working with my partner</option>
-                <option value="loved">I really enjoyed working with my partner</option>
-            </select>
-
-            <br><br>
-
-            <p> Do you have any comments on the experiment? </p>
-            <textarea id='comments' rows="4" cols="50"></textarea>
-            <br>
-
-            <p> Note: Clicking this button should automatically submit the HIT and close this tab. There is no need to input a code.<p>
-            <p> If you experience a problem submitting, please contact rxdh@stanford.edu for compensation. </p>
-            
-            <div><button id="surveySubmit" onclick="dropdownTip('submit')" type="button">Submit HIT</button></div>
-	    </div>
         </span>
     </div>
 </body>

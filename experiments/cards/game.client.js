@@ -1,82 +1,77 @@
-
-
-//   Copyright (c) 2012 Sven "FuzzYspo0N" Bergström, 
-//                   2013 Robert XD Hawkins
-
-//     written by : http://underscorediscovery.com
-//     written for : http://buildnewgames.com/real-time-multiplayer/
-
-//     modified for collective behavior experiments on Amazon Mechanical Turk
-
-//     MIT Licensed.
-
-
-// /* 
-//    THE FOLLOWING FUNCTIONS MAY NEED TO BE CHANGED
-// */
+/**
+ * @file receives updates from the server
+ */
 
 // A window global for our game root variable.
 var globalGame = {};
-// Keeps track of whether player is paying attention...
-var incorrect;
-var dragging;
-var waiting;
 
-//test: let's try a variable selecting, for when the listener selects an object
-// we don't need the dragging.
-var selecting;
-
-var client_onserverupdate_received = function (data) {
+// This gets called once when the server initializes the game for both players
+var client_onserverupdate_received = function (state) {
+  console.log('Server update received on client: ' + globalGame.my_id);
 
   // Update client versions of variables with data received from
   // server_send_update function in game.core.js
-  //data refers to server information
-  if (data.players) {
-    _.map(_.zip(data.players, globalGame.players), function (z) {
+  // data refers to server information
+
+  // offset each index of the player ids by 1
+  if (state.players) {
+    _.map(_.zip(state.players, globalGame.players), function (z) {
       z[1].id = z[0].id;
     });
   }
 
-  if (globalGame.roundNum != data.roundNum) {
-    globalGame.currStim = _.map(data.trialInfo.currStim, function (obj) {
-      // Extract the coordinates matching your role
-      var customCoords = (globalGame.my_role == globalGame.playerRoleNames.role1 ?
-        obj.speakerCoords : obj.listenerCoords);
-      // remove the speakerCoords and listenerCoords properties
-      var customObj = _.chain(obj)
-        .omit('speakerCoords', 'listenerCoords')
-        .extend(obj, {
-          trueX: customCoords.trueX, trueY: customCoords.trueY,
-          gridX: customCoords.gridX, gridY: customCoords.gridY,
-          box: customCoords.box
-        })
-        .value();
-
-      return customObj;
-    });
-  };
-
   // Get rid of "waiting" screen if there are multiple players
-  if (data.players.length > 1) {
+  if (state.players.length > 1) {
     $('#messages').empty();
     globalGame.get_player(globalGame.my_id).message = "";
+    $('#chatbox').removeAttr("disabled");
+  } else {
+    $('#chatbox').attr("disabled", "disabled");
   }
 
-  globalGame.game_started = data.gs;
-  globalGame.players_threshold = data.pt;
-  globalGame.player_count = data.pc;
-  globalGame.roundNum = data.roundNum;
-  // update data object on first round, don't overwrite (FIXME)
+  globalGame.game_started = state.gs;
+  globalGame.players_threshold = state.pt;
+  globalGame.player_count = state.pc;
+  globalGame.roundNum = state.roundNum;
+
+  // update data object on first round, don't overwrite (FIXME) 
   if (!_.has(globalGame, 'data')) {
-    globalGame.data = data.dataObj;
+    globalGame.data = state.dataObj;
   }
 
-  // Draw all this new stuff
-  drawScreen(globalGame, globalGame.get_player(globalGame.my_id));
+  // update the Phaser graphics
+  // TODO: update phaser with some update function passing in state.cards
+  // drawScreen(state)
+  console.log("Client side (not passed to Phaser yet), state.cards: " + JSON.stringify(state.cards));
+  console.log(`globalGame.my_role: ${globalGame.my_role}`);
+
+  // Package the data into a package convenient for Phaser NOTE: these variables could technically be stored in globalGame. maybe change that later
+  console.log(`globalGame.game_started: ${globalGame.game_started}`);
+  if (globalGame.game_started) {
+    $('#viewport').empty();
+    let pData = {
+      deck: state.cards.deck,
+      onTable: state.cards.onTable,
+    };
+    if (globalGame.my_role == 'player1') {
+      pData.isMyTurn = true;
+      pData.myHand = state.cards.p1Hand;
+      pData.theirHand = state.cards.p2Hand;
+    } else if (globalGame.my_role == 'player2') {
+      pData.isMyTurn = false;
+      pData.myHand = state.cards.p2Hand;
+      pData.theirHand = state.cards.p1Hand;
+    } else { // this shouldn't happen!
+      console.error("globalGame.my_role: " + globalGame.my_role);
+    }
+    console.log('Calling startPhaser with pData: ' + JSON.stringify(pData));
+    startPhaser(pData);
+  } else {
+    console.log('Waiting for game start')
+  }
 };
 
 var client_onMessage = function (data) {
-
   var commands = data.split('.');
   var command = commands[0];
   var subcommand = commands[1] || null;
@@ -91,41 +86,6 @@ var client_onMessage = function (data) {
           console.log("received end message...");
           break;
 
-        case 'feedback':
-          // Prevent them from sending messages b/w trials
-          $('#chatbox').attr("disabled", "disabled");
-          var objToHighlight;
-          var upperLeftX;
-          var upperLeftY;
-          var strokeColor;
-          var clickedObjStatus = commanddata;
-
-          // update local score
-          globalGame.data.subject_information.score += clickedObjStatus === "target";
-
-          // draw feedback
-          if (globalGame.my_role === globalGame.playerRoleNames.role1) {
-            objToHighlight = _.filter(globalGame.currStim, function (x) {
-              return x.targetStatus == clickedObjStatus;
-            })[0];
-            upperLeftX = objToHighlight.speakerCoords.gridPixelX;
-            upperLeftY = objToHighlight.speakerCoords.gridPixelY;
-          } else {
-            objToHighlight = _.filter(globalGame.currStim, function (x) {
-              return x.targetStatus == "target";
-            })[0];
-            upperLeftX = objToHighlight.listenerCoords.gridPixelX;
-            upperLeftY = objToHighlight.listenerCoords.gridPixelY;
-          }
-          if (upperLeftX != null && upperLeftY != null) {
-            globalGame.ctx.beginPath();
-            globalGame.ctx.lineWidth = "10";
-            globalGame.ctx.strokeStyle = "green";
-            globalGame.ctx.rect(upperLeftX + 5, upperLeftY + 5, 290, 290);
-            globalGame.ctx.stroke();
-          }
-          break;
-
         case 'alert': // Not in database, so you can't play...
           alert('You did not enter an ID');
           window.location.replace('http://nodejs.org'); break;
@@ -135,38 +95,19 @@ var client_onMessage = function (data) {
           client_onjoingame(num_players, commands[3]); break;
 
         case 'add_player': // New player joined... Need to add them to our list.
-          console.log("adding player" + commanddata);
+          console.log("adding player " + commanddata);
           console.log("cancelling timeout");
           clearTimeout(globalGame.timeoutID);
           if (hidden === 'hidden') {
             flashTitle("GO!");
           }
-          globalGame.players.push({ id: commanddata, player: new game_player(globalGame) }); break;
+          globalGame.players.push({
+            id: commanddata,
+            player: new game_player(globalGame)
+          }); break;
 
       }
   }
-};
-
-var client_addnewround = function (game) {
-  $('#roundnumber').append(game.roundNum);
-};
-
-var customSetup = function (game) {
-  // Set up new round on client's browsers after submit round button is pressed.
-  // This means clear the chatboxes, update round number, and update score on screen
-  game.socket.on('newRoundUpdate', function (data) {
-    $('#chatbox').removeAttr("disabled");
-    $('#chatbox').focus();
-    $('#messages').empty();
-    if (game.roundNum + 2 > game.numRounds) {
-      $('#roundnumber').empty();
-      $('#instructs').empty()
-        .append("Round\n" + (game.roundNum + 1) + "/" + game.numRounds);
-    } else {
-      $('#roundnumber').empty()
-        .append("Round\n" + (game.roundNum + 2) + "/" + game.numRounds);
-    }
-  });
 };
 
 var client_onjoingame = function (num_players, role) {
@@ -178,16 +119,6 @@ var client_onjoingame = function (num_players, role) {
     globalGame.players.unshift({ id: null, player: new game_player(globalGame) });
   });
 
-  // Update w/ role (can only move stuff if agent)
-  $('#roleLabel').append(role + '.');
-  if (role === globalGame.playerRoleNames.role1) {
-    $('#instructs').append("Send messages to tell the listener which object " +
-      "is the target.");
-  } else if (role === globalGame.playerRoleNames.role2) {
-    $('#instructs').append("Click on the target object which the speaker " +
-      "is telling you about.");
-  }
-
   if (num_players == 1) {
     // Set timeout only for first player...
     this.timeoutID = setTimeout(function () {
@@ -197,61 +128,42 @@ var client_onjoingame = function (num_players, role) {
         window.close();
       } else {
         console.log("would have submitted the following :");
-        console.log(this.data);
+        //console.log(this.data);
       }
-    }, 1000 * 60 * 15);
-
-    globalGame.get_player(globalGame.my_id).message = ('Waiting for another player to connect... '
-      + 'Please do not refresh the page!');
-  }
-
-  // set mouse-tracking event handler
-  if (role === globalGame.playerRoleNames.role2) {
-    globalGame.viewport.addEventListener("click", mouseClickListener, false);
+    }, 1000 * 60 * 15); // 15 minute timeout
+    console.log(globalGame.my_id);
+    globalGame.get_player(globalGame.my_id).message = (`The goal of the game is to collaboratively get a 6 card
+    straight. Communication with your partner is key!`);
   }
 };
 
-/*
- MOUSE EVENT LISTENERS
- */
+// Custom event listeners
+const customSetup = function (game) {
+  game.socket.on('swapUpdate', swapped => {
+    console.log('swapUpdate received on client ' + game.my_id + ': ' + JSON.stringify(swapped));
+    handleSwapUpdate(swapped.c1, swapped.c2);
+  })
+  // Update about the cards in both player's hands and on the table
+  game.socket.on('cardsUpdate', cardsPacket => {
+    console.log('cardsUpdate received on client ' + game.my_id + ': ' + JSON.stringify(cardsPacket));
+  });
 
-function mouseClickListener(evt) {
-  var bRect = globalGame.viewport.getBoundingClientRect();
-  var mouseX = (evt.clientX - bRect.left) * (globalGame.viewport.width / bRect.width);
-  var mouseY = (evt.clientY - bRect.top) * (globalGame.viewport.height / bRect.height);
-  if (globalGame.messageSent) { // if message was not sent, don't do anything
-    for (var i = 0; i < globalGame.currStim.length; i++) {
-      var obj = globalGame.currStim[i];
-      if (hitTest(obj, mouseX, mouseY)) {
-        globalGame.messageSent = false;
-        //highlight the object that was clicked:
-        var upperLeftXListener = obj.listenerCoords.gridPixelX;
-        var upperLeftYListener = obj.listenerCoords.gridPixelY;
-        if (upperLeftXListener != null && upperLeftYListener != null) {
-          globalGame.ctx.beginPath();
-          globalGame.ctx.lineWidth = "10";
-          globalGame.ctx.strokeStyle = "black";
-          globalGame.ctx.rect(upperLeftXListener + 5, upperLeftYListener + 5, 290, 290);
-          globalGame.ctx.stroke();
-        }
-        // Tell the server about it
-        var alt1 = _.sample(_.without(globalGame.currStim, obj));
-        var alt2 = _.sample(_.without(globalGame.currStim, obj, alt1));
-        globalGame.socket.send("clickedObj." + obj.condition + "." +
-          obj.targetStatus + "." + obj.color.join('.') + "." +
-          obj.speakerCoords.gridX + "." + obj.listenerCoords.gridX + "." +
-          alt1.targetStatus + "." + alt1.color.join('.') + "." +
-          alt1.speakerCoords.gridX + "." + alt1.listenerCoords.gridX + "." +
-          alt2.targetStatus + "." + alt2.color.join('.') + "." +
-          alt2.speakerCoords.gridX + "." + alt2.listenerCoords.gridX + ".");
+  // Next turn contains data for transitioning to the next turn
+  game.socket.on('endTurn', reshuffled => {
+    console.log('endTurn received on client ' + game.my_id + ': ' + JSON.stringify(reshuffled));
+    game.turnNum++;
+    handleEndTurn(reshuffled);
+  });
 
-      }
-    }
-  }
-};
+  // New turn update for the start of the next turn
+  game.socket.on('newTurn', newTurn => {
+    console.log('newTurn received on client ' + game.my_id + ': ' + JSON.stringify(newTurn));
+    handleNewTurn(newTurn);
+  });
 
-function hitTest(shape, mx, my) {
-  var dx = mx - shape.trueX;
-  var dy = my - shape.trueY;
-  return (0 < dx) && (dx < shape.width) && (0 < dy) && (dy < shape.height);
+}
+
+// This function only exists for compatibility within clientBase.js, as 'drawScreen()' is called in onconnect
+function drawScreen(data) {
+  console.log('drawScreen called for client ' + globalGame.my_id);
 }

@@ -1,11 +1,11 @@
 var visible;
 
-var getURLParams = function() {
+var getURLParams = function () {
   var match,
-      pl     = /\+/g,  // Regex for replacing addition symbol with a space
-      search = /([^&=]+)=?([^&]*)/g,
-      decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
-      query  = location.search.substring(1);
+    pl = /\+/g,  // Regex for replacing addition symbol with a space
+    search = /([^&=]+)=?([^&]*)/g,
+    decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+    query = location.search.substring(1);
 
   var urlParams = {};
   while ((match = search.exec(query))) {
@@ -14,10 +14,10 @@ var getURLParams = function() {
   return urlParams;
 };
 
-var ondisconnect = function(data) {
+var ondisconnect = function (data) {
   // Redirect to exit survey
   console.log("server booted");
-  this.viewport.style.display="none";
+  this.viewport.style.display = "none";
   var email = globalGame.email ? globalGame.email : '';
   var failMsg = [
     '<h3>Oops! It looks like your partner lost their connection!</h3>',
@@ -30,105 +30,107 @@ var ondisconnect = function(data) {
     "<p>Before you submit your HIT, we'd like to ask you a few questions.</p>"
   ].join('');
 
-  if(globalGame.roundNum + 2 > globalGame.numRounds) { 
-    $('#exit_survey').prepend(successMsg);    
+  if (globalGame.roundNum + 2 > globalGame.numRounds) {
+    $('#exit_survey').prepend(successMsg);
   } else {
-    $('#exit_survey').prepend(failMsg); 
+    $('#exit_survey').prepend(failMsg);
   }
 
   $('#exit_survey').show();
   $('#main').hide();
   $('#header').hide();
-  
+
   $('#message_panel').hide();
   $('#submitbutton').hide();
   $('#roleLabel').hide();
   $('#score').hide();
 
+  $('#post_test').hide();
   $('#sketchpad').hide(); // this is from sketchpad experiment (jefan 4/23/17)
   $('#loading').hide(); // this is from sketchpad experiment (jefan 4/23/17)
 };
 
 // The server responded that we are now in a game
-var onconnect = function(data) {
+var onconnect = function (data) {
+  console.log('onconnect called in clientBase.js');
   this.my_id = data.id;
+  console.log('my_id: ' + this.my_id);
   this.players[0].id = this.my_id;
   this.urlParams = getURLParams();
   drawScreen(this, this.get_player(this.my_id));
 };
 
 // Associates callback functions corresponding to different socket messages
-var sharedSetup = function(game) {
+var sharedSetup = function (game) {
   //Store a local reference to our connection to the server
-  game.socket = io.connect();
+  game.socket = io.connect({ reconnection: false });
 
   // Tell other player if someone is typing...
-  $('#chatbox').on('input', function() {
+  $('#chatbox').on('input', function () {
     console.log("inputting...");
-    if($('#chatbox').val() != "" && !globalGame.sentTyping) {
+    if ($('#chatbox').val() != "" && !globalGame.sentTyping) {
       game.socket.send('playerTyping.true');
       globalGame.typingStartTime = Date.now();
       globalGame.sentTyping = true;
-    } else if($("#chatbox").val() == "") {
+    } else if ($("#chatbox").val() == "") {
       game.socket.send('playerTyping.false');
       globalGame.sentTyping = false;
       console.log("globalGame is being used here!");
     }
   });
-  
+
   // Tell server when client types something in the chatbox
-  $('form').submit(function(){
+  $('form').submit(function () {
     var origMsg = $('#chatbox').val();
     var timeElapsed = Date.now() - globalGame.typingStartTime;
     var msg = ['chatMessage', origMsg.replace(/\./g, '~~~'), timeElapsed].join('.');
-    if($('#chatbox').val() != '') {
+    if ($('#chatbox').val() != '') {
       game.socket.send(msg);
       globalGame.sentTyping = false;
       $('#chatbox').val('');
     }
-    return false;   
+    return false;
   });
 
-  game.socket.on('playerTyping', function(data){
-    if(data.typing == "true") {
+  game.socket.on('playerTyping', function (data) {
+    if (data.typing == "true") {
       $('#messages')
-	.append('<span class="typing-msg">Other player is typing...</span>')
-	.stop(true,true)
-	.animate({
-	  scrollTop: $("#messages").prop("scrollHeight")
-	}, 800);
+        .append('<span class="typing-msg">Other player is typing...</span>')
+        .stop(true, true)
+        .animate({
+          scrollTop: $("#messages").prop("scrollHeight")
+        }, 800);
     } else {
       $('.typing-msg').remove();
     }
   });
-  
-  // Update messages log when other players send chat
-  game.socket.on('chatMessage', function(data){
 
+  // Update messages log when other players send chat
+  game.socket.on('chatMessage', function (data) {
     var otherRole = (globalGame.my_role === game.playerRoleNames.role1 ?
-		     game.playerRoleNames.role2 : game.playerRoleNames.role1);
-    var source = data.user === globalGame.my_id ? "You" : otherRole;
+      game.playerRoleNames.role2 : game.playerRoleNames.role1);
+    var source = data.user === globalGame.my_id ? "You" : "Partner";
     // To bar responses until speaker has uttered at least one message
-    if(source !== "You"){
+    if (source !== "You") {
       globalGame.messageSent = true;
     }
     var col = source === "You" ? "#363636" : "#707070";
     $('.typing-msg').remove();
     $('#messages')
       .append($('<li style="padding: 5px 10px; background: ' + col + '">')
-    	      .text(source + ": " + data.msg))
-      .stop(true,true)
+        .text(source + ": " + data.msg))
+      .stop(true, true)
       .animate({
-	scrollTop: $("#messages").prop("scrollHeight")
+        scrollTop: $("#messages").prop("scrollHeight")
       }, 800);
   });
 
   //so that we can measure the duration of the game
   game.startTime = Date.now();
-  
+
   //When we connect, we are not 'connected' until we have an id
   //and are placed in a game by the server. The server sends us a message for that.
-  game.socket.on('connect', function(){}.bind(game));
+  game.socket.on('connect', function () { }.bind(game));
   //Sent when we are disconnected (network, server down, etc)
   game.socket.on('disconnect', ondisconnect.bind(game));
   //Sent each tick of the server simulation. This is our authoritive update
@@ -141,15 +143,15 @@ var sharedSetup = function(game) {
 
 // When loading the page, we store references to our
 // drawing canvases, and initiate a game instance.
-window.onload = function(){
+window.onload = function () {
   //Create our game client instance.
-  globalGame = new game_core({server: false});
-  
+  globalGame = new game_core({ server: false });
+
   //Connect to the socket.io server!
   sharedSetup(globalGame);
   customSetup(globalGame);
   globalGame.submitted = false;
-    
+
   //Fetch the viewport
   globalGame.viewport = document.getElementById('viewport');
 
@@ -169,48 +171,49 @@ window.onload = function(){
 
 // This gets called when someone selects something in the menu during the exit survey...
 // collects data from drop-down menus and submits using mmturkey
-function dropdownTip(data){
+function dropdownTip(data) {
   console.log(globalGame);
   var commands = data.split('::');
-  switch(commands[0]) {
-  case 'human' :
-    $('#humanResult').show();
-    globalGame.data.subject_information = _.extend(globalGame.data.subject_information, 
-					     {'thinksHuman' : commands[1]}); break;
-  case 'language' :
-    globalGame.data.subject_information = _.extend(globalGame.data.subject_information, 
-					     {'nativeEnglish' : commands[1]}); break;
-  case 'partner' :
-    globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
-						   {'ratePartner' : commands[1]}); break;
-  case 'confused' :
-    globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
-						   {'confused' : commands[1]}); break;
-  case 'submit' :
-    globalGame.data.subject_information = _.extend(globalGame.data.subject_information, 
-				   {'comments' : $('#comments').val(), 
-				    'role' : globalGame.my_role,
-				    'totalLength' : Date.now() - globalGame.startTime});
-    globalGame.submitted = true;
-    console.log("data is...");
-    console.log(globalGame.data);
-    if(_.size(globalGame.urlParams) == 4) {
-      window.opener.turk.submit(globalGame.data, true);
-      window.close(); 
-    } else {
-      console.log("would have submitted the following :")
+  switch (commands[0]) {
+    case 'human':
+      $('#humanResult').show();
+      globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
+        { 'thinksHuman': commands[1] }); break;
+    case 'language':
+      globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
+        { 'nativeEnglish': commands[1] }); break;
+    case 'partner':
+      globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
+        { 'ratePartner': commands[1] }); break;
+    case 'confused':
+      globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
+        { 'confused': commands[1] }); break;
+    case 'submit':
+      globalGame.data.subject_information = _.extend(globalGame.data.subject_information,
+        {
+          'comments': $('#comments').val(),
+          'strategy': $('#strategy').val(),
+          'role': globalGame.my_role,
+          'totalLength': Date.now() - globalGame.startTime
+        });
+      globalGame.submitted = true;
+      console.log("data is...");
       console.log(globalGame.data);
-//      var URL = 'http://web.stanford.edu/~rxdh/psych254/replication_project/forms/end.html?id=' + my_id;
-//      window.location.replace(URL);
-    }
-    break;
+      if (_.size(globalGame.urlParams) == 4) {
+        window.opener.turk.submit(globalGame.data, true);
+        window.close();
+      } else {
+        console.log("would have submitted the following :")
+        console.log(globalGame.data);
+      }
+      break;
   }
 }
 
-window.onbeforeunload = function(e) {
+window.onbeforeunload = function (e) {
   e = e || window.event;
   var msg = ("If you leave before completing the task, "
-	     + "you will not be able to submit the HIT.");
+    + "you will not be able to submit the HIT.");
   if (!globalGame.submitted) {
     // For IE & Firefox
     if (e) {
@@ -222,7 +225,7 @@ window.onbeforeunload = function(e) {
 };
 
 // // Automatically registers whether user has switched tabs...
-(function() {
+(function () {
   document.hidden = hidden = "hidden";
 
   // Standards:
@@ -239,15 +242,15 @@ window.onbeforeunload = function(e) {
     document.onfocusin = document.onfocusout = onchange;
   // All others:
   else
-    window.onpageshow = window.onpagehide = window.onfocus 
-    = window.onblur = onchange;
+    window.onpageshow = window.onpagehide = window.onfocus
+      = window.onblur = onchange;
 })();
 
-function onchange (evt) {
+function onchange(evt) {
   var v = 'visible', h = 'hidden',
-      evtMap = { 
-        focus:v, focusin:v, pageshow:v, blur:h, focusout:h, pagehide:h 
-      };
+    evtMap = {
+      focus: v, focusin: v, pageshow: v, blur: h, focusout: h, pagehide: h
+    };
   evt = evt || window.event;
   if (evt.type in evtMap) {
     document.body.className = evtMap[evt.type];
@@ -258,7 +261,7 @@ function onchange (evt) {
   // console.log(document.body.className);
   // console.log(globalGame);
   visible = document.body.className;
-  globalGame.socket.send("h." + document.body.className);  
+  globalGame.socket.send("h." + document.body.className);
 
 };
 

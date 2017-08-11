@@ -7,18 +7,27 @@
  * @param {Array.<Number>} deck deck of card indices
  */
 function reshuffle(p, cards, deck) {
-  let n = 0;
-  cards.forEach(function(c) {
-    if (Math.random() <= p) {
-      n++;
-      deck.push(c.frame);
-    }
-  });
-  Phaser.ArrayUtils.shuffle(deck);
-  return [deck.length, n];
+    let n = 0;
+    cards.forEach(c => {
+        if (Math.random() <= p) {
+            n++;
+            deck.push(c.frame);
+        }
+    });
+    const newDeck = _.shuffle(deck);
+    return {newDeck, n};
 }
 
-const cardsInSuit = 12;
+/**
+ * 'Deals' the first n cards from a deck. The deck is modified.
+ * @param {Array<Number>} deck the deck of cards
+ * @param {Number} number how many to deal
+ */
+function dealCards(deck, number){
+   return deck.splice(0, number);
+}
+
+const cardsInSuit = 12; // number of cards in a suit
 /**
  * Determines if there is a straight among the 2 hands in a standard 52 card deck
  *
@@ -26,7 +35,7 @@ const cardsInSuit = 12;
  * @param {Array.<Number>} hand1 values in the first hand
  * @param {Array.<Number>} hand2 values in the second hand
  */
-function hasWrappedStraight(hand1, hand2){
+function hasWrappedStraight(hand1, hand2) {
     // let the suit start as the suit of the first card
     let firstSuit = getSuit(hand1[0]);
     let allCards = hand1.concat(hand2);
@@ -35,12 +44,12 @@ function hasWrappedStraight(hand1, hand2){
     });
     if (!matchingSuits) return false;
 
-    simplified = allCards.map(a => a % cardsInSuit).sort((a,b)=> a> b);
+    simplified = allCards.map(a => a % cardsInSuit).sort((a, b) => a > b);
     let breaks = 0;
     let hasBeg = simplified.includes(0);
     let hasEnd = simplified.includes(cardsInSuit - 1);
-    for(let i = 1; i < simplified.length; i++){
-        if (simplified[i] != simplified[i-1] + 1){
+    for (let i = 1; i < simplified.length; i++) {
+        if (simplified[i] != simplified[i - 1] + 1) {
             breaks++;
         }
         if (breaks > 1) return false;
@@ -53,12 +62,14 @@ function hasWrappedStraight(hand1, hand2){
  * Get the suit value of each card in a standard 52 card deck
  * @param cardValue an integer [0-51]
  */
-function getSuit(cardValue){
+function getSuit(cardValue) {
     return Math.trunc(cardValue / cardsInSuit);
 }
 
-module.exports = {
-    reshuffle: reshuffle,
-    hasWrappedStraight: hasWrappedStraight,
-    getSuit: getSuit
-}
+if (typeof module !== 'undefined')
+    module.exports = {
+        reshuffle,
+        dealCards,
+        hasWrappedStraight,
+        getSuit
+    }

@@ -1,15 +1,8 @@
-/*  Copyright (c) 2012 Sven "FuzzYspo0N" Bergström, 2013 Robert XD Hawkins
-    
-    written by : http://underscorediscovery.com
-    written for : http://buildnewgames.com/real-time-multiplayer/
-    
-    modified for collective behavior experiments on Amazon Mechanical Turk
-
-    MIT Licensed.
-*/
-var
+const
   fs = require('fs'),
   utils = require(__base + 'sharedUtils/sharedUtils.js');
+
+const cardLogic = require(__base + 'cards/card-logic.js');
 
 // This is the function where the server parses and acts on messages
 // sent from 'clients' aka the browsers of people playing the
@@ -17,34 +10,65 @@ var
 // to the server (check the client_on_click function in game.client.js)
 // with the coordinates of the click, which this function reads and
 // applies.
-var onMessage = function (client, message) {
+const onMessage = function (client, message) {
   //Cut the message up into sub components
-  var message_parts = message.split('.');
+  const message_parts = message.split('.');
 
   //The first is always the type of message
-  var message_type = message_parts[0];
+  const message_type = message_parts[0];
+
+  // logging for debug
+  if (message_type != 'h') {// skip the inactive window message
+    console.log('Server received message:');
+    message_parts.forEach((m, i) => console.log(`->[${i}]: <${typeof m}> ${m}`));
+  }
 
   //Extract important variables
-  var gc = client.game;
-  var id = gc.id;
-  var all = gc.get_active_players();
-  var target = gc.get_player(client.userid);
-  var others = gc.get_others(client.userid);
+  const gc = client.game;
+  const id = gc.id;
+  const all = gc.get_active_players();
+  const target = gc.get_player(client.userid);
+  const others = gc.get_others(client.userid);
+  let deck;
+  let onTable;
   switch (message_type) {
 
-    case 'clickedObj':
-      writeData(client, "clickedObj", message_parts);
-      others[0].player.instance.send("s.feedback." + message_parts[2]);
-      target.instance.send("s.feedback." + message_parts[2]);
-      setTimeout(function () {
-        _.map(all, function (p) {
-          p.player.instance.emit('newRoundUpdate', { user: client.userid });
-        });
-        gc.newRound();
-      }, 3000);
+    // player swapped two cards
+    case 'swapUpdate':
+      others.forEach(p => {
+        console.log("Emitting swapUpdate to player: " + p.id);
+        p.player.instance.emit('swapUpdate', { c1: message_parts[1], c2: message_parts[2] });
+      })
+      break;
+    // the player ended their turn
+    case 'endTurn':
+      // reshuffling logic here
+      deck = utils.toNumArray(message_parts[1]);
+      onTable = utils.toNumArray(message_parts[2]);
+      const reshuffle = cardLogic.reshuffle(gc.reshuffleP, onTable, deck);
+      // TODO: SOMETHING HERE ABOUT WRITING THE END STATE DATA
+      all.forEach(p => {
+        console.log("Emitting endTurn to player: " + p.id);
+        p.player.instance.emit('endTurn', reshuffle);
+      });
 
       break;
+    // client is requesting information to start the next turn
+    case 'nextTurnRequest':
+      deck = utils.toNumArray(message_parts[1]);
+      onTable = cardLogic.dealCards(deck, gc.options.CARDS_ON_TABLE); 
+      const newTurn = { deck, onTable };
+      gc.turnNum++;
 
+      // FIXME: I feel uncomfortable about the new draw being done per each client, instead of synced with the server. Technically data should be the same, but seems bad practice
+
+      // TODO: SOMETHING HERE ABOUT WRITING THE START STATE DATA
+
+      console.log("Emitting newTurn to player: " + target.i);
+      target.instance.emit('newTurn', newTurn);
+      break;
+
+    // a player is typing
     case 'playerTyping':
       _.map(others, function (p) {
         p.player.instance.emit('playerTyping',
@@ -52,77 +76,72 @@ var onMessage = function (client, message) {
       });
       break;
 
+    // a message was sent
     case 'chatMessage':
       if (client.game.player_count == 2 && !gc.paused) {
-        writeData(client, "message", message_parts);
         // Update others
-        var msg = message_parts[1].replace(/~~~/g, '.');
+        const msg = message_parts[1].replace(/~~~/g, '.');
         _.map(all, function (p) {
           p.player.instance.emit('chatMessage', { user: client.userid, msg: msg });
         });
       }
       break;
-
-    case 'h': // Receive message when browser focus shifts
-      target.visible = message_parts[1];
-      break;
   }
 };
 
-var writeData = function (client, type, message_parts) {
-  var gc = client.game;
-  var roundNum = gc.state.roundNum + 1;
-  var id = gc.id;
-  switch (type) {
-    case "clickedObj":
-      var outcome = message_parts[2] === "target";
-      var targetVsD1 = utils.colorDiff(getStim(gc, "target"), getStim(gc, "distr1"));
-      var targetVsD2 = utils.colorDiff(getStim(gc, "target"), getStim(gc, "distr2"));
-      var D1VsD2 = utils.colorDiff(getStim(gc, "distr1"), getStim(gc, "distr2"));
-      var line = (id + ',' + Date.now() + ',' + roundNum + ',' +
-        message_parts.slice(1).join(',') +
-        targetVsD1 + "," + targetVsD2 + "," + D1VsD2 + "," + outcome +
-        '\n');
-      console.log("clickedObj:" + line);
-      break;
-
-
-    case "message":
-      var msg = message_parts[1].replace(/~~~/g, '.');
-      var line = (id + ',' + Date.now() + ',' + roundNum + ',' + client.role + ',"' + msg + '"\n');
-      console.log("message:" + line);
-      break;
-  }
-  gc.streams[type].write(line, function (err) { if (err) throw err; });
+const setCustomEvents = function (socket) {
+  //empty
 };
 
-var getStim = function (game, targetStatus) {
-  return _.filter(game.trialInfo.currStim, function (x) {
-    return x.targetStatus == targetStatus;
-  })[0]['color'];
-};
+// Data output for the end of each turn
+const dataOutput = function () {
+  function commonOutput(client, message_data) {
+    return {
+      assignmentId: client.game.assignmentId,
+      workerId: client.game.workerId,
+      gameid: client.game.id,
+      epochTime: Date.now(),
+      humanTime: Date(), 
+      turnNum: client.game.turnNum + 1, // TODO: add turn number to game state
+    };
+  };
 
-// /* 
-//    The following functions should not need to be modified for most purposes
-// */
+  const chatMessageOutput = function (client, message_data) {
+    const output = Object.assign(commonOutput(client, message_data), {
+      role: client.role,
+      text: message_data[1].replace(/~~~/g, '.'),
+    });
 
-var startGame = function (game, player) {
-  // Establish write streams
-  var startTime = utils.getLongFormTime();
-  var dataFileName = startTime + "_" + game.id + ".csv";
-  utils.establishStream(game, "message", dataFileName,
-    "gameid,time,roundNum,sender,contents\n");
-  utils.establishStream(game, "clickedObj", dataFileName,
-    "gameid,time,roundNum,condition," +
-    "clickStatus,clickColH,clickColS,clickColL,clickLocS,clickLocL" +
-    "alt1Status,alt1ColH,alt1ColS,alt1ColL,alt1LocS,alt1LocL" +
-    "alt2Status,alt2ColH,alt2ColS,alt2ColL,alt2LocS,alt2LocL" +
-    "targetD1Diff,targetD2Diff,D1D2Diff,outcome\n");
-  game.newRound();
-};
+    console.log(JSON.stringify(output, null, 3));
+    return output;
+  };
+
+  const cardsOutput = function (client, message_data) {
+    const output = Object.assign(commonOutput(client, message_data), {
+      // whoseTurn: ,
+      // stage: ,
+      // p1Hand: ,
+      // p2Hand: ,
+      // onTable: ,
+      // deck: client.game.deck,
+      // deckSize: 
+      // numSwapped: 
+      // reshuffleP: 
+      // numReshuffled:
+    });
+
+    console.log(JSON.stringify(output, null, 3));
+    return output;
+  };
+
+  return {
+    'chatMessage': chatMessageOutput,
+    'cards': cardsOutput
+  };
+}();
 
 module.exports = {
-  writeData: writeData,
-  startGame: startGame,
-  onMessage: onMessage
+  onMessage: onMessage,
+  setCustomEvents: setCustomEvents,
+  dataOutput: dataOutput
 };
