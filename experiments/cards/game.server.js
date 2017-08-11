@@ -97,8 +97,8 @@ const setCustomEvents = function (socket) {
 const dataOutput = function () {
   function commonOutput(client, message_data) {
     return {
-      assignmentId: client.game.assignmentId,
-      workerId: client.game.workerId,
+      assignmentId: client.game.assignmentId || 'none',
+      workerId: client.game.workerId || 'none',
       gameid: client.game.id,
       epochTime: Date.now(),
       humanTime: Date(), 
