@@ -99,7 +99,7 @@ const dataOutput = function () {
     return {
       assignmentId: client.game.assignmentId || 'none',
       workerId: client.game.workerId || 'none',
-      gameid: client.game.id,
+      gameId: client.game.id,
       epochTime: Date.now(),
       humanTime: Date(), 
       turnNum: client.game.turnNum + 1, // TODO: add turn number to game state

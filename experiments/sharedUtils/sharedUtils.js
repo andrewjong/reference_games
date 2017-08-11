@@ -15,8 +15,9 @@ mongoDB
   .catch(err => console.log(`Couldn't connect to MongoDB! Data is not being saved\n${err}`));
 
 const gameSchema = new mongoose.Schema({
-  line: String
-})
+  line: {}
+});
+
 // Use different models if chatMessage or clickedObj because they have different number of fields
 const ChatMessage = mongoose.model('chatmessage', gameSchema);
 const State = mongoose.model('state', gameSchema);
@@ -45,23 +46,23 @@ var checkPreviousParticipant = function (workerId, callback) {
   return callback(false);
 };
 
-var writeDataToMongo = function (game, line) {
+var writeDataToMongo = function (game, obj) {
   //The data
   const postData = {
-    line: line
+    line: obj
   };
   console.log("postData: " + JSON.stringify(postData));
   // Use a different Model per message type
   let mongoData;
-  if (line.eventType == 'chatMessage') {
+  if (obj.eventType == 'chatMessage') {
     console.log('Using model chatmessage');
     mongoData = new ChatMessage(postData);
   }
-  else if (line.eventType == 'clickedObj'){
+  else if (obj.eventType == 'clickedObj'){
     console.log('Using model clickedObj');
     mongoData = new State(postData);
   } 
-  else if (line.eventType == 'state'){
+  else if (obj.eventType == 'state'){
     console.log('Using model state');
     mongoData = new State(postData);
   } 
