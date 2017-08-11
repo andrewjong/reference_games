@@ -18,8 +18,8 @@ const gameSchema = new mongoose.Schema({
   line: String
 })
 // Use different models if chatMessage or clickedObj because they have different number of fields
-const ChatMessage = mongoose.model('chatMessage', gameSchema);
-const ClickedObj = mongoose.model('clickedObj', gameSchema);
+const ChatMessage = mongoose.model('chatmessage', gameSchema);
+const State = mongoose.model('state', gameSchema);
 
 var serveFile = function (req, res) {
   var fileName = req.params[0];
@@ -59,7 +59,7 @@ var writeDataToMongo = function (game, line) {
   }
   else if (line.eventType == 'clickedObj'){
     console.log('Using model clickedObj');
-    mongoData = new ClickedObj(postData);
+    mongoData = new State(postData);
   }
   // Save to Mongo
   mongoData.save(err => {
