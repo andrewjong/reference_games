@@ -99,6 +99,8 @@ const onMessage = function (client, data) {
       // because eventType got replaced with 'dataToWrite', replace eventType with the originating event type
       data.eventType = data.origEvent;
       delete data.origEvent;
+      // convert the data to generic perspective rather than "my" and "their"
+      convertData(client.role, data);
 
       // this commonOutput only works because it's stored on the server's version
       const commonOutput = {
@@ -112,6 +114,20 @@ const onMessage = function (client, data) {
       const combinedData = Object.assign(commonOutput, data, {deckSize: data.deckSize});  // deck size useful
 
       utils.writeDataToMongo(combinedData);
+  }
+  function convertData(role, data){
+    data.whoseTurn = data.isMyTurn ? role : (role == 'player1' ? 'player2' : 'player1');
+    delete data.isMyTurn;
+
+    if (role == 'player1'){
+      data.p1Hand = data.myHand;
+      data.p2Hand = data.theirHand;
+    } else if (role == 'player2') {
+      data.p2Hand = data.myHand;
+      data.p1Hand = data.theirHand;
+    }
+    delete data.myHand;
+    delete data.theirHand;
   }
 };
 
