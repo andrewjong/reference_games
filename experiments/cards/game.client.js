@@ -161,6 +161,11 @@ const customSetup = function (game) {
     handleNewTurn(newTurn);
   });
 
+  game.socket.on('stateRequest', eventData => {
+    console.log('stateRequest received on client ' + game.my_id + ': ' + JSON.stringify(eventData));
+    attachGameState(eventData);
+  })
+
 }
 
 // This function only exists for compatibility within clientBase.js, as 'drawScreen()' is called in onconnect

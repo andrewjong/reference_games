@@ -69,11 +69,17 @@ var sharedSetup = function (game) {
   $('#chatbox').on('input', function () {
     console.log("inputting...");
     if ($('#chatbox').val() != "" && !globalGame.sentTyping) {
-      game.socket.send('playerTyping.true');
+      game.socket.send({
+        eventType: 'playerTyping',
+        isTyping: true
+      });
       globalGame.typingStartTime = Date.now();
       globalGame.sentTyping = true;
     } else if ($("#chatbox").val() == "") {
-      game.socket.send('playerTyping.false');
+      game.socket.send({
+        eventType: 'playerTyping',
+        isTyping: false
+      });
       globalGame.sentTyping = false;
       console.log("globalGame is being used here!");
     }
@@ -81,11 +87,15 @@ var sharedSetup = function (game) {
 
   // Tell server when client types something in the chatbox
   $('form').submit(function () {
-    var origMsg = $('#chatbox').val();
-    var timeElapsed = Date.now() - globalGame.typingStartTime;
-    var msg = ['chatMessage', origMsg.replace(/\./g, '~~~'), timeElapsed].join('.');
+    const message = $('#chatbox').val();
+    const timeElapsed = Date.now() - globalGame.typingStartTime;
+    const packet = {
+      eventType: 'chatMessage',
+      message,
+      timeElapsed
+    }
     if ($('#chatbox').val() != '') {
-      game.socket.send(msg);
+      game.socket.send(packet);
       globalGame.sentTyping = false;
       $('#chatbox').val('');
     }

@@ -402,14 +402,23 @@ function getCounterString(num, descrip) {
 }
 
 /**
+ * Get an object representing the current game state. theirHand and myHand are from this player's perspective
+ * @return {isMyTurn, deck, theirHand, onTable, myHand}
+ */
+function getState(){
+  return {
+    isMyTurn,
+    deck,
+    theirHand,
+    onTable,
+    myHand
+  }
+}
+/**
  * Logs the state of the cards game on the client side.
  */
 function logState() {
-  console.log('isMyTurn: ' + isMyTurn);
-  console.log('Deck: ' + deck);
-  console.log('Their Hand: ' + theirHand);
-  console.log('On Table: ' + onTable);
-  console.log('My Hand: ' + myHand);
+  console.log(JSON.stringify(getState()));
 }
 
 /**

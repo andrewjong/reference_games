@@ -8,10 +8,14 @@
  * @param {Number} c2 the second card to swap
  */
 function sendSwapUpdate(c1, c2) {
-    const packet = ["swapUpdate", c1, c2];
-    console.log('swapUpdate packet: ' + packet)
+    const packet = {
+        eventType: "swapUpdate",
+        c1,
+        c2
+    }
+    console.log('swapUpdate packet: ' + JSON.stringify(packet))
     console.log("Emitting swapUpdate with packet...");
-    globalGame.socket.send(packet.join('.'));
+    globalGame.socket.send(packet);
 }
 
 /**
@@ -37,10 +41,12 @@ function handleSwapUpdate(c1, c2) {
  * Lets the server know the turn has ended.
  */
 function sendEndTurn() {
-    const packet = ['endTurn', deck, onTable];
+    const packet = Object.assign(
+        { eventType: 'endTurn' },
+        getState());
     console.log('endTurn packet: ' + packet);
     console.log("Emitting endTurn with packet...");
-    globalGame.socket.send(packet.join('.'));
+    globalGame.socket.send(packet);
 }
 
 /**
@@ -55,19 +61,28 @@ function handleEndTurn(reshuffled) {
     reshuffledText.setText(getCounterString(reshuffled.n, 'reshuffled'));
     //TODO: disable card swaps while transitioning turns
 
-    const packet = ['nextTurnRequest', deck];
+    const packet = { eventType: 'nextTurnRequest', deck };
     console.log('nextTurnRequest packet: ' + packet);
     console.log("Emitting nextTurnRequest with packet...");
-    globalGame.socket.send(packet.join('.'));
+    globalGame.socket.send(packet);
 }
 
 /**
  * Handle the update for the new turn
  * @param {Object} newTurn object containing the new turn info: Array<Number> deck, Array<Number> onTable
  */
-function handleNewTurn(newTurn){
-    console.log('New turn received!');
+function handleNewTurn(newTurn) {
     const iMT = !isMyTurn;
     //TODO: animations for dealing the new turn cards
-    updatePhaser({isMyTurn: iMT, deck: newTurn.deck, onTable: newTurn.onTable});
+    updatePhaser({ isMyTurn: iMT, deck: newTurn.deck, onTable: newTurn.onTable });
+}
+
+function attachGameState(eventData) {
+    const packet = Object.assign(
+        {eventType: 'dataToWrite'},
+        eventData, 
+        getState());
+    console.log('dataToWrite packet: ' + packet);
+    console.log("Emitting dataToWrite with packet...");
+    globalGame.socket.send(packet);
 }

@@ -10,17 +10,18 @@ const cardLogic = require(__base + 'cards/card-logic.js');
 // to the server (check the client_on_click function in game.client.js)
 // with the coordinates of the click, which this function reads and
 // applies.
-const onMessage = function (client, message) {
-  //Cut the message up into sub components
-  const message_parts = message.split('.');
+const onMessage = function (client, data) {
 
-  //The first is always the type of message
-  const message_type = message_parts[0];
+  // The eventType is stored in data.eventType
+  const eventType = data.eventType;
 
   // logging for debug
-  if (message_type != 'h') {// skip the inactive window message
+  if (eventType != 'h') {// skip the inactive window message
     console.log('Server received message:');
-    message_parts.forEach((m, i) => console.log(`->[${i}]: <${typeof m}> ${m}`));
+    for(let attribute in data){
+      const value = data[attribute];
+      console.log(`->[${attribute}]: <${typeof value}> ${value}`);
+    }
   }
 
   //Extract important variables
@@ -31,37 +32,42 @@ const onMessage = function (client, message) {
   const others = gc.get_others(client.userid);
   let deck;
   let onTable;
-  switch (message_type) {
 
+  /**
+   * Request the client's current state to add to the eventData before writing. This is because the server does
+   * not store a copy of the client's state - it must ask the client for it.
+   * @param eventData an object for the event data
+   */
+  function sendWriteRequest(eventData){
+    // ask the client to attach its current game state to the eventData
+    target.instance.emit('stateRequest', Object.assign({origEvent:eventType}, eventData));
+  }
+
+  switch (eventType) {
     // player swapped two cards
     case 'swapUpdate':
+      sendWriteRequest(data);
       others.forEach(p => {
         console.log("Emitting swapUpdate to player: " + p.id);
-        p.player.instance.emit('swapUpdate', { c1: message_parts[1], c2: message_parts[2] });
+        p.player.instance.emit('swapUpdate', { c1: data.c1, c2: data.c2 });
       })
       break;
     // the player ended their turn
     case 'endTurn':
       // reshuffling logic here
-      deck = utils.toNumArray(message_parts[1]);
-      onTable = utils.toNumArray(message_parts[2]);
-      const reshuffle = cardLogic.reshuffle(gc.reshuffleP, onTable, deck);
+      const reshuffle = cardLogic.reshuffle(gc.reshuffleP, data.onTable, data.deck);
       // TODO: SOMETHING HERE ABOUT WRITING THE END STATE DATA
       all.forEach(p => {
         console.log("Emitting endTurn to player: " + p.id);
         p.player.instance.emit('endTurn', reshuffle);
       });
-
       break;
+
     // client is requesting information to start the next turn
     case 'nextTurnRequest':
-      deck = utils.toNumArray(message_parts[1]);
-      onTable = cardLogic.dealCards(deck, gc.options.CARDS_ON_TABLE); 
-      const newTurn = { deck, onTable };
-      gc.turnNum++;
-
       // FIXME: I feel uncomfortable about the new draw being done per each client, instead of synced with the server. Technically data should be the same, but seems bad practice
-
+      const newTurn = { deck: data.deck, onTable: data.onTable };
+      gc.turnNum++;
       // TODO: SOMETHING HERE ABOUT WRITING THE START STATE DATA
 
       console.log("Emitting newTurn to player: " + target.i);
@@ -72,76 +78,94 @@ const onMessage = function (client, message) {
     case 'playerTyping':
       _.map(others, function (p) {
         p.player.instance.emit('playerTyping',
-          { typing: message_parts[1] });
+          { typing: data.isTyping });
       });
       break;
 
     // a message was sent
     case 'chatMessage':
       if (client.game.player_count == 2 && !gc.paused) {
+        const message = data.message.replace(/~~~/g, '.');
         // Update others
-        const msg = message_parts[1].replace(/~~~/g, '.');
+        sendWriteRequest({message});
         _.map(all, function (p) {
-          p.player.instance.emit('chatMessage', { user: client.userid, msg: msg });
+          p.player.instance.emit('chatMessage', { user: client.userid, msg: message });
         });
       }
       break;
+
+    // the client replied with the current game state to write. now we can explicitly call the write function
+    case 'dataToWrite':
+      // because eventType got replaced with 'dataToWrite', replace eventType with the originating event type
+      data.eventType = data.origEvent;
+      delete data.origEvent;
+
+      // this commonOutput only works because it's stored on the server's version
+      const commonOutput = {
+        assignmentid: client.game.assignmentid || 'none',
+        workerid: client.game.workerid || 'none',
+        gameid: client.game.id,
+        epochTime: Date.now(),
+        humanTime: Date(), 
+        turnNum: client.game.turnNum + 1, // TODO: add turn number to game state
+      }
+      const combinedData = Object.assign(commonOutput, data, {deckSize: data.deckSize});  // deck size useful
+
+      utils.writeDataToMongo(combinedData);
   }
 };
 
-const setCustomEvents = function (socket) {
-  //empty
-};
+const setCustomEvents = function (socket) { /*empty. can't delete because compatibility*/ };
 
-// Data output for the end of each turn
-const dataOutput = function () {
-  function commonOutput(client, message_data) {
-    return {
-      assignmentId: client.game.assignmentId || 'none',
-      workerId: client.game.workerId || 'none',
-      gameId: client.game.id,
-      epochTime: Date.now(),
-      humanTime: Date(), 
-      turnNum: client.game.turnNum + 1, // TODO: add turn number to game state
-    };
-  };
+// // Data output for the end of each turn
+// const dataOutput = function () {
+//   function commonOutput(client, data) {
+//     return {
+//       assignmentid: client.game.assignmentid || 'none',
+//       workerid: client.game.workerid || 'none',
+//       gameid: client.game.id,
+//       epochTime: Date.now(),
+//       humanTime: Date(), 
+//       turnNum: client.game.turnNum + 1, // TODO: add turn number to game state
+//     };
+//   };
 
-  const chatMessageOutput = function (client, message_data) {
-    const output = Object.assign(commonOutput(client, message_data), {
-      role: client.role,
-      text: message_data[1].replace(/~~~/g, '.'),
-    });
+//   const chatMessageOutput = function (client, data) {
+//     const output = Object.assign(commonOutput(client, message_data), {
+//       role: client.role,
+//       text: data.message.replace(/~~~/g, '.'),
+//     });
 
-    console.log(JSON.stringify(output, null, 3));
-    return output;
-  };
+//     console.log(JSON.stringify(output, null, 3));
+//     return output;
+//   };
 
-  const cardsOutput = function (client, message_data) {
-    const output = Object.assign(commonOutput(client, message_data), {
-      // whoseTurn: ,
-      // stage: ,
-      // p1Hand: ,
-      // p2Hand: ,
-      // onTable: ,
-      // deck: client.game.deck,
-      // deckSize: 
-      // numSwapped: 
-      // reshuffleP: 
-      // numReshuffled:
-    });
+//   const cardsOutput = function (client, message_data) {
+//     const output = Object.assign(commonOutput(client, message_data), {
+//       // whoseTurn: ,
+//       // stage: ,
+//       // p1Hand: ,
+//       // p2Hand: ,
+//       // onTable: ,
+//       // deck: client.game.deck,
+//       // deckSize: 
+//       // numSwapped: 
+//       // reshuffleP: 
+//       // numReshuffled:
+//     });
 
-    console.log(JSON.stringify(output, null, 3));
-    return output;
-  };
+//     console.log(JSON.stringify(output, null, 3));
+//     return output;
+//   };
 
-  return {
-    'chatMessage': chatMessageOutput,
-    'cards': cardsOutput
-  };
-}();
+//   return {
+//     'chatMessage': chatMessageOutput,
+//     'cards': cardsOutput
+//   };
+// }();
 
 module.exports = {
   onMessage: onMessage,
   setCustomEvents: setCustomEvents,
-  dataOutput: dataOutput
+  // dataOutput: dataOutput
 };

@@ -22,24 +22,24 @@ class ReferenceGameServer {
   /*
     Writes data specified by experiment instance to csv and/or mongodb
   */
-  writeData(client, eventType, message_parts) {
-    var output = this.customServer.dataOutput;
-    var game = client.game;
-    if (_.has(output, eventType)) {
-      var dataPoint = _.extend(output[eventType](client, message_parts), { eventType });
-      if (_.includes(game.dataStore, 'csv'))
-        utils.writeDataToCSV(game, dataPoint);
-      if (_.includes(game.dataStore, 'mongo'))
-        utils.writeDataToMongo(game, dataPoint);
-    }
-  }
+  // writeData(client, data) {
+  //   const eventType = data.eventType;
+  //   const output = this.customServer.dataOutput;
+  //   const game = client.game;
+  //   if (_.has(output, eventType)) {
+  //     var dataPoint = _.extend(output[eventType](client, message_parts), { eventType });
+  //     if (_.includes(game.dataStore, 'csv'))
+  //       utils.writeDataToCSV(game, dataPoint);
+  //     if (_.includes(game.dataStore, 'mongo'))
+  //       utils.writeDataToMongo(game, dataPoint);
+  //   }
+  // }
 
-  onMessage(client, message) {
-    var message_parts = message.split('.');
-    this.customServer.onMessage(client, message);
-    if (!_.isEmpty(client.game.dataStore)) {
-      this.writeData(client, message_parts[0], message_parts);
-    }
+  onMessage(client, data) {
+    this.customServer.onMessage(client, data);
+    // if (!_.isEmpty(client.game.dataStore)) {
+    //   this.writeData(client, data);
+    // }
   }
 
   findGame(player) {
