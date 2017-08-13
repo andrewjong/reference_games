@@ -54,6 +54,7 @@ var writeDataToMongo = function (data) {
   if (data.eventType == 'chatMessage') {
     console.log('Using model chatmessage');
     mongoData = new ChatMessage(data);
+    mongoData.markModified('data');
   }
   else if (data.eventType == 'state'){
     console.log('Using model state');
