@@ -111,7 +111,7 @@ const onMessage = function (client, data) {
         humanTime: Date(), 
         turnNum: client.game.turnNum + 1, // TODO: add turn number to game state
       }
-      const combinedData = Object.assign(commonOutput, data, {deckSize: data.deckSize});  // deck size useful
+      const combinedData = Object.assign(commonOutput, data, {deckSize: data.deck.length});  // deck size useful
 
       utils.writeDataToMongo(combinedData);
   }

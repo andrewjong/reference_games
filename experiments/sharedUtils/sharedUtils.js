@@ -15,7 +15,7 @@ mongoDB
   .catch(err => console.log(`Couldn't connect to MongoDB! Data is not being saved\n${err}`));
 
 const gameSchema = new mongoose.Schema({
-  data: {}
+  data: mongoose.Schema.Types.Mixed
 });
 
 // Use different models if chatMessage or clickedObj because they have different number of fields
@@ -53,7 +53,8 @@ var writeDataToMongo = function (data) {
   let mongoData;
   if (data.eventType == 'chatMessage') {
     console.log('Using model chatmessage');
-    mongoData = new ChatMessage(data);
+    mongoData = new ChatMessage;
+    mongoData.data = data;
     mongoData.markModified('data');
   }
   else if (data.eventType == 'state'){
