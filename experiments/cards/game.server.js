@@ -101,30 +101,30 @@ const onMessage = function (client, data) {
       // because eventType got replaced with 'dataToWrite', replace eventType with the originating event type
       data.eventType = data.origEvent;
       delete data.origEvent;
-      // convert the data to generic perspective rather than "my" and "their"
-      convertData(client.role, data);
-
       // this commonOutput only works because it's stored on the server's version
       const commonOutput = {
-        assignmentid: client.game.assignmentid || 'none',
-        workerid: client.game.workerid || 'none',
-        gameid: client.game.id,
+        assignmentid: gc.assignmentid || 'none',
+        workerid: gc.workerid || 'none',
+        gameid: gc.id,
         epochTime: Date.now(),
         humanTime: Date(), 
-        turnNum: client.game.turnNum + 1, // TODO: add turn number to game state
+        turnNum: gc.turnNum + 1, // TODO: add turn number to game state
       }
+      // convert the data to generic perspective rather than "my" and "their"
+      data.role = client.role;
+      convertData(data);
       const combinedData = Object.assign(commonOutput, data, {deckSize: data.deck.length});  // deck size useful
 
       utils.writeDataToMongo(combinedData);
   }
-  function convertData(role, data){
-    data.whoseTurn = data.isMyTurn ? role : (role == 'player1' ? 'player2' : 'player1');
+  function convertData(data){
+    data.whoseTurn = data.isMyTurn ? data.role : (data.role == 'player1' ? 'player2' : 'player1');
     delete data.isMyTurn;
 
-    if (role == 'player1'){
+    if (data.role == 'player1'){
       data.p1Hand = data.myHand;
       data.p2Hand = data.theirHand;
-    } else if (role == 'player2') {
+    } else if (data.role == 'player2') {
       data.p2Hand = data.myHand;
       data.p1Hand = data.theirHand;
     }
