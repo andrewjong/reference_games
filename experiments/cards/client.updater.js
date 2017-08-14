@@ -77,6 +77,11 @@ function handleNewTurn(newTurn) {
     updatePhaser({ isMyTurn: iMT, deck: newTurn.deck, onTable: newTurn.onTable });
 }
 
+/**
+ * Attaches the game state to the given eventData object and sends the it back to the server using the event type 'dataToWrite'.
+ * See the getState() function for attached props.
+ * @param {Object} eventData 
+ */
 function attachGameState(eventData) {
     const packet = Object.assign(
         {eventType: 'dataToWrite'},

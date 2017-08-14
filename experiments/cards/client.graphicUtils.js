@@ -326,13 +326,13 @@ function reshuffleAnimation(numReshuffle) {
 }
 /**
  * Move a sprite to a location, with the option of fading or destroying it in the process.
- * @param {Phaser.Sprite} sprite the sprite
- * @param {Number} x x pos to move to
- * @param {Number} y y pos t omove to
- * @param {Number} moveTime time to move there
- * @param {Number} waitTime time before moving
- * @param {Boolean} fadeBool whether to fade out
- * @param {Boolean} destroyBool whether to destroy sprite on finish
+ * @param {Phaser.Sprite} sprite - the sprite
+ * @param {Number} x - x pos to move to
+ * @param {Number} y - y pos t omove to
+ * @param {Number} moveTime - time to move there
+ * @param {Number} waitTime - time before moving
+ * @param {Boolean} fadeBool - whether to fade out
+ * @param {Boolean} destroyBool - whether to destroy sprite on finish
  */
 function moveTo(sprite, x, y, moveTime, waitTime, fadeBool, destroyBool) {
   phaser.physics.arcade.enable(sprite);
@@ -374,8 +374,8 @@ function fadeOut(card, time) {
 
 /**
  * Random number between min and max
- * @param {Number} min
- * @param {Number} max
+ * @param {Number} min inclusive
+ * @param {Number} max exclusive
  */
 function randBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -393,8 +393,8 @@ function getTurnString() {
 
 /**
  * Get the string describing information about the cards.
- * @param {Number} num number of cards
- * @param {String} counterType either 'left' for 'left in deck' or 'reshuffled'
+ * @param {Number} num - number of cards
+ * @param {string} descrip - the description to add, e.g. "in deck"
  */
 function getCounterString(num, descrip) {
   const plural = (num == 1) ? '' : 's';
@@ -403,7 +403,13 @@ function getCounterString(num, descrip) {
 
 /**
  * Get an object representing the current game state. theirHand and myHand are from this player's perspective
- * @return {isMyTurn, deck, theirHand, onTable, myHand}
+ * @returns {Object} object - the state of the game
+ * @returns {boolean} object.isMyTurn - whether my turn or not
+ * @returns {Number[]} object.deck - the cards in the deck
+ * @returns {Number[]} object.onTable - the cards currently on the table
+ * @returns {Number[]} object.myHand - the cards in the player's hand
+ * @returns {Number[]} object.theirHand - the cards in the partner's hand
+ * {isMyTurn, deck, theirHand, onTable, myHand}
  */
 function getState(){
   return {
