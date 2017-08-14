@@ -40,17 +40,19 @@ const onMessage = function (client, data) {
    */
   function sendWriteRequest(eventData){
     // ask the client to attach its current game state to the eventData
-    target.instance.emit('stateRequest', Object.assign({origEvent:eventType}, eventData));
+    const packet = Object.assign({origEvent:eventType}, eventData);
+    packet.eventType = 'dataToWrite';
+    target.instance.emit('stateRequest', packet);
   }
 
   switch (eventType) {
     // player swapped two cards
     case 'swapUpdate':
-      sendWriteRequest(data);
       others.forEach(p => {
         console.log("Emitting swapUpdate to player: " + p.id);
         p.player.instance.emit('swapUpdate', { c1: data.c1, c2: data.c2 });
       })
+      sendWriteRequest(data);
       break;
     // the player ended their turn
     case 'endTurn':

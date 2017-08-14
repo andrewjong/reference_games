@@ -12,7 +12,7 @@ const mongoose = require('mongoose');
 const mongoDB = mongoose.connect(process.env.MONGODB_URI, { useMongoClient: true });
 mongoDB
   .then(db => console.log("MongoDB connected :)"))
-  .catch(err => console.log(`Couldn't connect to MongoDB! Data is not being saved\n${err}`));
+  .catch(err => console.log(`Couldn't connect to MongoDB! Data is not being saved. If you are testing, this is okay.\n\t${err}`));
 
 const gameSchema = new mongoose.Schema({
   data: mongoose.Schema.Types.Mixed
@@ -50,26 +50,30 @@ var checkPreviousParticipant = function (workerId, callback) {
 var writeDataToMongo = function (data) {
   console.log("Data writing to mongo: " + JSON.stringify(data));
   // Use a different Model per message type
-  let mongoData;
+  let mongoData = null;
   if (data.eventType == 'chatMessage') {
     console.log('Using model chatmessage');
     mongoData = new ChatMessage;
-    mongoData.data = data;
-    mongoData.markModified('data');
   }
-  else if (data.eventType == 'state'){
+  else if (data.eventType == 'state') {
     console.log('Using model state');
-    mongoData = new State(data);
-  } 
-  else if (data.eventType == 'cardSwap'){
+    mongoData = new State;
+  }
+  else if (data.eventType == 'swapUpdate') {
     console.log('Using model cardSwap');
-    mongoData = new CardSwap(data);
+    mongoData = new CardSwap;
   }
   // Save to Mongo
-  mongoData.save(err => {
-    if (err) console.log('Error writing to mongo! ' + err);
-    else console.log('Data saved successfully to mongo');
-  });
+  if (mongoData != null) {
+    mongoData.data = data;
+    mongoData.markModified('data');
+    mongoData.save(err => {
+      if (err) console.log('Error writing to mongo! ' + err);
+      else console.log('Data saved successfully to mongo');
+    });
+  }
+  else
+    console.log(`Not writing to mongo because data.eventType=${data.eventType} is unaccounted for.`);
 };
 
 var UUID = function () {
@@ -235,7 +239,7 @@ var series = function makeSeries(lb, ub) {
  * Convert a string of csv numbers to a numbers array
  * @param {String} string string of numbers separated by commas
  */
-const toNumArray = function(string){
+const toNumArray = function (string) {
   return string.split(',').map(n => Number(n));
 }
 
