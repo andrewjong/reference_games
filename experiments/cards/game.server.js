@@ -30,18 +30,16 @@ const onMessage = function (client, data) {
   const all = gc.get_active_players();
   const target = gc.get_player(client.userid);
   const others = gc.get_others(client.userid);
-  let deck;
-  let onTable;
 
   /**
    * Request the client's current state to add to the eventData before writing. This is because the server does
-   * not store a copy of the client's state - it must ask the client for it.
-   * @param eventData an object for the event data
+   * not store a copy of the client's state - it must ask the client for it. Call this function to write data.
+   * @param {Object} eventData - an object containing the event data
    */
   function sendWriteRequest(eventData){
     // ask the client to attach its current game state to the eventData
-    const packet = Object.assign({origEvent:eventType}, eventData);
-    packet.eventType = 'dataToWrite';
+    const packet = Object.assign({ origEvent: eventType }, eventData);
+    packet.eventType = 'dataToWrite'; // technically this assignment is optional. but needed if called as sendWriteRequest(data)
     target.instance.emit('stateRequest', packet);
   }
 
@@ -63,6 +61,8 @@ const onMessage = function (client, data) {
         console.log("Emitting endTurn to player: " + p.id);
         p.player.instance.emit('endTurn', reshuffle);
       });
+      // Note: I think client should have updated, but I might be wrong. We may need to fix this with a promise
+      sendWriteRequest({state: 'end', numReshuffled: reshuffle.n});
       break;
 
     // client is requesting information to start the next turn
@@ -71,10 +71,10 @@ const onMessage = function (client, data) {
       const newOnTable = cardLogic.dealCards(data.deck, gc.options.CARDS_ON_TABLE);
       const newTurn = { deck: data.deck, onTable: newOnTable };
       gc.turnNum++;
-      // TODO: SOMETHING HERE ABOUT WRITING THE START STATE DATA
 
       console.log("Emitting newTurn to player: " + target.id);
       target.instance.emit('newTurn', newTurn);
+      sendWriteRequest({state: 'start'});
       break;
 
     // a player is typing
@@ -88,11 +88,10 @@ const onMessage = function (client, data) {
     // a message was sent
     case 'chatMessage':
       if (client.game.player_count == 2 && !gc.paused) {
-        const message = data.message.replace(/~~~/g, '.');
         // Update others
-        sendWriteRequest({message});
+        sendWriteRequest(data);
         _.map(all, function (p) {
-          p.player.instance.emit('chatMessage', { user: client.userid, msg: message });
+          p.player.instance.emit('chatMessage', { user: client.userid, msg: data.message });
         });
       }
       break;
@@ -110,6 +109,7 @@ const onMessage = function (client, data) {
         epochTime: Date.now(),
         humanTime: Date(), 
         turnNum: gc.turnNum + 1, // TODO: add turn number to game state
+        reshuffleP: gc.reshuffleP
       }
       // convert the data to generic perspective rather than "my" and "their"
       data.role = client.role;

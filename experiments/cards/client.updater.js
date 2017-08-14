@@ -44,7 +44,7 @@ function sendEndTurn() {
     const packet = Object.assign(
         { eventType: 'endTurn' },
         getState());
-    console.log('endTurn packet: ' + packet);
+    console.log('endTurn packet: ' + JSON.stringify(packet));
     console.log("Emitting endTurn with packet...");
     globalGame.socket.send(packet);
 }
@@ -62,7 +62,7 @@ function handleEndTurn(reshuffled) {
     //TODO: disable card swaps while transitioning turns
 
     const packet = { eventType: 'nextTurnRequest', deck };
-    console.log('nextTurnRequest packet: ' + packet);
+    console.log('nextTurnRequest packet: ' + JSON.stringify(packet));
     console.log("Emitting nextTurnRequest with packet...");
     globalGame.socket.send(packet);
 }
@@ -87,7 +87,7 @@ function attachGameState(eventData) {
         {eventType: 'dataToWrite'},
         eventData, 
         getState());
-    console.log('dataToWrite packet: ' + packet);
+    console.log('dataToWrite packet: ' + JSON.stringify(packet));
     console.log("Emitting dataToWrite with packet...");
     globalGame.socket.send(packet);
 }

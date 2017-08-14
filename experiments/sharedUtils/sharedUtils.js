@@ -55,7 +55,7 @@ var writeDataToMongo = function (data) {
     console.log('Using model chatmessage');
     mongoData = new ChatMessage;
   }
-  else if (data.eventType == 'state') {
+  else if (data.eventType == 'endTurn' || data.eventType == 'nextTurnRequest') {
     console.log('Using model state');
     mongoData = new State;
   }
