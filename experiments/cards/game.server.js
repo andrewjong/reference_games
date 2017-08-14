@@ -68,11 +68,12 @@ const onMessage = function (client, data) {
     // client is requesting information to start the next turn
     case 'nextTurnRequest':
       // FIXME: I feel uncomfortable about the new draw being done per each client, instead of synced with the server. Technically data should be the same, but seems bad practice
-      const newTurn = { deck: data.deck, onTable: data.onTable };
+      const newOnTable = cardLogic.dealCards(data.deck, gc.options.CARDS_ON_TABLE);
+      const newTurn = { deck: data.deck, onTable: newOnTable };
       gc.turnNum++;
       // TODO: SOMETHING HERE ABOUT WRITING THE START STATE DATA
 
-      console.log("Emitting newTurn to player: " + target.i);
+      console.log("Emitting newTurn to player: " + target.id);
       target.instance.emit('newTurn', newTurn);
       break;
 
