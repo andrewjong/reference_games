@@ -63,6 +63,7 @@ const onMessage = function (client, data) {
       });
       // Note: I think client should have updated, but I might be wrong. We may need to fix this with a promise
       sendWriteRequest({state: 'end', numReshuffled: reshuffle.n});
+      gc.turnNum++;
       break;
 
     // client is requesting information to start the next turn
@@ -70,7 +71,6 @@ const onMessage = function (client, data) {
       // FIXME: I feel uncomfortable about the new draw being done per each client, instead of synced with the server. Technically data should be the same, but seems bad practice
       const newOnTable = cardLogic.dealCards(data.deck, gc.options.CARDS_ON_TABLE);
       const newTurn = { deck: data.deck, onTable: newOnTable };
-      gc.turnNum++;
 
       console.log("Emitting newTurn to player: " + target.id);
       target.instance.emit('newTurn', newTurn);
