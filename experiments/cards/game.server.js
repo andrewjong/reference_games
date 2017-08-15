@@ -60,12 +60,17 @@ const onMessage = function (client, data) {
       data.numReshuffled = reshuffle.n;
       data.state = 'end';
       writeData(data);
-      all.forEach(p => {
-        console.log("Emitting endTurn to player: " + p.id);
-        p.player.instance.emit('endTurn', reshuffle);
-      });
-      // TODO: something about end game state
-      gc.turnNum++;
+
+      if (cardLogic.hasWrappedStraight(data.p1Hand, data.p2Hand) || data.deck.length == 0) {
+        // won!!!!!!!!!!!!!!!!!!!
+        all.forEach(p => p.player.instance.disconnect());
+      } else {
+        all.forEach(p => {
+          console.log("Emitting endTurn to player: " + p.id);
+          p.player.instance.emit('endTurn', reshuffle);
+        });
+        gc.turnNum++;
+      }
       break;
 
     // a player is requesting new turn data
@@ -109,7 +114,7 @@ const onMessage = function (client, data) {
    * @param {Object} data - the data to write
    * @param {boolean} convertData - whether data needs to be converted to generic perspective. default true
    */
-  function writeData(data, convertData=true) {
+  function writeData(data, convertData = true) {
     // assign common output
     Object.assign(data, {
       assignmentid: gc.assignmentid || 'none',
