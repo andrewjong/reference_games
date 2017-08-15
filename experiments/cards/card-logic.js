@@ -11,7 +11,7 @@ function reshuffle(p, cards, deck) {
     cards.forEach(c => {
         if (Math.random() <= p) {
             n++;
-            deck.push(c.frame);
+            deck.push(c);
         }
     });
     const newDeck = _.shuffle(deck);
