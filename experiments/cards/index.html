@@ -11,14 +11,12 @@
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
 
     <!-- Include some extra functional programming tools -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min.js">
-
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min.js"></script>
 
     <!-- Load jQuery, which lets us handle mouse events -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 
-    <!-- Load Phaser -->
+    <!-- Load Phaser & Plugins -->
     <script type="text/javascript" src="phaser.js"></script>
     <script type="text/javascript" src="Phasetips.js"></script>
 
@@ -50,9 +48,10 @@
 </head>
 
 <body>
+    <!-- MAIN GAME -->
     <div id='main'>
         <span>
-            <!-- GAME VIEWPORT -->
+            <!-- game viewport -->
             <div id="viewport" > 
                 <br>
                 Waiting for another player...
@@ -62,7 +61,7 @@
                 <image src="forms/images/loading.gif">
             </div>
 
-            <!-- CHAT BOX -->
+            <!-- chat box -->
             <div id='message_panel' >
                 <ul id="messages"></ul>
                 <hr>
@@ -76,6 +75,54 @@
 
         </span>
     </div>
-</body>
 
+        <!-- EXIT SURVEY -->
+        <div id="exit_survey" style="display:none">
+            <br><br><br>
+            <p> Did you believe you were playing against another human player? </p>
+            <select onChange="dropdownTip('human::' + this.value)">
+                <option value=""></option>
+                <option value="yes">Yes, I thought they were a human</option>
+                <option value="no">No, I thought it was a computer program</option>
+            </select>
+            <p id='humanResult' style="display:none;color:red"> Thank you for your response -- in fact, all players were paired with other human turkers! </p>
+
+            <br> <br>
+            <p> Are you a native English speaker? </p>
+            <select onChange="dropdownTip('language::' + this.value)">
+                <option value = ""></option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+            <br><br>
+            <p> Did you read the instructions and do you think you did the HIT correctly? </p>
+            <select onChange="dropdownTip('confused::' + this.value)">
+                <option value = ""></option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+                <option value="confused">I was confused</option>
+            </select>
+
+            <br><br>
+            <p> How much did you like working with your partner? </p>
+            <select onChange="dropdownTip('partner::' + this.value)">
+                <option value = ""></option>
+                <option value="not much">Not that much</option>
+                <option value="okay">My partner was fine</option>
+                <option value="liked">I liked working with my partner</option>
+                <option value="loved">I really enjoyed working with my partner</option>
+            </select>
+            <br><br>
+
+            <p> Do you have any comments on the experiment? </p>
+            <textarea id='comments' rows="4" cols="50"></textarea>
+            <br>
+
+            <p> Note: Clicking this button should automatically submit the HIT and close this tab. There is no need to input a code.</p>
+            <p> If you experience a problem submitting, please contact stanfordpraglab@gmail.com for compensation. </p>
+
+            <div><button id="surveySubmit" onclick="dropdownTip('submit')" type="button">Submit HIT</button></div>
+        </div>
+
+</body>
 </html>

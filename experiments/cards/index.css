@@ -104,6 +104,9 @@ ALOT...don't understand how to adjust that.*/
 	left:0; right:0; top:0%; bottom: 0;
 	position: absolute;
 }
+#exit_survey{
+	text-align: center;
+}
 
 /*height and width originally 80vh*/
 #viewport {
