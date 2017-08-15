@@ -47,6 +47,10 @@ function handleSwapUpdate(c1, c2) {
     swapPosition(spritesToSwap[0], spritesToSwap[1]);
 }
 
+function handleEndTurnAllowed(isAllowed){
+    console.log('Handling end-turn-allowed: isAllowed=' + isAllowed);
+    turnButtonSetEnabled(isAllowed);
+}
 /**
  * Lets the server know the turn has ended.
  */
@@ -64,6 +68,7 @@ function sendEndTurn() {
  * @param {Object{newDeck, n}} reshuffled 
  */
 function handleEndTurn(reshuffled) {
+    console.log('Handling end turn');
     deck = reshuffled.newDeck;
 
     reshuffleAnimation(reshuffled.n);
@@ -82,6 +87,7 @@ function handleEndTurn(reshuffled) {
  * @param {Object} newTurn object containing the new turn info: Array<Number> deck, Array<Number> onTable
  */
 function handleNewTurn(newTurn) {
+    console.log('Handling new turn');
     const iMT = !isMyTurn;
     //TODO: animations for dealing the new turn cards
     updatePhaser({ isMyTurn: iMT, deck: newTurn.deck, onTable: newTurn.onTable });

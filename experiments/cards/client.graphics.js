@@ -98,7 +98,8 @@ function updatePhaser(cards) {
         myHandGroup = makeHandGroup(myHand, true);
     }
     // set appropriate enable and disables on sprites
-    turnButtonSetEnabled(isMyTurn);
+    // EDIT: Disabled the below because don't want to enable until at least 1 swap. Gets enabled in client.updater.js on handleEndTurnAllowed()
+    // turnButtonSetEnabled(isMyTurn); 
     onTableGroup.forEach(isMyTurn ? enableCard : disableCard);
 
     console.log('Cards after updatePhaser: ');
@@ -163,6 +164,7 @@ playState.prototype = {
         turnButton = phaser.add.button(phaser.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad,
             phaser.world.height - graphics.TURN_BUTTON_HEIGHT - centerInBar,
             'end-turn', sendEndTurn, this, 0, 1, 2);
+        turnButtonSetEnabled(false);
 
         loaded = true;
         console.log('Phaser client instance loaded');

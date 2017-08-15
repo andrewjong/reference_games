@@ -165,8 +165,8 @@ let stopDrag = function (card, pointer) {
   swappableCards.some(o => {
     if (!(card === o) && card.overlap(o) && shouldSwap(card, o)) {
       // console.log(`Found overlap for ${o.frame}`);
-      swapPosition(card, o);
       sendSwapUpdate(card.frame, o.frame);
+      swapPosition(card, o);
       didOverlap = true;
     }
   })

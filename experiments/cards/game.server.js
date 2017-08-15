@@ -40,6 +40,11 @@ const onMessage = function (client, data) {
 
     // player swapped two cards
     case 'swapUpdate':
+      // only allow to end turn if one of the cards swapped was on the table
+      let swappedWithTable = data.onTable.some(c => c == data.c1 || c == data.c2);
+      if (swappedWithTable)
+        target.instance.emit('endTurnAllowed', true);
+
       others.forEach(p => {
         console.log("Emitting swapUpdate to player: " + p.id);
         p.player.instance.emit('swapUpdate', { c1: data.c1, c2: data.c2 });

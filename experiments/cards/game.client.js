@@ -137,17 +137,23 @@ var client_onjoingame = function (num_players, role) {
   }
 };
 
-// Custom event listeners
+// Custom event listeners. The handle methods are in client.updater.js
 const customSetup = function (game) {
+  // Notification of the other player's swap update
   game.socket.on('swapUpdate', swapped => {
     console.log('swapUpdate received on client ' + game.my_id + ': ' + JSON.stringify(swapped));
     handleSwapUpdate(swapped.c1, swapped.c2);
+  });
+
+  // Notification that end turn is allowed (only occurs after client has sent a swap).
+  game.socket.on('endTurnAllowed', isAllowed => {
+    console.log('endTurnAllowed received on client ' + game.my_id + ': ' + isAllowed);
+    handleEndTurnAllowed(isAllowed);
   })
 
   // Next turn contains data for transitioning to the next turn
   game.socket.on('endTurn', reshuffled => {
     console.log('endTurn received on client ' + game.my_id + ': ' + JSON.stringify(reshuffled));
-    game.turnNum++;
     handleEndTurn(reshuffled);
   });
 
@@ -160,5 +166,5 @@ const customSetup = function (game) {
 
 // This function only exists for compatibility within clientBase.js, as 'drawScreen()' is called in onconnect
 function drawScreen(data) {
-  console.log('drawScreen called for client ' + globalGame.my_id);
+  // console.log('drawScreen called for client ' + globalGame.my_id);
 }
