@@ -71,7 +71,7 @@ function handleEndTurn(reshuffled) {
     reshuffledText.setText(getCounterString(reshuffled.n, 'reshuffled'));
     //TODO: disable card swaps while transitioning turns
 
-    const packet = { eventType: 'nextTurnRequest', deck };
+    const packet = Object.assign({ eventType: 'nextTurnRequest'}, getState(), {deck});
     console.log('nextTurnRequest packet: ' + JSON.stringify(packet));
     console.log("Emitting nextTurnRequest with packet...");
     globalGame.socket.send(packet);
