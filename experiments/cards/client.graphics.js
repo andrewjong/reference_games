@@ -35,7 +35,7 @@ let deckSprites = {
 let myHandGroup, theirHandGroup, onTableGroup; // phaser groups for sprites
 let turnText; // text that displays whose turn it is
 let turnButton; // button to end the turn
-let tooltipTarget; // the invisible object the tooltip attaches to.
+let tooltipTarget; // the invisible object the turnButton tooltip attaches to.
 let remainingText, reshuffledText; // cards remaining in deck and reshuffled last round
 
 let loaded = false; // state for whether the phaser game is fully loaded (true after create is called)

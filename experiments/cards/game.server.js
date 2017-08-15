@@ -38,7 +38,7 @@ const onMessage = function (client, data) {
       writeData(data, false);
       break;
 
-    // player swapped two cards
+    // a player swapped two cards
     case 'swapUpdate':
       // only allow to end turn if one of the cards swapped was on the table
       let swappedWithTable = data.onTable.some(c => c == data.c1 || c == data.c2);
@@ -52,7 +52,7 @@ const onMessage = function (client, data) {
       writeData(data);
       break;
 
-    // the player ended their turn
+    // a player ended their turn
     case 'endTurn':
       // reshuffling logic here
       const reshuffle = cardLogic.reshuffle(gc.reshuffleP, data.onTable, data.deck);
@@ -60,20 +60,20 @@ const onMessage = function (client, data) {
       data.numReshuffled = reshuffle.n;
       data.state = 'end';
       writeData(data);
-      // TODO: SOMETHING HERE ABOUT WRITING THE END STATE DATA
       all.forEach(p => {
         console.log("Emitting endTurn to player: " + p.id);
         p.player.instance.emit('endTurn', reshuffle);
       });
+      // TODO: something about end game state
       gc.turnNum++;
       break;
 
-    // client is requesting information to start the next turn
+    // a player is requesting new turn data
     case 'nextTurnRequest':
       // FIXME: I feel uncomfortable about the new draw being done per each client, instead of synced with the server. Technically data should be the same, but seems bad practice
       const newOnTable = cardLogic.dealCards(data.deck, gc.options.CARDS_ON_TABLE);
       const newTurn = { deck: data.deck, onTable: newOnTable };
-      // only write for one player, not both
+      // only write data for one player, not both
       if (data.isMyTurn) {
         data.state = 'start';
         writeData(Object.assign(data, newTurn));
