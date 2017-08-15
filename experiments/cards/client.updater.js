@@ -2,6 +2,15 @@
  * @file Contains functions for the client to interface with the server, i.e. handling and sending updates.
  */
 
+ /**
+  * Attaches the game state to the chat message
+  */
+function sendChatMessage(packet) {
+    Object.assign(packet, getState());
+    console.log('chatMessage packet: ' + JSON.stringify(packet))
+    console.log("Emitting chatMessage with packet...");
+    globalGame.socket.send(packet);
+}
 /**
  * Sends an update to the server of which cards were swapped as a numerical representation of the card.
  * @param {Number} c1 the first card to swap
@@ -13,6 +22,7 @@ function sendSwapUpdate(c1, c2) {
         c1,
         c2
     }
+    Object.assign(packet, getState());
     console.log('swapUpdate packet: ' + JSON.stringify(packet))
     console.log("Emitting swapUpdate with packet...");
     globalGame.socket.send(packet);
@@ -84,8 +94,8 @@ function handleNewTurn(newTurn) {
  */
 function attachGameState(eventData) {
     const packet = Object.assign(
-        {eventType: 'dataToWrite'},
-        eventData, 
+        { eventType: 'dataToWrite' },
+        eventData,
         getState());
     console.log('dataToWrite packet: ' + JSON.stringify(packet));
     console.log("Emitting dataToWrite with packet...");

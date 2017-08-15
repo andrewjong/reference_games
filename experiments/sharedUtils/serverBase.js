@@ -71,6 +71,7 @@ class ReferenceGameServer {
 
         // Start game
         this.startGame(game);
+        this.onMessage(player, Object.assign({eventType: 'initialized'}, game.cards));
       }
     }
 

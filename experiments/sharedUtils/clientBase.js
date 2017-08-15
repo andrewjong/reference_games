@@ -95,7 +95,8 @@ var sharedSetup = function (game) {
       timeElapsed
     }
     if ($('#chatbox').val() != '') {
-      game.socket.send(packet);
+      // game.socket.send(packet); replaced this line with the line below
+      sendChatMessage(packet);
       globalGame.sentTyping = false;
       $('#chatbox').val('');
     }

@@ -89,7 +89,7 @@ var game_core = function (options) {
     console.log("P2 hand: " + this.cards.p2Hand);
 
     console.log('server game core initialized!');
-    this.server_send_update();
+    // this.server_send_update();
   } else {
     // If we're initializing a player's local game copy, create the player object
     // Don't initialize any client state until after another client connects and server sends update
