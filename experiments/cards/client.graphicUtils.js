@@ -436,6 +436,7 @@ function turnButtonSetEnabled(isEnabled) {
     // Enable the end-turn button
     turnButton.setFrames(0, 1, 2);
     turnButton.inputEnabled = true;
+    tooltipTarget.inputEnabled = false;
   } else {
     // Disable the end-turn button
     turnButton.setFrames(3, 3, 3);

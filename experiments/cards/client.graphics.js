@@ -35,6 +35,7 @@ let deckSprites = {
 let myHandGroup, theirHandGroup, onTableGroup; // phaser groups for sprites
 let turnText; // text that displays whose turn it is
 let turnButton; // button to end the turn
+let tooltipTarget; // the invisible object the tooltip attaches to.
 let remainingText, reshuffledText; // cards remaining in deck and reshuffled last round
 
 let loaded = false; // state for whether the phaser game is fully loaded (true after create is called)
@@ -98,8 +99,7 @@ function updatePhaser(cards) {
         myHandGroup = makeHandGroup(myHand, true);
     }
     // set appropriate enable and disables on sprites
-    // EDIT: Disabled the below because don't want to enable until at least 1 swap. Gets enabled in client.updater.js on handleEndTurnAllowed()
-    // turnButtonSetEnabled(isMyTurn); 
+    tooltipTarget.inputEnabled = isMyTurn; // never enable on my turn. else start as enabled until the endTurn button is no longer disabled (see turnButtonSetEnabled)
     onTableGroup.forEach(isMyTurn ? enableCard : disableCard);
 
     console.log('Cards after updatePhaser: ');
@@ -161,10 +161,24 @@ playState.prototype = {
         // End turn button
         const centerInBar = (barHeight - graphics.TURN_BUTTON_HEIGHT) / 2;
         const horizontalPad = centerInBar;
-        turnButton = phaser.add.button(phaser.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad,
-            phaser.world.height - graphics.TURN_BUTTON_HEIGHT - centerInBar,
-            'end-turn', sendEndTurn, this, 0, 1, 2);
+        const turnButtonX = phaser.world.width - graphics.TURN_BUTTON_WIDTH - horizontalPad;
+        const turnButtonY = phaser.world.height - graphics.TURN_BUTTON_HEIGHT - centerInBar
+        turnButton = phaser.add.button(turnButtonX, turnButtonY, 'end-turn', sendEndTurn, this, 0, 1, 2);
         turnButtonSetEnabled(false);
+
+        // Button Tooltip
+        tooltipTarget = phaser.add.sprite(turnButtonX, turnButtonY, 'end-turn', 0);
+        tooltipTarget.alpha = 0;
+        const turnTooltip = new Phasetips(phaser, {
+            targetObject: tooltipTarget,
+            context: 'You must swap out one of your cards.',
+            position: 'top',
+            animation: 'grow',
+            animationSpeedShow: 150,
+            roundedCornersRadius: 5,
+            wordWrap: true,
+            fontSize: 16
+        });
 
         loaded = true;
         console.log('Phaser client instance loaded');
