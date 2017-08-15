@@ -52,6 +52,7 @@ const onMessage = function (client, data) {
       // reshuffling logic here
       const reshuffle = cardLogic.reshuffle(gc.reshuffleP, data.onTable, data.deck);
       data.deck = reshuffle.newDeck;
+      data.numReshuffled = reshuffle.n;
       data.state = 'end';
       writeData(data);
       // TODO: SOMETHING HERE ABOUT WRITING THE END STATE DATA
