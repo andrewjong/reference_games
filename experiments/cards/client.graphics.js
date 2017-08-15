@@ -53,7 +53,7 @@ function startPhaser(cards) {
     if (loaded === false) {
         console.log(`Phaser not yet loaded. Creating a new phaser game instance before handling update`);
         pendingUpdate = cards;
-        phaser = new Phaser.Game(graphics.GAME_WIDTH, graphics.GAME_HEIGHT, Phaser.AUTO, 'viewport');
+        phaser = new Phaser.Game(graphics.GAME_WIDTH, graphics.GAME_HEIGHT, Phaser.CANVAS, 'viewport');
         phaser.state.add('Play', playState);
         phaser.state.start('Play');
     } else {
