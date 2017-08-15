@@ -143,10 +143,6 @@ const customSetup = function (game) {
     console.log('swapUpdate received on client ' + game.my_id + ': ' + JSON.stringify(swapped));
     handleSwapUpdate(swapped.c1, swapped.c2);
   })
-  // Update about the cards in both player's hands and on the table
-  game.socket.on('cardsUpdate', cardsPacket => {
-    console.log('cardsUpdate received on client ' + game.my_id + ': ' + JSON.stringify(cardsPacket));
-  });
 
   // Next turn contains data for transitioning to the next turn
   game.socket.on('endTurn', reshuffled => {
@@ -160,12 +156,6 @@ const customSetup = function (game) {
     console.log('newTurn received on client ' + game.my_id + ': ' + JSON.stringify(newTurn));
     handleNewTurn(newTurn);
   });
-
-  game.socket.on('stateRequest', eventData => {
-    console.log('stateRequest received on client ' + game.my_id + ': ' + JSON.stringify(eventData));
-    attachGameState(eventData);
-  })
-
 }
 
 // This function only exists for compatibility within clientBase.js, as 'drawScreen()' is called in onconnect

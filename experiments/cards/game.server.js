@@ -96,30 +96,12 @@ const onMessage = function (client, data) {
         });
       }
       break;
-
-    // we shouldn't need this below anymore
-    // // the client replied with the current game state to write. now we can explicitly call the write function
-    // case 'dataToWrite':
-    //   // because eventType got replaced with 'dataToWrite', replace eventType with the originating event type
-    //   data.eventType = data.origEvent;
-    //   delete data.origEvent;
-    //   writeData();
   }
-  // /**
-  //  * Request the client's current state to add to the eventData before writing. This is because the server does
-  //  * not store a copy of the client's state - it must ask the client for it. Call this function to write data.
-  //  * @param {Object} eventData - an object containing the event data
-  //  */
-  // function sendWriteRequest(eventData){
-  //   // ask the client to attach its current game state to the eventData
-  //   const packet = Object.assign({ origEvent: eventType }, eventData);
-  //   packet.eventType = 'dataToWrite'; // technically this assignment is optional. but needed if called as sendWriteRequest(data)
-  //   target.instance.emit('stateRequest', packet);
-  // }
 
   /**
-   * 
-   * @param {Object} data 
+   * Combines data about the game and the game state, converts the data to generic perspective unless specified otherwise,
+   * then writes the data to mongo.
+   * @param {Object} data - the data to write
    * @param {boolean} convertData - whether data needs to be converted to generic perspective. default true
    */
   function writeData(data, convertData=true) {
@@ -142,6 +124,11 @@ const onMessage = function (client, data) {
     utils.writeDataToMongo(data);
   }
 
+  /**
+   * Converts data with cards state to generic perspective. E.g. myHand, theirHand, isMyTurn becomes p1Hand, p2Hand, p1Turn
+   * based on the client's role property.
+   * @param {Object} data - the data with cards state
+   */
   function convertCardData(data) {
     data.whoseTurn = data.isMyTurn ? data.role : (data.role == 'player1' ? 'player2' : 'player1');
     delete data.isMyTurn;
@@ -163,5 +150,4 @@ const setCustomEvents = function (socket) { /*empty. can't delete because compat
 module.exports = {
   onMessage: onMessage,
   setCustomEvents: setCustomEvents,
-  // dataOutput: dataOutput
 };
