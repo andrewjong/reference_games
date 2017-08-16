@@ -27,7 +27,7 @@ function dealCards(deck, number){
    return deck.splice(0, number);
 }
 
-const cardsInSuit = 12; // number of cards in a suit
+const cardsInSuit = 13; // number of cards in a suit
 /**
  * Determines if there is a straight among the 2 hands in a standard 52 card deck
  *
