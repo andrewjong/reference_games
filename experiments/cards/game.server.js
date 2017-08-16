@@ -59,43 +59,47 @@ const onMessage = function (client, data) {
       data.deck = reshuffle.newDeck;
       data.numReshuffled = reshuffle.n;
       data.state = 'end';
+
+      // Determien if end game
+      const hasStraight = cardLogic.hasWrappedStraight(data.theirHand, data.myHand);
+      const noMoreCards = data.deck.length == 0;
+      if (hasStraight) {
+        data.score = 50; // won goal
+        console.log('Game won!')
+        all.forEach(p => p.player.instance.disconnect());
+      } else if (noMoreCards) {
+        data.score = 25; // some points for finishing the game
+        console.log('Game lost.');
+      } else {
+        data.score = 0;
+      }
       writeData(data);
 
       all.forEach(p => {
         console.log("Emitting endTurn to player: " + p.id);
         p.player.instance.emit('endTurn', reshuffle);
       });
+
+      if (hasStraight || noMoreCards)
+        all.forEach(p => p.player.instance.disconnect());
+
       break;
 
     // a player is requesting new turn data
     case 'nextTurnRequest':
-      // Determien if end game
-      const hasStraight = cardLogic.hasWrappedStraight(data.p1Hand, data.p2Hand);
-      const noMoreCards = data.deck.length == 0;
-      if (hasStraight) {
-        gc.score = 50; // won goal
-        console.log('Game won!')
-        all.forEach(p => p.player.instance.disconnect());
-      } else if (noMoreCards) {
-        gc.score = 25; // some points for finishing the game
-        console.log('Game lost.');
-        all.forEach(p => p.player.instance.disconnect());
-      } 
-      
-      else {
-        // FIXME: I feel uncomfortable about the new draw being done per each client, instead of synced with the server. Technically data should be the same, but seems bad practice
-        gc.turnNum++;
-        const newOnTable = cardLogic.dealCards(data.deck, gc.options.CARDS_ON_TABLE);
-        const newTurn = { deck: data.deck, onTable: newOnTable };
-        // only write data for one player, not both
-        if (data.isMyTurn) {
-          data.state = 'start';
-          writeData(Object.assign(data, newTurn));
-        }
-
-        console.log("Emitting newTurn to player: " + target.id);
-        target.instance.emit('newTurn', newTurn);
+      // FIXME: I feel uncomfortable about the new draw being done per each client, instead of synced with the server. Technically data should be the same, but seems bad practice
+      gc.turnNum++;
+      const newOnTable = cardLogic.dealCards(data.deck, gc.options.CARDS_ON_TABLE);
+      const newTurn = { deck: data.deck, onTable: newOnTable };
+      // only write data for one player, not both
+      if (data.isMyTurn) {
+        data.state = 'start';
+        writeData(Object.assign(data, newTurn));
       }
+
+      console.log("Emitting newTurn to player: " + target.id);
+      target.instance.emit('newTurn', newTurn);
+
 
       break;
 
