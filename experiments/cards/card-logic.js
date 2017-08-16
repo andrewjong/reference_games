@@ -1,3 +1,5 @@
+const _ = require('underscore');
+
 /**
  * Reshuffles an array of card sprits into the deck with probability p for each card
  * Returns [# cards left in deck, # cards added back to deck]
@@ -37,17 +39,17 @@ const cardsInSuit = 13; // number of cards in a suit
  */
 function hasWrappedStraight(hand1, hand2) {
     // let the suit start as the suit of the first card
-    let firstSuit = getSuit(hand1[0]);
-    let allCards = hand1.concat(hand2);
-    let matchingSuits = allCards.every(cardVal => {
+    const firstSuit = getSuit(hand1[0]);
+    const allCards = hand1.concat(hand2);
+    const matchingSuits = allCards.every(cardVal => {
         return firstSuit == getSuit(cardVal);
     });
     if (!matchingSuits) return false;
 
-    simplified = allCards.map(a => a % cardsInSuit).sort((a, b) => a > b);
+    const simplified = allCards.map(a => a % cardsInSuit).sort((a, b) => a > b);
     let breaks = 0;
-    let hasBeg = simplified.includes(0);
-    let hasEnd = simplified.includes(cardsInSuit - 1);
+    const hasBeg = simplified.includes(0);
+    const hasEnd = simplified.includes(cardsInSuit - 1);
     for (let i = 1; i < simplified.length; i++) {
         if (simplified[i] != simplified[i - 1] + 1) {
             breaks++;
