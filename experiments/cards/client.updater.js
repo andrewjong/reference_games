@@ -50,8 +50,7 @@ function handleSwapUpdate(c1, c2) {
 function handleEndTurnAllowed(isAllowed){
     console.log('Handling end-turn-allowed: isAllowed=' + isAllowed);
     turnButtonSetEnabled(isAllowed);
-    if (isAllowed)
-        turnTooltip.hideTooltip();
+    tooltipTarget.inputEnabled = !isAllowed
 }
 /**
  * Lets the server know the turn has ended.

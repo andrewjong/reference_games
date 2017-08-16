@@ -4,6 +4,8 @@ const
 
 const cardLogic = require(__base + 'cards/card-logic.js');
 
+let originalOnTable; // variable for the cards on the table at the start of a turn
+
 // This is the function where the server parses and acts on messages
 // sent from 'clients' aka the browsers of people playing the
 // game. For example, if someone clicks on the map, they send a packet
@@ -30,21 +32,28 @@ const onMessage = function (client, data) {
   const all = gc.get_active_players();
   const target = gc.get_player(client.userid);
   const others = gc.get_others(client.userid);
+  data.score = 0;
 
   switch (eventType) {
     // initialization from server
     case 'initialized':
       data.state = 'start';
+      originalOnTable = data.onTable;
       writeData(data, false);
       break;
 
     // a player swapped two cards
     case 'swapUpdate':
-      // only allow to end turn if one of the cards swapped was on the table
-      let swappedWithTable = data.onTable.some(c => c == data.c1 || c == data.c2);
-      if (swappedWithTable)
+      // only allow to end turn if the table is not the same as before
+      let isSameAsOriginal = originalOnTable.every(number => data.onTable.includes(number));
+      if (isSameAsOriginal) {
+        console.log('endTurnAllowed false')
+        target.instance.emit('endTurnAllowed', false);
+      } else {
+        console.log('endTurnAllowed true')
         target.instance.emit('endTurnAllowed', true);
-
+      }
+      // tell everyone else about the swap
       others.forEach(p => {
         console.log("Emitting swapUpdate to player: " + p.id);
         p.player.instance.emit('swapUpdate', { c1: data.c1, c2: data.c2 });
@@ -64,22 +73,22 @@ const onMessage = function (client, data) {
       const hasStraight = cardLogic.hasWrappedStraight(data.theirHand, data.myHand);
       const noMoreCards = data.deck.length == 0;
       if (hasStraight) {
-        data.score = 50; // won goal
+        data.score = 50; // won goal, full points
         console.log('Game won!')
         all.forEach(p => p.player.instance.disconnect());
       } else if (noMoreCards) {
         data.score = 25; // some points for finishing the game
         console.log('Game lost.');
-      } else {
-        data.score = 0;
       }
       writeData(data);
 
+      // give everyone the reshuffle data
       all.forEach(p => {
         console.log("Emitting endTurn to player: " + p.id);
         p.player.instance.emit('endTurn', reshuffle);
       });
 
+      // end the game if game done
       if (hasStraight || noMoreCards)
         all.forEach(p => p.player.instance.disconnect());
 
@@ -93,14 +102,13 @@ const onMessage = function (client, data) {
       const newTurn = { deck: data.deck, onTable: newOnTable };
       // only write data for one player, not both
       if (data.isMyTurn) {
+        originalOnTable = newOnTable;
         data.state = 'start';
         writeData(Object.assign(data, newTurn));
       }
 
       console.log("Emitting newTurn to player: " + target.id);
       target.instance.emit('newTurn', newTurn);
-
-
       break;
 
     // a player is typing
