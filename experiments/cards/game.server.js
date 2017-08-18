@@ -63,12 +63,6 @@ const onMessage = function (client, data) {
 
     // a player ended their turn
     case 'endTurn':
-      // reshuffling logic here
-      const reshuffle = cardLogic.reshuffle(gc.reshuffleP, data.onTable, data.deck);
-      data.deck = reshuffle.newDeck;
-      data.numReshuffled = reshuffle.n;
-      data.state = 'end';
-
       // Determien if end game
       const hasStraight = cardLogic.hasWrappedStraight(data.theirHand, data.myHand);
       const noMoreCards = data.deck.length == 0;
@@ -79,18 +73,23 @@ const onMessage = function (client, data) {
       } else if (noMoreCards) {
         data.score = 25; // some points for finishing the game
         console.log('Game lost.');
+        all.forEach(p => p.player.instance.disconnect());
+      } 
+      // game not done yet
+      else {
+        // reshuffling logic here
+        const reshuffle = cardLogic.reshuffle(gc.reshuffleP, data.onTable, data.deck);
+        data.deck = reshuffle.newDeck;
+        data.numReshuffled = reshuffle.n;
+        data.state = 'end';
+        // give everyone the reshuffle data
+        all.forEach(p => {
+          console.log("Emitting endTurn to player: " + p.id);
+          p.player.instance.emit('endTurn', reshuffle);
+        });
+
       }
       writeData(data);
-
-      // give everyone the reshuffle data
-      all.forEach(p => {
-        console.log("Emitting endTurn to player: " + p.id);
-        p.player.instance.emit('endTurn', reshuffle);
-      });
-
-      // end the game if game done
-      if (hasStraight || noMoreCards)
-        all.forEach(p => p.player.instance.disconnect());
 
       break;
 
