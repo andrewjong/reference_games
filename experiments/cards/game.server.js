@@ -4,8 +4,6 @@ const
 
 const cardLogic = require(__base + 'cards/card-logic.js');
 
-let originalOnTable; // variable for the cards on the table at the start of a turn
-
 // This is the function where the server parses and acts on messages
 // sent from 'clients' aka the browsers of people playing the
 // game. For example, if someone clicks on the map, they send a packet
@@ -38,14 +36,14 @@ const onMessage = function (client, data) {
     // initialization from server
     case 'initialized':
       data.state = 'start';
-      originalOnTable = data.onTable;
+      gc.originalOnTable = data.onTable;
       writeData(data, false);
       break;
 
     // a player swapped two cards
     case 'swapUpdate':
       // only allow to end turn if the table is not the same as before
-      let isSameAsOriginal = originalOnTable.every(number => data.onTable.includes(number));
+      let isSameAsOriginal = gc.originalOnTable.every(number => data.onTable.includes(number));
       if (isSameAsOriginal) {
         console.log('endTurnAllowed false')
         target.instance.emit('endTurnAllowed', false);
@@ -107,7 +105,7 @@ const onMessage = function (client, data) {
       const newTurn = { deck: data.deck, onTable: newOnTable };
       // only write data for one player, not both
       if (data.isMyTurn) {
-        originalOnTable = newOnTable;
+        gc.originalOnTable = newOnTable;
         data.state = 'start';
         writeData(Object.assign(data, newTurn));
       }
