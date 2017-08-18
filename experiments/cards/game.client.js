@@ -162,6 +162,11 @@ const customSetup = function (game) {
     console.log('newTurn received on client ' + game.my_id + ': ' + JSON.stringify(newTurn));
     handleNewTurn(newTurn);
   });
+
+  game.socket.on('gameEnd', isWon => {
+    console.log('gameEnd received. Won: ' + isWon);
+    globalGame.won = isWon;
+  });
 }
 
 // This function only exists for compatibility within clientBase.js, as 'drawScreen()' is called in onconnect

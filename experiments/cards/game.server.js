@@ -67,14 +67,20 @@ const onMessage = function (client, data) {
       const hasStraight = cardLogic.hasWrappedStraight(data.theirHand, data.myHand);
       const noMoreCards = data.deck.length == 0;
       if (hasStraight) {
-        data.score = 50; // won goal, full points
+        data.score = 100; // won goal, full points
         console.log('Game won!')
-        all.forEach(p => p.player.instance.disconnect());
+        all.forEach(p => {
+          p.player.instance.emit('gameEnd', true);
+          p.player.instance.disconnect()
+        });
       } else if (noMoreCards) {
-        data.score = 25; // some points for finishing the game
+        data.score = 50; // some points for finishing the game
         console.log('Game lost.');
-        all.forEach(p => p.player.instance.disconnect());
-      } 
+        all.forEach(p => {
+          p.player.instance.emit('gameEnd', false);
+          p.player.instance.disconnect()
+        });
+      }
       // game not done yet
       else {
         // reshuffling logic here
