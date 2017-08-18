@@ -105,7 +105,7 @@ var sharedSetup = function (game) {
   });
 
   game.socket.on('playerTyping', function (data) {
-    if (data.typing == "true") {
+    if (data.typing === true) {
       $('#messages')
         .append('<span class="typing-msg">Other player is typing...</span>')
         .stop(true, true)
