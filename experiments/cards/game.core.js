@@ -23,14 +23,14 @@ var game_core = function (options) {
 
   this.options = {
     CARDS_PER_HAND: 3,
-    CARDS_ON_TABLE: 4,
+    CARDS_ON_TABLE: 5,
     RESHUFFLE_PROBABILITY: 0.5
   }
 
-  this.world = {
-    width: 1000,
-    height: 700
-  }
+  // this.world = {
+  //   width: 1280,
+  //   height: 720
+  // }
 
   // How many players in the game?
   this.players_threshold = 2;

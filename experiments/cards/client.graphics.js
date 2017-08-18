@@ -4,16 +4,16 @@
 
 // Graphic options for sprites and placement
 const graphics = {
-    GAME_WIDTH: 1000,
+    GAME_WIDTH: 1152, // phaser game window width
     GAME_HEIGHT: 700,
-    CARD_WIDTH: 334,
-    CARD_HEIGHT: 440,
-    CARD_SCALE: 0.3,
+    CARD_WIDTH: 334, // width of sprite
+    CARD_HEIGHT: 440,// height of sprite
+    CARD_SCALE: 0.3,// scale of sprite
     CARD_CELL_WIDTH: 120, // size of a card cell
     ENABLED_TINT: 0xFFFFFF, // color when a card is enabled
     DISABLED_TINT: 0xBEBEBE,
     FADE_IN_TIME: 800,
-    DECK_X: 140, // X location of the deck
+    DECK_X: 150, // X location of the deck
     DECK_PADDING: 100, // vertical padding between deck and description text
     HAND_OFFSET_FROM_CENTER: 200, // in the y direction, for each player's hand
     TURN_BAR_HEIGHT: 75,
@@ -25,7 +25,7 @@ let phaser; // the phaser game instance. 'phaser' is used instead of the convent
 let isMyTurn = false; // turn boolean
 let deck, myHand, theirHand, onTable; // numerical arrays to represent each hand
 let deckSprites = {
-    x: 140, // x location
+    x: graphics.DECK_X, // x location
     x_offset: 0, // the total current x offset of the top card
     y_offset: 0, // the total current y offset of the top card
     dx: 0.1, // how much to offset x per card
@@ -138,8 +138,8 @@ playState.prototype = {
 
         // text stating how many cards are left in the deck and how many were reshuffled in the previous round
         const counterStyle = { font: '20px Arial', fill: '#FFF', align: 'center' };
-        remainingText = phaser.add.text(140, phaser.world.centerY + graphics.DECK_PADDING, '', counterStyle);
-        reshuffledText = phaser.add.text(140, phaser.world.centerY - graphics.DECK_PADDING, '', counterStyle);
+        remainingText = phaser.add.text(graphics.DECK_X, phaser.world.centerY + graphics.DECK_PADDING, '', counterStyle);
+        reshuffledText = phaser.add.text(graphics.DECK_X, phaser.world.centerY - graphics.DECK_PADDING, '', counterStyle);
         [remainingText, reshuffledText].forEach(text => {
             text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
             text.anchor = new Phaser.Point(0.5, 0.5);
