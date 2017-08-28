@@ -215,7 +215,7 @@ function dropdownTip(data) {
         window.opener.turk.submit(globalGame.data, true);
         window.close();
       } else {
-        console.log("would have submitted the following :")
+        console.log("would have submitted the following: ")
         console.log(globalGame.data);
       }
       break;

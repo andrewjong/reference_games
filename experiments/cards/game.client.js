@@ -124,6 +124,7 @@ var client_onjoingame = function (num_players, role) {
     this.timeoutID = setTimeout(function () {
       if (_.size(this.urlParams) == 4) {
         this.submitted = true;
+        // submit if wait too long
         window.opener.turk.submit(this.data, true);
         window.close();
       } else {
