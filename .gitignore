@@ -3,9 +3,6 @@
 *RData
 *Rhistory
 cogsci_cache
-data/
-data/colorReference/clickedObj/node_modules/
-data/sketchpad/message/*.csv
 experiments/node_modules/
 experiments/2dSplines/
 experiments/3dObjects/
@@ -46,14 +43,9 @@ production_results/
 auth.json
 credentials.py
 credentials.pyc
-data/3dObjects/sketchpad/mturk/credentials.py
-data/3dObjects/sketchpad/mturk/auth.json
 compensation_driver.py
 auth.json
 production_results/
-data/3dObjects/sketchpad_basic/clickedObj/*.js
-data/3dObjects/sketchpad_basic/stroke/*.js
-data/3dObjects/sketchpad_repeated/
 analysis/3dObjects/sketchpad_repeated/sketches/*
 analysis/3dObjects/sketchpad_basic/sketches/*
 .vscode/
