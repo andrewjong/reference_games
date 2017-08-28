@@ -25,8 +25,8 @@ then
 		echo "User: $user"
 		echo "Password: $password"
 		# get data
-		chat="mongoexport -h ds115583.mlab.com:15583 -d heroku_7slvngr1 -c chatmessages -u $user -p $password -o hawkins_data/chatmessages.json"
-		clicked="mongoexport -h ds115583.mlab.com:15583 -d heroku_7slvngr1 -c clickedobjs -u $user -p $password -o hawkins_data/clickedobjs.json"
+		chat="mongoexport -h ds115583.mlab.com:15583 -d heroku_7slvngr1 -c chatmessages -u $user -p $password -o gameData/chatmessages.json"
+		clicked="mongoexport -h ds115583.mlab.com:15583 -d heroku_7slvngr1 -c clickedobjs -u $user -p $password -o gameData/clickedobjs.json"
 		eval $chat
 		eval $clicked
 	done < "$auth"
@@ -36,8 +36,8 @@ then
 	python jsonToCSV.py
 	echo Conversion done
 
-	echo Copying to languageAnalysis/
-	cp hawkins_data/*Chinese* languageAnalysis/
+#	echo Copying to languageAnalysis/
+#	cp hawkins_data/*Chinese* languageAnalysis/
 	echo Done
 
 else
