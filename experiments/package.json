@@ -17,6 +17,7 @@
     "express": "~4.15.0",
     "jsonfile": "~2.4.0",
     "lodash": "^4.17.4",
+    "loglevel": "^1.4.1",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
     "mongodb": "^2.2.28",
