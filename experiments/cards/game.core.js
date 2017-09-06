@@ -169,6 +169,7 @@ game_core.prototype.server_send_update = function () {
     gs: this.game_started,   // true when game's started
     pt: this.players_threshold,
     pc: this.player_count,
+    dataObj: this.data
   };
 
   // Add info about all players
@@ -178,7 +179,6 @@ game_core.prototype.server_send_update = function () {
       player: null
     }
   })
-
 
   _.extend(state, {
     players: player_packet,
