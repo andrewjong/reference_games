@@ -19,22 +19,22 @@ var ondisconnect = function (data) {
   console.log("server booted");
   this.viewport.style.display = "none";
   var email = globalGame.email ? globalGame.email : '';
-  const winLoseMessage = globalGame.won ? "You won!" : "Looks like you lost.";
-  var failMsg = [
+  const winLoseMsg = globalGame.won ? "You won!" : "Looks like you lost.";
+  var disconnectMsg = [
     '<h3>Oops! It looks like your partner lost their connection!</h3>',
     '<p> Completing this survey will submit your HIT so you will still receive full ',
     'compensation.</p> <p>If you experience any problems, please email us (',
     email, ')</p>'
   ].join('');
-  var successMsg = [
-    "<h3>", winLoseMessage, " Thanks for participating in our experiment!</h3>",
+  var completedMsg = [
+    "<h3>", winLoseMsg, " Thanks for participating in our experiment!</h3>",
     "<p>Before you submit your HIT, we'd like to ask you a few questions.</p>"
   ].join('');
 
   if (globalGame.won === true || globalGame.won === false) {
-    $('#exit_survey').prepend(successMsg);
+    $('#exit_survey').prepend(completedMsg);
   } else {
-    $('#exit_survey').prepend(failMsg);
+    $('#exit_survey').prepend(disconnectMsg);
   }
 
   $('#exit_survey').show();

@@ -167,6 +167,7 @@ const customSetup = function (game) {
   game.socket.on('gameEnd', isWon => {
     console.log('gameEnd received. Won: ' + isWon);
     globalGame.won = isWon;
+    globalGame.data.subject_information.score = isWon ? 100 : 50;
   });
 }
 
