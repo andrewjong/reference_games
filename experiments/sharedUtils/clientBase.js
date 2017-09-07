@@ -27,9 +27,9 @@ var ondisconnect = function (data) {
       <p>If you experience any problems, please email us (${email})</p>`;
     $('#exit_survey').prepend(disconnectMsg);
   } else {
-    const winLoseMsg = globalGame.won ? "You won!" : "Looks like you lost.";
+    const winLoseMsg = globalGame.won ? "You won!" : "Sorry, looks like you lost.";
     const completedMsg =
-      `<h3>${winLoseMsg},  Thanks for participating in our experiment!</h3>
+      `<h3>${winLoseMsg} Thanks for participating in our experiment!</h3>
       <p>Before you submit your HIT, we'd like to ask you a few questions.</p>`;
     $('#exit_survey').prepend(completedMsg);
   }
