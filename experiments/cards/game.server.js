@@ -69,15 +69,15 @@ const onMessage = function (client, data) {
         console.log('Game won!')
         all.forEach(p => {
           p.player.instance.emit('gameEnd', true);
-          p.player.instance.disconnect()
         });
+        target.instance.disconnect();
       } else if (noMoreCards) {
         data.score = 50; // some points for finishing the game
         console.log('Game lost.');
         all.forEach(p => {
           p.player.instance.emit('gameEnd', false);
-          p.player.instance.disconnect()
         });
+        target.instance.disconnect();
       }
       // game not done yet
       else {
