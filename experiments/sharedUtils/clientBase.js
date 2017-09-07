@@ -18,23 +18,20 @@ var ondisconnect = function (data) {
   // Redirect to exit survey
   console.log("server booted");
   this.viewport.style.display = "none";
-  var email = globalGame.email ? globalGame.email : '';
-  const winLoseMsg = globalGame.won ? "You won!" : "Looks like you lost.";
-  var disconnectMsg = [
-    '<h3>Oops! It looks like your partner lost their connection!</h3>',
-    '<p> Completing this survey will submit your HIT so you will still receive full ',
-    'compensation.</p> <p>If you experience any problems, please email us (',
-    email, ')</p>'
-  ].join('');
-  var completedMsg = [
-    "<h3>", winLoseMsg, " Thanks for participating in our experiment!</h3>",
-    "<p>Before you submit your HIT, we'd like to ask you a few questions.</p>"
-  ].join('');
-
-  if (globalGame.won === true || globalGame.won === false) {
-    $('#exit_survey').prepend(completedMsg);
-  } else {
+  const email = globalGame.email ? globalGame.email : '';
+  if (globalGame.won === undefined) { // case that win/lose not set, ie game ended prematurely
+    const disconnectMsg =
+      `<h3>Oops! It looks like your partner lost their connection!</h3> 
+      <p> Completing this survey will submit your HIT so you will still receive full 
+      compensation.</p> 
+      <p>If you experience any problems, please email us (${email})</p>`;
     $('#exit_survey').prepend(disconnectMsg);
+  } else {
+    const winLoseMsg = globalGame.won ? "You won!" : "Looks like you lost.";
+    const completedMsg =
+      `<h3>${winLoseMsg},  Thanks for participating in our experiment!</h3>
+      <p>Before you submit your HIT, we'd like to ask you a few questions.</p>`;
+    $('#exit_survey').prepend(completedMsg);
   }
 
   $('#exit_survey').show();
