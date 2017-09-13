@@ -94,13 +94,13 @@ const onMessage = function (client, data) {
 
       }
       writeData(data);
+      gc.turnNum++; // update the server's copy of the turn number
 
       break;
 
     // a player is requesting new turn data
     case 'nextTurnRequest':
       // FIXME: I feel uncomfortable about the new draw being done per each client, instead of synced with the server. Technically data should be the same, but seems bad practice
-      gc.turnNum++;
       const newOnTable = cardLogic.dealCards(data.deck, gc.options.CARDS_ON_TABLE);
       const newTurn = { deck: data.deck, onTable: newOnTable };
       // only write data for one player, not both
