@@ -143,8 +143,8 @@ const onMessage = function (client, data) {
   function writeData(data, changePerspective = true) {
     // assign common output
     Object.assign(data, {
-      assignmentid: gc.assignmentid || 'none',
-      workerid: gc.workerid || 'none',
+      assignmentid: client.assignmentid || 'none',
+      workerid: client.workerid || 'none',
       gameid: gc.id,
       epochTime: Date.now(),
       humanTime: Date(),

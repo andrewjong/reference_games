@@ -124,7 +124,7 @@ var initialize = function(query, client, id) {
   // about that as well, so it can remove them from the game they are
   // in, and make sure the other player knows that they left and so on.
   client.on('disconnect', function () {            
-    console.log('\t socket.io:: client id ' + client.userid 
+    console.log('\t socket.io:: client id ' + client.userid + ' (worker id ' + client.workerid + ')' 
                 + ' disconnected from game id ' + client.game.id);
 
     // in colorReference, we don't mind duplicates across games 
