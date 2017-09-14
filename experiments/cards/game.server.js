@@ -144,7 +144,7 @@ const onMessage = function (client, data) {
     // assign common output
     Object.assign(data, {
       assignmentid: client.assignmentid || 'none',
-      workerid: client.workerid || 'none',
+      userid: client.userid || 'none',
       gameid: gc.id,
       epochTime: Date.now(),
       humanTime: Date(),
