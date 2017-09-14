@@ -1,3 +1,4 @@
+mlab_auth
 *.DS_Store
 *~
 *RData
@@ -40,13 +41,11 @@ experiments/3dObjects/sketchpad/python/.ipynb_checkpoints
 experiments/3dObjects/sketchpad/_*
 experiments/3dObjects/sketchpad/compensation_driver.py
 production_results/
-auth.json
 credentials.py
 credentials.pyc
 data/3dObjects/sketchpad/mturk/credentials.py
 data/3dObjects/sketchpad/mturk/auth.json
 compensation_driver.py
-auth.json
 production_results/
 data/3dObjects/sketchpad_basic/clickedObj/*.js
 data/3dObjects/sketchpad_basic/stroke/*.js
