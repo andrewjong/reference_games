@@ -138,9 +138,9 @@ const onMessage = function (client, data) {
    * Combines data about the game and the game state, converts the data to generic perspective unless specified otherwise,
    * then writes the data to mongo.
    * @param {Object} data - the data to write
-   * @param {boolean} convertData - whether data needs to be converted to generic perspective. default true
+   * @param {boolean} changePerspective - whether data needs to be converted to generic perspective. default true
    */
-  function writeData(data, convertData = true) {
+  function writeData(data, changePerspective = true) {
     // assign common output
     Object.assign(data, {
       assignmentid: gc.assignmentid || 'none',
@@ -153,8 +153,13 @@ const onMessage = function (client, data) {
       role: client.role
     })
     // convert the data to generic perspective rather than "my" and "their"
-    if (convertData)
-      convertCardData(data);
+    if (changePerspective) setServerPerspective(data);
+    // convert cards to human readable format
+    data.p1Hand = setHumanReadable(data.p1Hand);
+    data.p2Hand = setHumanReadable(data.p2Hand);
+    data.onTable = setHumanReadable(data.onTable);
+    data.deck = setHumanReadable(data.deck);
+
     Object.assign(data, { deckSize: data.deck.length });  // deck size is useful
 
     utils.writeDataToMongo(data);
@@ -165,19 +170,42 @@ const onMessage = function (client, data) {
    * based on the client's role property.
    * @param {Object} data - the data with cards state
    */
-  function convertCardData(data) {
-    data.whoseTurn = data.isMyTurn ? data.role : (data.role == 'player1' ? 'player2' : 'player1');
-    delete data.isMyTurn;
+  function setServerPerspective(data) {
+    if (data.p1Hand === undefined && data.p2Hand === undefined && data.whoseTurn === undefined) {
+      data.whoseTurn = data.isMyTurn ? data.role : (data.role == 'player1' ? 'player2' : 'player1');
+      delete data.isMyTurn;
 
-    if (data.role == 'player1') {
-      data.p1Hand = data.myHand;
-      data.p2Hand = data.theirHand;
-    } else if (data.role == 'player2') {
-      data.p2Hand = data.myHand;
-      data.p1Hand = data.theirHand;
+      if (data.role == 'player1') {
+        data.p1Hand = data.myHand;
+        data.p2Hand = data.theirHand;
+      } else if (data.role == 'player2') {
+        data.p2Hand = data.myHand;
+        data.p1Hand = data.theirHand;
+      }
+      delete data.myHand;
+      delete data.theirHand;
     }
-    delete data.myHand;
-    delete data.theirHand;
+  }
+  /**
+   * Converts the cards in data to human readable format.
+   * @param {Array<Number} cards 
+   */
+  function setHumanReadable(cards) {
+    return cards.map(c => {
+      console.log('c: ' + c)
+      let denomination = c % 13;
+      console.log('denomination: ' + denomination);
+      const suitVal = Math.trunc(c / 13);
+      console.log('suitVal: ' + suitVal);
+      // set royal representation if needed
+      denomination = gc.options.ROYALS[denomination] || ++denomination; // ++ to set the correct value, because 1 is 2
+      console.log('denomination: ' + denomination);
+
+      const suit = gc.options.SUITS[suitVal]
+      console.log('suit: ' + suit);
+      const cardStr = denomination + suit;
+      return cardStr;
+    });
   }
 };
 

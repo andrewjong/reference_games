@@ -24,7 +24,14 @@ var game_core = function (options) {
   this.options = {
     CARDS_PER_HAND: 3,
     CARDS_ON_TABLE: 4,
-    RESHUFFLE_PROBABILITY: 0.5
+    RESHUFFLE_PROBABILITY: 0.5,
+    SUITS: [ '♠S', '♣C', '♦D', '♥H'], // listed in order according to spritesheet (cards.png)
+    ROYALS: {
+      0: 'A',
+      10: 'J',
+      11: 'Q',
+      12: 'K'
+    }
   }
 
   this.world = {

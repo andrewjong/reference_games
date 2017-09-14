@@ -270,8 +270,11 @@ function onchange(evt) {
   // console.log(document.body.className);
   // console.log(globalGame);
   visible = document.body.className;
-  globalGame.socket.send("h." + document.body.className);
-
+  const obj = {
+    eventType: 'h',
+    'h': document.body.className
+  }
+  globalGame.socket.send(obj);
 };
 
 (function () {
