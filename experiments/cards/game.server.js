@@ -63,7 +63,7 @@ const onMessage = function (client, data) {
     case 'endTurn':
       // Determien if end game
       const hasStraight = cardLogic.hasWrappedStraight(data.theirHand, data.myHand);
-      const noMoreCards = data.deck.length == 0;
+      const noMoreCards = data.deck.length < gc.options.CARDS_ON_TABLE;
       if (hasStraight) {
         data.score = 100; // won goal, full points
         console.log('Game won!')
