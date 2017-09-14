@@ -192,17 +192,17 @@ const onMessage = function (client, data) {
    */
   function setHumanReadable(cards) {
     return cards.map(c => {
-      console.log('c: ' + c)
+      // console.log('c: ' + c)
       let denomination = c % 13;
-      console.log('denomination: ' + denomination);
+      // console.log('denomination: ' + denomination);
       const suitVal = Math.trunc(c / 13);
-      console.log('suitVal: ' + suitVal);
+      // console.log('suitVal: ' + suitVal);
       // set royal representation if needed
       denomination = gc.options.ROYALS[denomination] || ++denomination; // ++ to set the correct value, because 1 is 2
-      console.log('denomination: ' + denomination);
+      // console.log('denomination: ' + denomination);
 
       const suit = gc.options.SUITS[suitVal]
-      console.log('suit: ' + suit);
+      // console.log('suit: ' + suit);
       const cardStr = denomination + suit;
       return cardStr;
     });
