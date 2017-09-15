@@ -66,6 +66,7 @@ const onMessage = function (client, data) {
       const noMoreCards = data.deck.length < gc.options.CARDS_ON_TABLE;
       if (hasStraight) {
         data.score = 100; // won goal, full points
+        data.state = 'won'
         console.log('Game won!')
         all.forEach(p => {
           p.player.instance.emit('gameEnd', true);
@@ -73,6 +74,7 @@ const onMessage = function (client, data) {
         target.instance.disconnect();
       } else if (noMoreCards) {
         data.score = 50; // some points for finishing the game
+        data.state = 'lost';
         console.log('Game lost.');
         all.forEach(p => {
           p.player.instance.emit('gameEnd', false);
