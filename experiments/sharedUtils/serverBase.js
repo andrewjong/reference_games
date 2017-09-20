@@ -25,8 +25,12 @@ class ReferenceGameServer {
   writeData(client, eventType, message_parts) {
     var output = this.customServer.dataOutput;
     var game = client.game;
+    const meta = {
+      assignmentid: client.assignmentid,
+      userid: client.userid
+    }
     if (_.has(output, eventType)) {
-      var dataPoint = _.extend(output[eventType](client, message_parts), { eventType });
+      var dataPoint = _.extend(meta, output[eventType](client, message_parts), { eventType });
       if (_.includes(game.dataStore, 'mongo')) {
         console.log('Writing to mongo');
         utils.writeDataToMongo(game, dataPoint);
