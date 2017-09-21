@@ -20,6 +20,9 @@ function reshuffle(p, cards, deck) {
     return {newDeck, n};
 }
 
+function biasedShuffle(p, bias, cards, deck){
+
+}
 /**
  * 'Deals' the first n cards from a deck. The deck is modified.
  * @param {Array<Number>} deck the deck of cards
@@ -66,6 +69,25 @@ function hasWrappedStraight(hand1, hand2) {
  */
 function getSuit(cardValue) {
     return Math.trunc(cardValue / cardsInSuit);
+} 
+
+/**
+ * Returns the numerical representatiom {0...3} of the least appearing suit in an array of cards
+ * @param {Array<Number>} cards 
+ */
+function getLeastCommonSuit(cards) {
+    let suitCount = { 0: 0, 1: 0, 2: 0, 3: 0 }
+    cards.forEach(c => {
+        suit = getSuit(c);
+        ++suitCount[suit];
+    })
+    let min = 0;
+    for (let i = 1; i < Object.keys(suitCount).length; i++) {
+        if (suitCount[i] < suitCount[min]){
+            min = i;
+        }
+    }
+    return min;
 }
 
 if (typeof module !== 'undefined')
@@ -73,5 +95,6 @@ if (typeof module !== 'undefined')
         reshuffle,
         dealCards,
         hasWrappedStraight,
-        getSuit
+        getSuit,
+        getLeastCommonSuit
     }

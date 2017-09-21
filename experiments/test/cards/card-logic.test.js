@@ -47,3 +47,12 @@ test('6 consecutive cards of different suits returns false', () => {
     const hand2 = [15, 16, 17]; //12=0;13=1;14=2;
     expect(cardLogic.hasWrappedStraight(hand1, hand2)).not.toBe(true);
 });
+
+test('Returning the least common suit for a card not present', () => {
+    const cards = [0, 13, 27]
+    expect(cardLogic.getLeastCommonSuit(cards)).toBe(3);
+});
+test('Returning the least common suit for a card not present', () => {
+    const cards = [0, 1, 13, 14, 27, 28, 42]
+    expect(cardLogic.getLeastCommonSuit(cards)).toBe(3);
+});

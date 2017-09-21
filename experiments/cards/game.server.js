@@ -36,14 +36,15 @@ const onMessage = function (client, data) {
     // initialization from server
     case 'initialized':
       data.state = 'start';
-      gc.originalOnTable = data.onTable;
+      gc.startingOnTable = data.onTable; // cards the table at the start of the first turn, to detect if players have swapped or not
+      gc.biasSuit = cardLogic.getLeastCommonSuit(data.onTable) // rig the game so that the suit not ont he table
       writeData(data, false);
       break;
 
     // a player swapped two cards
     case 'swapUpdate':
       // only allow to end turn if the table is not the same as before
-      let isSameAsOriginal = gc.originalOnTable.every(number => data.onTable.includes(number));
+      let isSameAsOriginal = gc.startingOnTable.every(number => data.onTable.includes(number));
       if (isSameAsOriginal) {
         console.log('endTurnAllowed false')
         target.instance.emit('endTurnAllowed', false);
@@ -107,7 +108,7 @@ const onMessage = function (client, data) {
       const newTurn = { deck: data.deck, onTable: newOnTable };
       // only write data for one player, not both
       if (data.isMyTurn) {
-        gc.originalOnTable = newOnTable;
+        gc.startingOnTable = newOnTable;
         data.state = 'start';
         writeData(Object.assign(data, newTurn));
       }
