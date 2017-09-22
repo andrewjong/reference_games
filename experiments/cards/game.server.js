@@ -17,7 +17,7 @@ const onMessage = function (client, data) {
 
   // logging for debug
   if (eventType != 'h') {// skip the inactive window message
-    console.log('Server received message:');
+    console.log(`Server received message from ${client.userid}:`);
     for (let attribute in data) {
       const value = data[attribute];
       console.log(`->[${attribute}]: <${typeof value}> ${value}`);
@@ -37,8 +37,9 @@ const onMessage = function (client, data) {
     case 'initialized':
       data.state = 'start';
       gc.startingOnTable = data.onTable; // cards the table at the start of the first turn, to detect if players have swapped or not
-      gc.biasSuit = cardLogic.getLeastCommonSuit(data.onTable) // rig the game so that the suit not ont he table
-      console.log(`bias suit: ${gc.options.SUITS[gc.biasSuit]}`)
+      const cardsInPlay = data.onTable.concat(data.p1Hand).concat(data.p2Hand);
+      gc.biasSuit = cardLogic.getLeastCommonSuit(cardsInPlay); // rig the game so that the suit not ont he table
+      console.log(`bias suit: ${cardLogic.SUITS[gc.biasSuit]}`);
       writeData(data, false);
       break;
 
@@ -88,14 +89,15 @@ const onMessage = function (client, data) {
         // reshuffling logic here
         // const reshuffle = cardLogic.reshuffle(gc.reshuffleP, data.onTable, data.deck);
         // bias shuffle with 0.75 return rate and 0.75 bring forward rate
-        const reshuffle = cardLogic.biasReshuffle(gc.biasSuit, 0.95, 0.75, data.onTable, data.deck);
-        data.deck = reshuffle.newDeck;
-        data.numReshuffled = reshuffle.n;
+        const reshuffled = cardLogic.biasReshuffle(gc.biasSuit, gc.options.BIAS_P, gc.options.DECK_BIAS, data.onTable, data.deck);
+        // store the reshuffled info in the server's copy for writing
+        data.deck = reshuffled.deck;
+        data.numReshuffled = reshuffled.n;
         data.state = 'end';
-        // give everyone the reshuffle data
+        // send all clients the reshuffle data
         all.forEach(p => {
           console.log("Emitting endTurn to player: " + p.id);
-          p.player.instance.emit('endTurn', reshuffle);
+          p.player.instance.emit('endTurn', reshuffled);
         });
 
       }
@@ -160,16 +162,19 @@ const onMessage = function (client, data) {
       epochTime: Date.now(),
       humanTime: Date(),
       turnNum: gc.turnNum + 1, // TODO: add turn number to game state
-      reshuffleP: gc.reshuffleP,
+      reshuffleP: gc.options.P,
+      biasSuit: cardLogic.SUITS[gc.biasSuit],
+      biasP: gc.options.BIAS_P,
+      deckBias: gc.options.DECK_BIAS,
       role: client.role
     })
     // convert the data to generic perspective rather than "my" and "their"
     if (changePerspective) setServerPerspective(data);
     // convert cards to human readable format
-    data.p1Hand = setHumanReadable(data.p1Hand);
-    data.p2Hand = setHumanReadable(data.p2Hand);
-    data.onTable = setHumanReadable(data.onTable);
-    data.deck = setHumanReadable(data.deck);
+    data.p1Hand = cardLogic.getHumanReadable(data.p1Hand);
+    data.p2Hand = cardLogic.getHumanReadable(data.p2Hand);
+    data.onTable = cardLogic.getHumanReadable(data.onTable);
+    data.deck = cardLogic.getHumanReadable(data.deck);
 
     Object.assign(data, { deckSize: data.deck.length });  // deck size is useful
 
@@ -196,27 +201,6 @@ const onMessage = function (client, data) {
       delete data.myHand;
       delete data.theirHand;
     }
-  }
-  /**
-   * Converts the cards in data to human readable format.
-   * @param {Array<Number} cards 
-   */
-  function setHumanReadable(cards) {
-    return cards.map(c => {
-      // console.log('c: ' + c)
-      let denomination = c % 13;
-      // console.log('denomination: ' + denomination);
-      const suitVal = Math.trunc(c / 13);
-      // console.log('suitVal: ' + suitVal);
-      // set royal representation if needed
-      denomination = gc.options.ROYALS[denomination] || ++denomination; // ++ to set the correct value, because 1 is 2
-      // console.log('denomination: ' + denomination);
-
-      const suit = gc.options.SUITS[suitVal]
-      // console.log('suit: ' + suit);
-      const cardStr = denomination + suit;
-      return cardStr;
-    });
   }
 };
 

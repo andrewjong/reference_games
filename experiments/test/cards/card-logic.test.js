@@ -7,8 +7,8 @@ test('reshuffling with p=1 returns all cards to the deck', () => {
     let deck = [];
     // TODO
     const reshuffle = cardLogic.reshuffle(p, onTable, deck);
-    expect(reshuffle.newDeck).toEqual(expect.arrayContaining([0, 1, 2, 3]));
-    expect(reshuffle.newDeck).toHaveLength(4);
+    expect(reshuffle.deck).toEqual(expect.arrayContaining([0, 1, 2, 3]));
+    expect(reshuffle.deck).toHaveLength(4);
 });
 
 // hasWrappedStraight function
@@ -69,10 +69,10 @@ test('Calling biasDeckShuffle with deckBiasP=1 brings all the cards of the bias 
         [0, 1,   // suit 0
          13, 14, // suit 1
          27, 28, // suit 2
-         42, 43] // suit 3
+         42, 43]; // suit 3
     const biasSuit = 2;
     const deckBiasP = 1;
-    const firstTwo = cardLogic.biasDeckShuffle(deck, biasSuit, deckBiasP).splice(0,2)
+    const firstTwo = cardLogic.biasDeckShuffle(biasSuit, deckBiasP, deck).splice(0,2)
     const expected = [27, 28]
     expect(firstTwo).toEqual(expect.arrayContaining(expected));
 })
@@ -82,10 +82,10 @@ test('Calling biasDeckShuffle with deckBiasP=1 on the first suit in front brings
         [0, 1,   // suit 0
          13, 14, // suit 1
          27, 28, // suit 2
-         42, 43] // suit 3
+         42, 43]; // suit 3
     const biasSuit = 0;
     const deckBiasP = 1;
-    const firstTwo = cardLogic.biasDeckShuffle(deck, biasSuit, deckBiasP).splice(0,2)
+    const firstTwo = cardLogic.biasDeckShuffle(biasSuit, deckBiasP, deck).splice(0,2)
     const expected = [0, 1]
     expect(firstTwo).toEqual(expect.arrayContaining(expected));
 })
@@ -95,10 +95,10 @@ test('Calling biasDeckShuffle with deckBiasP=0 sends all the cards of the bias s
         [0, 1,   // suit 0
          13, 14, // suit 1
          27, 28, // suit 2
-         42, 43] // suit 3
+         42, 43]; // suit 3
     const biasSuit = 2;
     const deckBiasP = 0;
-    const lastTwo = cardLogic.biasDeckShuffle(deck, biasSuit, deckBiasP).splice(6,2);
+    const lastTwo = cardLogic.biasDeckShuffle(biasSuit, deckBiasP, deck).splice(6,2);
     const expected = [27, 28]
     expect(lastTwo).toEqual(expect.arrayContaining(expected));
 })
@@ -108,10 +108,10 @@ test('Calling biasDeckShuffle with deckBiasP=0 on the last suit sends all the ca
         [0, 1,   // suit 0
          13, 14, // suit 1
          27, 28, // suit 2
-         42, 43] // suit 3
+         42, 43]; // suit 3
     const biasSuit = 3;
     const deckBiasP = 0;
-    const lastTwo = cardLogic.biasDeckShuffle(deck, biasSuit, deckBiasP).splice(6,2);
+    const lastTwo = cardLogic.biasDeckShuffle(biasSuit, deckBiasP, deck).splice(6,2);
     const expected = [42, 43]
     expect(lastTwo).toEqual(expect.arrayContaining(expected));
 })
@@ -121,10 +121,12 @@ test('Calling biasDeckShuffle with deckBiasP=0.5 randomly shuffles the deck', ()
         [0, 1,   // suit 0
          13, 14, // suit 1
          27, 28, // suit 2
-         42, 43] // suit 3
+         42, 43]; // suit 3
     const biasSuit = 3;
     const deckBiasP = 0.5;
-    const newDeck = cardLogic.biasDeckShuffle(deck, biasSuit, deckBiasP);
-    console.log(deck)
-    console.log(newDeck)
+    const newDeck = cardLogic.biasDeckShuffle(biasSuit, deckBiasP, deck);
+    const hr = cardLogic.getHumanReadable;
+    console.log('bias: ' + cardLogic.SUITS[biasSuit]);
+    console.log(hr(deck))
+    console.log(hr(newDeck))
 })

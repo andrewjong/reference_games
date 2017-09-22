@@ -66,11 +66,11 @@ function sendEndTurn() {
 
 /**
  * Handle ending the turn, specifically the reshuffle animation, disabling input, and letting the server know ready for the next turn
- * @param {Object{newDeck, n}} reshuffled 
+ * @param {Object{deck, n}} reshuffled 
  */
 function handleEndTurn(reshuffled) {
     console.log('Handling end turn');
-    deck = reshuffled.newDeck;
+    const deck = reshuffled.deck;
 
     reshuffleAnimation(reshuffled.n);
     turnButtonSetEnabled(false);

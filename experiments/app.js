@@ -89,6 +89,7 @@ io.on('connection', function (client) {
       id = query.workerId; 
     }
     if(valid_id(id)) {
+      console.log('User ' + id + ' connected. Initializing...')
       initialize(query, client, id);
     }
   }

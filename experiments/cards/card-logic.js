@@ -1,5 +1,39 @@
 const _ = require('underscore');
 
+const SUITS = // listed in order according to spritesheet (cards.png)
+    ['♠S', // 0-12
+        '♣C', // 13-25
+        '♦D', // 26-38
+        '♥H']; // 39-51
+
+const ROYALS = {
+    0: 'A',
+    10: 'J',
+    11: 'Q',
+    12: 'K'
+}
+
+/**
+ * Converts the cards in data to human readable format.
+ * @param {Array<Number} cards 
+ */
+function getHumanReadable(cards) {
+    return cards.map(c => {
+        // console.log('c: ' + c)
+        let denomination = c % 13;
+        // console.log('denomination: ' + denomination);
+        const suitVal = Math.trunc(c / 13);
+        // console.log('suitVal: ' + suitVal);
+        // set royal representation if needed
+        denomination = ROYALS[denomination] || ++denomination; // ++ to set the correct value, because 1 represents 2
+        // console.log('denomination: ' + denomination);
+
+        const suit = SUITS[suitVal]
+        // console.log('suit: ' + suit);
+        const cardStr = denomination + suit;
+        return cardStr;
+    });
+}
 /**
  * Reshuffles an array of card sprites into the deck with probability p for each card
  * Returns [# cards left in deck, # cards added back to deck]
@@ -17,7 +51,7 @@ function reshuffle(p, cards, deck) {
         }
     });
     const newDeck = _.shuffle(deck);
-    return { newDeck, n };
+    return { deck: newDeck, n };
 }
 
 /**
@@ -25,16 +59,16 @@ function reshuffle(p, cards, deck) {
  * then calls biasDeckShuffle().
  * @param {Number} biasSuit - the suit that the shuffle will bias towards
  * @param {Number} biasP - the probability of adding the biased suit vs others back to the deck
- * @param {Number} deckBiasP - how much the deck will favor shuffling biasSuit cards to the top of the deck. 
+ * @param {Number} deckBias - how much the deck will favor shuffling biasSuit cards to the top of the deck. 
  * @param {Array<Number>} cards - the cards to reshuffle into the deck
  * @param {Array<Number>} deck - the deck of cards to return to
  */
-function biasReshuffle(biasSuit, biasP, deckBiasP, cards, deck) {
-    const biasRet = biasReturnCards(biasSuit, biasP, deckBiasP);
+function biasReshuffle(biasSuit, biasP, deckBias, cards, deck) {
+    const biasRet = biasReturnCards(biasSuit, biasP, cards, deck);
     const n = biasRet.n;
 
-    const newDeck = biasDeckShuffle(biasRet.deck, biasSuit, deckBiasP);
-    return { newDeck, n };
+    const newDeck = biasDeckShuffle(biasSuit, deckBias, biasRet.deck);
+    return { deck: newDeck, n };
 }
 
 /**
@@ -63,11 +97,11 @@ function biasReturnCards(biasSuit, biasP, cards, deck) {
  * Setting deckBiasP to 1 means all cards of the bias suit are brought to the top. 
  * Setting deckBiasP to 0 means all cards of the bias suit are sent to the bottom. 
  * Setting deckBiasP to 0.5 means the deck is shuffled randomly
- * @param {Array<Number>} deck - the deck of cards to rig
  * @param {Number} biasSuit - 
  * @param {*} deckBiasP - 
+ * @param {Array<Number>} deck - the deck of cards to rig
  */
-function biasDeckShuffle(deck, biasSuit, deckBiasP) {
+function biasDeckShuffle(biasSuit, deckBiasP, deck) {
     deck = _.shuffle(deck);
     // console.log(deck)
     let numCards = deck.length;
@@ -83,6 +117,7 @@ function biasDeckShuffle(deck, biasSuit, deckBiasP) {
         }
         // console.log(deck)
     }
+    // console.log(deck);
     return deck;
 }
 
@@ -140,22 +175,26 @@ function getSuit(cardValue) {
  * @param {Array<Number>} cards - the set of cards to evaluate
  */
 function getLeastCommonSuit(cards) {
-    let suitCount = { 0: 0, 1: 0, 2: 0, 3: 0 }
+    const suitCount = { 0: 0, 1: 0, 2: 0, 3: 0 }
     cards.forEach(c => {
         suit = getSuit(c);
         ++suitCount[suit];
     })
-    let min = 0;
+    console.log('Suit count: ' + JSON.stringify(suitCount));
+    let leastCommonSuit = 0; // set the suit to the first one
     for (let i = 1; i < Object.keys(suitCount).length; i++) {
-        if (suitCount[i] < suitCount[min]) {
-            min = i;
+        if (suitCount[i] < suitCount[leastCommonSuit]) {
+            leastCommonSuit = i;
         }
     }
-    return min;
+    return leastCommonSuit;
 }
 
 if (typeof module !== 'undefined')
     module.exports = {
+        SUITS,
+        ROYALS,
+        getHumanReadable,
         reshuffle,
         biasReshuffle,
         biasReturnCards,

@@ -24,18 +24,9 @@ var game_core = function (options) {
   this.options = {
     CARDS_PER_HAND: 3,
     CARDS_ON_TABLE: 4,
-    RESHUFFLE_PROBABILITY: 0.5,
-    SUITS: // listed in order according to spritesheet (cards.png)
-    [ '♠S', // 0-12
-    '♣C', // 13-25
-    '♦D', // 26-38
-    '♥H'], // 39-51
-    ROYALS: {
-      0: 'A',
-      10: 'J',
-      11: 'Q',
-      12: 'K'
-    }
+    P: 0.5,
+    BIAS_P: 0.5, // set 0.5 for random
+    DECK_BIAS: 0.1, // set to 0.5 for random, 1 for all to the top, 0 for all to the bottom 
   }
 
   this.world = {
@@ -59,7 +50,7 @@ var game_core = function (options) {
   this.turnNum = 0;
 
   // the value of 'p'
-  this.reshuffleP = this.options.RESHUFFLE_PROBABILITY;
+  this.reshuffleP = this.options.P;
 
   if (this.server) {
     // If we're initializing the server game copy, pre-create the list of trials
