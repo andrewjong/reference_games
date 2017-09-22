@@ -106,7 +106,12 @@ const onMessage = function (client, data) {
 
     // a player is requesting new turn data
     case 'nextTurnRequest':
-      // FIXME: I feel uncomfortable about the new draw being done per each client, instead of synced with the server. Technically data should be the same, but seems bad practice
+      /* FIXME:bad coding practice 
+      This way of doing things means that each client sends its deck to the server for the server to draw from.
+      This isn't very secure in the case that one of the clients' data gets corrupted. It would be better to have
+      a single copy of the data sent from the server. Technically the data sent from both clients should be the same,
+      but this seems to be bad practice.
+      */
       const newOnTable = cardLogic.dealCards(data.deck, gc.options.CARDS_ON_TABLE);
       const newTurn = { deck: data.deck, onTable: newOnTable };
       // only write data for one player, not both
