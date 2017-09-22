@@ -25,7 +25,11 @@ var game_core = function (options) {
     CARDS_PER_HAND: 3,
     CARDS_ON_TABLE: 4,
     RESHUFFLE_PROBABILITY: 0.5,
-    SUITS: [ '♠S', '♣C', '♦D', '♥H'], // listed in order according to spritesheet (cards.png)
+    SUITS: // listed in order according to spritesheet (cards.png)
+    [ '♠S', // 0-12
+    '♣C', // 13-25
+    '♦D', // 26-38
+    '♥H'], // 39-51
     ROYALS: {
       0: 'A',
       10: 'J',

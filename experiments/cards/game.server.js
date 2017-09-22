@@ -88,7 +88,7 @@ const onMessage = function (client, data) {
         // reshuffling logic here
         // const reshuffle = cardLogic.reshuffle(gc.reshuffleP, data.onTable, data.deck);
         // bias shuffle with 0.75 return rate and 0.75 bring forward rate
-        const reshuffle = cardLogic.biasShuffle(gc.biasSuit, 0.95, 0.75, data.onTable, data.deck);
+        const reshuffle = cardLogic.biasReshuffle(gc.biasSuit, 0.95, 0.75, data.onTable, data.deck);
         data.deck = reshuffle.newDeck;
         data.numReshuffled = reshuffle.n;
         data.state = 'end';
