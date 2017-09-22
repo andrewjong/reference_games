@@ -38,6 +38,7 @@ const onMessage = function (client, data) {
       data.state = 'start';
       gc.startingOnTable = data.onTable; // cards the table at the start of the first turn, to detect if players have swapped or not
       gc.biasSuit = cardLogic.getLeastCommonSuit(data.onTable) // rig the game so that the suit not ont he table
+      console.log(`bias suit: ${gc.options.SUITS[gc.biasSuit]}`)
       writeData(data, false);
       break;
 
@@ -85,7 +86,9 @@ const onMessage = function (client, data) {
       // game not done yet
       else {
         // reshuffling logic here
-        const reshuffle = cardLogic.reshuffle(gc.reshuffleP, data.onTable, data.deck);
+        // const reshuffle = cardLogic.reshuffle(gc.reshuffleP, data.onTable, data.deck);
+        // bias shuffle with 0.75 return rate and 0.75 bring forward rate
+        const reshuffle = cardLogic.biasShuffle(gc.biasSuit, 0.95, 0.75, data.onTable, data.deck);
         data.deck = reshuffle.newDeck;
         data.numReshuffled = reshuffle.n;
         data.state = 'end';

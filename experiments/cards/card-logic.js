@@ -17,19 +17,56 @@ function reshuffle(p, cards, deck) {
         }
     });
     const newDeck = _.shuffle(deck);
-    return {newDeck, n};
+    return { newDeck, n };
 }
 
-function biasedShuffle(p, bias, cards, deck){
+/**
+ * 
+ * @param {Number} biasSuit - the suit that the shuffle will be biased towards
+ * @param {Number} biasP - the probability of adding the biased suit vs others back to the deck
+ * @param {*} biasP - the bias probability that the biasSuit will get reshuffled. By default has the same value as p 
+ * @param {Number} bringForwardBias - how much the deck will favor shuffling biasSuit cards to the top of the deck
+ * @param {*} cards 
+ * @param {*} deck 
+ */
+function biasShuffle(biasSuit, biasP, bringForwardBias, cards, deck) {
+    let n = 0;
+    cards.forEach(c => {
+        let returnP = getSuit(c) == biasSuit ? biasP : 1 - biasP; // set the p value to the biasP or the regular p
+        if (Math.random() <= returnP) {
+            n++;
+            deck.push(c);
+        }
+    });
+    const newDeck = rigTheDeck(deck, biasSuit, bringForwardBias);
+    return { newDeck, n };
+}
 
+/**
+ * Rigs the deck by bringing cards forward
+ * @param {} deck 
+ * @param {*} biasSuit 
+ * @param {*} deckBiasP 
+ */
+function rigTheDeck(deck, biasSuit, deckBiasP) {
+    deck = _.shuffle(deck);
+    let end = deck.length;
+    for (let i = 0; i < end; i++) {
+        let bringForwardP = getSuit(deck[i]) == biasSuit ? deckBiasP : 1 - deckBiasP;
+        if (Math.random() < bringForwardP) {
+            let cards = deck.splice(i, 1);
+            deck = cards.concat(deck);
+        }
+    }
+    return deck;
 }
 /**
  * 'Deals' the first n cards from a deck. The deck is modified.
  * @param {Array<Number>} deck the deck of cards
  * @param {Number} number how many to deal
  */
-function dealCards(deck, number){
-   return deck.splice(0, number);
+function dealCards(deck, number) {
+    return deck.splice(0, number);
 }
 
 const cardsInSuit = 13; // number of cards in a suit
@@ -69,7 +106,7 @@ function hasWrappedStraight(hand1, hand2) {
  */
 function getSuit(cardValue) {
     return Math.trunc(cardValue / cardsInSuit);
-} 
+}
 
 /**
  * Returns the numerical representatiom {0...3} of the least appearing suit in an array of cards
@@ -83,7 +120,7 @@ function getLeastCommonSuit(cards) {
     })
     let min = 0;
     for (let i = 1; i < Object.keys(suitCount).length; i++) {
-        if (suitCount[i] < suitCount[min]){
+        if (suitCount[i] < suitCount[min]) {
             min = i;
         }
     }
@@ -93,6 +130,8 @@ function getLeastCommonSuit(cards) {
 if (typeof module !== 'undefined')
     module.exports = {
         reshuffle,
+        biasShuffle,
+        rigTheDeck,
         dealCards,
         hasWrappedStraight,
         getSuit,
